@@ -1,0 +1,1799 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CENTRO DE CONTROL - Sistema de Cámaras CIOE</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    body { background-color: #030712; color: #f3f4f6; font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif; }
+    
+    .status-OPERATIVA { background-color: #fbbf24 !important; color: #000000 !important; font-weight: 800; }
+    .status-INOPERATIVA { background-color: #ef4444 !important; color: #ffffff !important; font-weight: 800; }
+    .status-MANTENIMIENTO { background-color: #3b82f6 !important; color: #ffffff !important; font-weight: 800; }
+
+    table td, table th {
+      vertical-align: middle !important;
+    }
+
+    ::-webkit-scrollbar { width: 8px; height: 8px; }
+    ::-webkit-scrollbar-track { background: #030712; }
+    ::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: #334155; }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col p-3 md:p-5 space-y-4 w-full">
+
+  <!-- ==================== VISTA 0: PANTALLA DE LOGIN ==================== -->
+  <div id="loginView" class="fixed inset-0 bg-[#030712] z-50 flex items-center justify-center p-4">
+    <div class="bg-[#0a0f1d] border border-slate-800 rounded-2xl p-8 max-w-sm w-full shadow-2xl space-y-6 text-center">
+      <div class="space-y-2">
+        <div class="inline-flex p-3.5 bg-emerald-500 rounded-2xl text-white font-black shadow-lg shadow-emerald-500/20">
+          <i class="fa-solid fa-lock text-2xl"></i>
+        </div>
+        <h2 class="text-base font-black text-white uppercase tracking-wide">Acceso al Sistema</h2>
+        <p class="text-xs text-slate-400">Por favor, complete sus credenciales para iniciar sesión.</p>
+      </div>
+
+      <form onsubmit="handleLogin(event)" class="space-y-4 text-left">
+        <div>
+          <label class="text-xs font-bold text-slate-300 block mb-1.5">Usuario</label>
+          <div class="relative">
+            <i class="fa-solid fa-user absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500 text-xs"></i>
+            <input type="text" id="loginUser" required placeholder="Ingrese su usuario" class="w-full bg-[#030712] border border-slate-800 rounded-xl pl-9 pr-3 py-2.5 text-xs text-white focus:outline-none focus:border-amber-500 transition">
+          </div>
+        </div>
+
+        <div>
+          <label class="text-xs font-bold text-slate-300 block mb-1.5">Contraseña</label>
+          <div class="relative">
+            <i class="fa-solid fa-key absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500 text-xs"></i>
+            <input type="password" id="loginPass" required placeholder="••••••••" class="w-full bg-[#030712] border border-slate-800 rounded-xl pl-9 pr-3 py-2.5 text-xs text-white focus:outline-none focus:border-amber-500 transition">
+          </div>
+        </div>
+
+        <p id="loginError" class="text-[11px] text-rose-500 font-bold text-center hidden">
+          <i class="fa-solid fa-triangle-exclamation"></i> Usuario o contraseña incorrectos
+        </p>
+
+        <button type="submit" class="w-full bg-amber-500 hover:bg-amber-400 text-black py-2.5 rounded-xl text-xs font-black transition shadow-lg shadow-amber-500/10">
+          Ingresar
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- ==================== VISTA 1: CENTRO DE CONTROL PRINCIPAL ==================== -->
+  <div id="mainDashboardView" class="hidden space-y-4 flex flex-col flex-1">
+    <header class="bg-[#0a0f1d] border border-slate-800 rounded-2xl p-4 shadow-xl flex flex-col lg:flex-row justify-between items-center gap-4 w-full">
+      <div class="flex items-center gap-3">
+        <div class="p-3 bg-emerald-500 rounded-xl text-white font-black">
+          <i class="fa-solid fa-video text-xl"></i>
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <h1 class="text-xl font-black text-white tracking-wide">CENTRO DE CONTROL</h1>
+            <span class="bg-amber-500/20 text-amber-400 border border-amber-500/30 text-[10px] font-black px-2 py-0.5 rounded-md uppercase">SISTEMA DIARIO</span>
+          </div>
+          <p class="text-xs text-slate-400">Gestión de Cámaras, Estado de Operatividad e Incidencias</p>
+        </div>
+      </div>
+
+      <div class="flex flex-wrap items-center gap-2.5 w-full lg:w-auto justify-end">
+        <div class="relative">
+          <button type="button" id="ocurrenciasBtn" onclick="toggleOcurrenciasMenu(event)" class="flex items-center gap-2 bg-[#030712] border border-slate-800 px-3.5 py-2 rounded-xl text-xs font-bold text-amber-400 hover:border-slate-700 hover:bg-slate-900/60 transition select-none">
+            <i class="fa-solid fa-clipboard-list text-amber-500 text-sm pointer-events-none"></i>
+            <span class="pointer-events-none uppercase tracking-wider">OCURRENCIAS</span>
+            <i class="fa-solid fa-chevron-down text-[10px] text-slate-400 ml-1 pointer-events-none"></i>
+          </button>
+
+          <div id="ocurrenciasMenu" class="hidden absolute left-0 lg:right-0 lg:left-auto top-11 z-50 bg-[#0a0f1d] border border-slate-700 rounded-2xl p-1.5 shadow-2xl w-60 text-xs space-y-1">
+            <button type="button" onclick="showSearchReportView(event)" class="w-full text-left px-3.5 py-2.5 rounded-xl hover:bg-amber-500 hover:text-black font-bold text-slate-200 transition flex items-center gap-2">
+              <i class="fa-solid fa-magnifying-glass text-amber-400"></i>
+              <span>Buscar reporte de cámara</span>
+            </button>
+            <button type="button" onclick="showVecinalesView(event)" class="w-full text-left px-3.5 py-2.5 rounded-xl hover:bg-amber-500 hover:text-black font-bold text-slate-200 transition flex items-center gap-2">
+              <i class="fa-solid fa-users-viewfinder text-emerald-400"></i>
+              <span>Cámaras vecinales</span>
+            </button>
+          </div>
+        </div>
+
+        <button onclick="openModal()" class="bg-amber-500 hover:bg-amber-400 text-black px-4 py-2 rounded-xl text-xs font-black transition flex items-center gap-2 shadow-lg shadow-amber-500/10">
+          <i class="fa-solid fa-plus text-sm"></i> Añadir Cámara
+        </button>
+
+        <button onclick="copySummary()" class="bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 shadow">
+          <i class="fa-solid fa-share-nodes text-amber-500"></i> Reporte WhatsApp
+        </button>
+
+        <button onclick="exportCSV()" class="bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 px-3.5 py-2 rounded-xl text-xs font-medium transition flex items-center gap-1.5">
+          <i class="fa-solid fa-database text-blue-400"></i> Exportar CSV
+        </button>
+
+        <button onclick="cerrarSesion()" class="bg-rose-600 hover:bg-rose-500 text-white px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2">
+          <i class="fa-solid fa-right-from-bracket"></i> Cerrar sesión
+        </button>
+      </div>
+    </header>
+
+    <section class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 w-full">
+      <div class="bg-[#0a0f1d] p-3.5 rounded-2xl border border-slate-800 shadow-xl flex justify-between items-center">
+        <div>
+          <span class="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">TOTAL CÁMARAS</span>
+          <span id="stat-total" class="text-2xl font-black text-white mt-0.5 block">0</span>
+        </div>
+        <div class="p-2.5 bg-slate-800/80 rounded-xl text-slate-400">
+          <i class="fa-solid fa-video text-lg"></i>
+        </div>
+      </div>
+
+      <div class="bg-[#0a0f1d] p-3.5 rounded-2xl border border-slate-800 shadow-xl flex justify-between items-center">
+        <div>
+          <span class="text-[10px] text-amber-400 font-bold uppercase tracking-wider block">OPERATIVAS</span>
+          <span id="stat-operativas" class="text-2xl font-black text-amber-400 mt-0.5 block">0</span>
+        </div>
+        <div class="p-2.5 bg-amber-500/10 rounded-xl text-amber-500 border border-amber-500/20">
+          <i class="fa-solid fa-circle-check text-lg"></i>
+        </div>
+      </div>
+
+      <div class="bg-[#0a0f1d] p-3.5 rounded-2xl border border-slate-800 shadow-xl flex justify-between items-center">
+        <div>
+          <span class="text-[10px] text-rose-400 font-bold uppercase tracking-wider block">INOPERATIVAS</span>
+          <span id="stat-inoperativas" class="text-2xl font-black text-rose-400 mt-0.5 block">0</span>
+        </div>
+        <div class="p-2.5 bg-rose-500/10 rounded-xl text-rose-500 border border-rose-500/20">
+          <i class="fa-solid fa-circle-xmark text-lg"></i>
+        </div>
+      </div>
+
+      <div class="bg-[#0a0f1d] p-3.5 rounded-2xl border border-slate-800 shadow-xl flex justify-between items-center">
+        <div>
+          <span class="text-[10px] text-blue-400 font-bold uppercase tracking-wider block">MANTENIMIENTO</span>
+          <span id="stat-mantenimiento" class="text-2xl font-black text-blue-400 mt-0.5 block">0</span>
+        </div>
+        <div class="p-2.5 bg-blue-500/10 rounded-xl text-blue-400 border border-blue-500/20">
+          <i class="fa-solid fa-wrench text-lg"></i>
+        </div>
+      </div>
+
+      <div class="bg-[#0a0f1d] p-3.5 rounded-2xl border border-slate-800 shadow-xl flex justify-between items-center col-span-2 sm:col-span-1">
+        <div>
+          <span class="text-[10px] text-emerald-400 font-bold uppercase tracking-wider block">% OPERATIVIDAD</span>
+          <span id="stat-rate" class="text-2xl font-black text-emerald-400 mt-0.5 block">0%</span>
+        </div>
+        <div class="p-2.5 bg-emerald-500/10 rounded-xl text-emerald-400 border border-emerald-500/20">
+          <i class="fa-solid fa-chart-pie text-lg"></i>
+        </div>
+      </div>
+    </section>
+
+    <div class="bg-[#0a0f1d] p-3 rounded-2xl border border-slate-800/80 shadow-lg flex flex-col md:flex-row gap-4 justify-between items-center w-full">
+      <div class="relative w-full md:w-96">
+        <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500 text-sm"></i>
+        <input type="text" id="searchInput" oninput="renderTable()" placeholder="Buscar cámara, calle, zona o suministro..." class="w-full bg-[#030712] border border-slate-800 text-slate-200 text-xs rounded-xl pl-10 pr-4 py-2.5 focus:outline-none focus:border-amber-500 transition">
+      </div>
+
+      <div class="flex items-center gap-1 bg-[#030712] p-1 rounded-xl border border-slate-800 w-full md:w-auto justify-between md:justify-start">
+        <button onclick="setFilter('ALL')" id="filter-ALL" class="px-5 py-1.5 rounded-lg text-xs font-bold transition bg-amber-500 text-black">Todas</button>
+        <button onclick="setFilter('OPERATIVA')" id="filter-OPERATIVA" class="px-5 py-1.5 rounded-lg text-xs font-semibold text-slate-400 hover:text-white transition">Operativas</button>
+        <button onclick="setFilter('INOPERATIVA')" id="filter-INOPERATIVA" class="px-5 py-1.5 rounded-lg text-xs font-semibold text-slate-400 hover:text-white transition">Inoperativas</button>
+        <button onclick="setFilter('MANTENIMIENTO')" id="filter-MANTENIMIENTO" class="px-5 py-1.5 rounded-lg text-xs font-semibold text-slate-400 hover:text-white transition">Mantenimiento</button>
+      </div>
+    </div>
+
+    <div class="bg-[#0a0f1d] border border-slate-800/80 px-4 py-2.5 rounded-xl text-xs text-slate-400 flex justify-between items-center w-full">
+      <span class="flex items-center gap-2">
+        <i class="fa-solid fa-circle-info text-amber-500"></i>
+        <span>Utiliza el icono del lápiz en la columna Acciones para editar los datos de cualquier cámara.</span>
+      </span>
+      <span id="recordCount" class="font-bold text-slate-200">0 Registros</span>
+    </div>
+
+    <main class="flex-1 bg-[#0a0f1d] rounded-2xl border border-slate-800/80 shadow-2xl overflow-hidden flex flex-col w-full">
+      <div class="overflow-x-auto w-full">
+        <table class="w-full text-left text-xs border-collapse min-w-[1200px]">
+          <thead>
+            <tr class="bg-black text-white uppercase tracking-wider text-[11px] font-black border-b border-slate-800">
+              <th class="p-3.5 text-center w-28">CÁMARA</th>
+              <th class="p-3.5">ESTACIONES</th>
+              <th class="p-3.5 w-24">SISTEMA</th>
+              <th class="p-3.5 w-40 text-center">OPERATIVAS</th>
+              <th class="p-3.5">UBICACIÓN</th>
+              <th class="p-3.5">URBANIZACIÓN</th>
+              <th class="p-3.5 w-28">ZONA/SECTOR</th>
+              <th class="p-3.5">SUMINISTROS</th>
+              <th class="p-3.5 text-center w-24">ACCIONES</th>
+            </tr>
+          </thead>
+          <tbody id="tableBody" class="divide-y divide-slate-800/60 text-slate-200 font-medium">
+          </tbody>
+        </table>
+      </div>
+    </main>
+  </div>
+
+  <!-- ==================== VISTA 2: BUSCADOR DE REPORTES DE CÁMARAS ==================== -->
+  <div id="searchReportView" class="hidden space-y-4 flex-col flex-1">
+    <header class="bg-[#0a0f1d] border border-slate-800 rounded-2xl p-4 shadow-xl flex flex-col sm:flex-row justify-between items-center gap-4 w-full">
+      <div class="flex items-center gap-3">
+        <div class="p-3 bg-amber-500 rounded-xl text-black font-black">
+          <i class="fa-solid fa-magnifying-glass text-xl"></i>
+        </div>
+        <div>
+          <h1 class="text-xl font-black text-white tracking-wide uppercase">BUSCADOR DE REPORTES DE CÁMARAS</h1>
+          <p class="text-xs text-slate-400">Consulta histórica de estado y fecha/hora de publicación del reporte</p>
+        </div>
+      </div>
+
+      <button onclick="showMainDashboardView()" class="bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2">
+        <i class="fa-solid fa-arrow-left text-amber-500"></i> Volver al Centro de Control
+      </button>
+    </header>
+
+    <div class="space-y-4 flex-1 flex flex-col">
+      <div class="bg-[#0a0f1d] border border-amber-500/40 rounded-2xl p-4 shadow-xl">
+        <span class="text-[10px] text-amber-400 font-black uppercase tracking-wider block mb-1">REGISTRO DE PUBLICACIÓN DEL REPORTE</span>
+        <div class="bg-[#030712] border border-slate-800 p-3.5 rounded-xl flex items-center justify-between">
+          <div class="flex items-center gap-3">
+            <i class="fa-regular fa-clock text-amber-500 text-xl"></i>
+            <div>
+              <span id="reportTimestampDisplay" class="text-sm font-black text-white block">21/09/2026 - 10:30:00 PM</span>
+              <span class="text-[10px] text-slate-400">Fecha y Hora exacta de envío al sistema</span>
+            </div>
+          </div>
+          
+          <div class="flex items-center gap-3">
+            <div class="flex items-center gap-2 border-l border-slate-800 pl-4">
+              <i class="fa-solid fa-video text-amber-500 text-xs"></i>
+              <span id="reportCameraDisplay" class="text-xs font-black text-amber-400">CAMARA-01</span>
+            </div>
+            <span class="bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-[10px] font-bold px-2 py-1 rounded-lg">
+              REGISTRADO
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <div class="w-full bg-[#0a0f1d] rounded-2xl border border-slate-800 p-4 shadow-2xl flex flex-col flex-1">
+        <div class="overflow-x-auto w-full">
+          <table class="w-full text-left text-xs border-collapse">
+            <thead>
+              <tr class="bg-black text-white uppercase tracking-wider text-[11px] font-black border-b border-slate-800">
+                <th class="p-3 text-center border-r border-slate-800 w-28">CAMARA</th>
+                <th class="p-3 border-r border-slate-800 w-24">SISTEMA</th>
+                <th class="p-3 text-center border-r border-slate-800 w-32">OPERATIVAS</th>
+                <th class="p-3 border-r border-slate-800">DETALLES / NOVEDADES</th>
+                <th class="p-3 text-center w-24">ACCIONES</th>
+              </tr>
+            </thead>
+            <tbody id="searchTableBody" class="divide-y divide-slate-800/60 text-slate-200">
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== VISTA 3: CÁMARAS VECINALES / BARRIO SEGURO ==================== -->
+  <div id="vecinalesView" class="hidden space-y-4 flex-col flex-1">
+    <header class="bg-[#0a0f1d] border border-slate-800 rounded-2xl p-4 shadow-xl flex flex-col sm:flex-row justify-between items-center gap-4 w-full">
+      <div class="flex items-center gap-3">
+        <div class="p-3 bg-emerald-500 rounded-xl text-black font-black">
+          <i class="fa-solid fa-users-viewfinder text-xl"></i>
+        </div>
+        <div>
+          <h1 class="text-xl font-black text-white tracking-wide uppercase">CÁMARAS DE BARRIO SEGURO / VECINALES</h1>
+          <p class="text-xs text-slate-400">Interconectadas al Sistema de Monitoreo Territorial</p>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-2">
+        <button onclick="openVecinalModal()" class="bg-amber-500 hover:bg-amber-400 text-black px-4 py-2 rounded-xl text-xs font-black transition flex items-center gap-2 shadow-lg shadow-amber-500/10">
+          <i class="fa-solid fa-plus text-sm"></i> Añadir Cámara Vecinal
+        </button>
+
+        <button onclick="openVecinalAddToBarrio()" class="bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2 rounded-xl text-xs font-black transition flex items-center gap-2 shadow-lg shadow-emerald-500/10">
+          <i class="fa-solid fa-folder-plus text-sm"></i> Añadir a un Barrio
+        </button>
+
+        <button onclick="showMainDashboardView()" class="bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2">
+          <i class="fa-solid fa-arrow-left text-amber-500"></i> Volver al Centro de Control
+        </button>
+      </div>
+    </header>
+
+    <div class="bg-[#0a0f1d] p-3 rounded-2xl border border-slate-800 shadow-lg flex flex-col lg:flex-row gap-4 justify-between items-center w-full">
+      <div class="relative w-full lg:w-80">
+        <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500 text-sm"></i>
+        <input type="text" id="searchVecinalInput" oninput="renderVecinalesTable()" placeholder="Buscar barrio, calle o cámara vecinal..." class="w-full bg-[#030712] border border-slate-800 text-slate-200 text-xs rounded-xl pl-10 pr-4 py-2.5 focus:outline-none focus:border-amber-500 transition">
+      </div>
+
+      <div class="flex items-center gap-3 w-full lg:w-auto">
+        <label class="text-xs font-bold text-slate-400 whitespace-nowrap">Filtrar por Barrio:</label>
+        <select id="barrioFilter" onchange="renderVecinalesTable()" class="bg-[#030712] border border-slate-800 text-amber-400 font-bold text-xs rounded-xl px-3 py-2 focus:outline-none focus:border-amber-500 w-full lg:w-72">
+          <option value="ALL">TODOS LOS BARRIOS</option>
+        </select>
+      </div>
+
+      <div class="flex items-center gap-2 bg-[#030712] px-3 py-2 rounded-xl border border-slate-800 text-xs">
+        <span class="text-slate-400 font-bold">Total Cámaras Vecinales:</span>
+        <span id="vecinalCount" class="text-amber-400 font-black">0</span>
+      </div>
+    </div>
+
+    <!-- RESUMEN GENERAL DE CÁMARAS VECINALES -->
+    <section class="grid grid-cols-2 sm:grid-cols-4 gap-3 w-full">
+      <div class="bg-[#0a0f1d] p-3.5 rounded-2xl border border-slate-800 shadow-xl flex justify-between items-center">
+        <div>
+          <span class="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">TOTAL VECINALES</span>
+          <span id="vec-stat-total" class="text-2xl font-black text-white mt-0.5 block">0</span>
+        </div>
+        <div class="p-2.5 bg-slate-800/80 rounded-xl text-slate-400">
+          <i class="fa-solid fa-video text-lg"></i>
+        </div>
+      </div>
+
+      <div class="bg-[#0a0f1d] p-3.5 rounded-2xl border border-slate-800 shadow-xl flex justify-between items-center">
+        <div>
+          <span class="text-[10px] text-amber-400 font-bold uppercase tracking-wider block">OPERATIVAS</span>
+          <span id="vec-stat-operativas" class="text-2xl font-black text-amber-400 mt-0.5 block">0</span>
+        </div>
+        <div class="p-2.5 bg-amber-500/10 rounded-xl text-amber-500 border border-amber-500/20">
+          <i class="fa-solid fa-circle-check text-lg"></i>
+        </div>
+      </div>
+
+      <div class="bg-[#0a0f1d] p-3.5 rounded-2xl border border-slate-800 shadow-xl flex justify-between items-center">
+        <div>
+          <span class="text-[10px] text-rose-400 font-bold uppercase tracking-wider block">INOPERATIVAS</span>
+          <span id="vec-stat-inoperativas" class="text-2xl font-black text-rose-400 mt-0.5 block">0</span>
+        </div>
+        <div class="p-2.5 bg-rose-500/10 rounded-xl text-rose-500 border border-rose-500/20">
+          <i class="fa-solid fa-circle-xmark text-lg"></i>
+        </div>
+      </div>
+
+      <div class="bg-[#0a0f1d] p-3.5 rounded-2xl border border-slate-800 shadow-xl flex justify-between items-center">
+        <div>
+          <span class="text-[10px] text-blue-400 font-bold uppercase tracking-wider block">MANTENIMIENTO</span>
+          <span id="vec-stat-mantenimiento" class="text-2xl font-black text-blue-400 mt-0.5 block">0</span>
+        </div>
+        <div class="p-2.5 bg-blue-500/10 rounded-xl text-blue-400 border border-blue-500/20">
+          <i class="fa-solid fa-wrench text-lg"></i>
+        </div>
+      </div>
+    </section>
+
+    <!-- RESUMEN POR BARRIO, DESPLEGABLE -->
+    <section class="bg-[#0a0f1d] border border-slate-800 rounded-2xl p-3 shadow-xl w-full">
+      <div class="flex items-center justify-between mb-3 px-1">
+        <div>
+          <h2 class="text-sm font-black text-white uppercase tracking-wide">Resumen por Barrio</h2>
+          <p class="text-[10px] text-slate-500">Cada B muestra sus cámaras operativas e inoperativas. Usa la flecha para desplegar.</p>
+        </div>
+        <span id="vecinalSummaryTotal" class="text-[10px] font-bold text-slate-400"></span>
+      </div>
+      <div id="vecinalBarrioSummary" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-2.5"></div>
+    </section>
+
+    <main class="flex-1 bg-[#0a0f1d] rounded-2xl border border-slate-800 shadow-2xl overflow-hidden flex flex-col w-full">
+      <div class="overflow-x-auto w-full">
+        <table class="w-full text-left text-xs border-collapse min-w-[1200px] border border-slate-800">
+          <thead>
+            <tr class="bg-black text-white uppercase tracking-wider text-[11px] font-black border-b border-slate-800">
+              <th class="p-3.5 w-64 border-r border-slate-800">BARRIO</th>
+              <th class="p-3.5 border-r border-slate-800">N° CÁMARA / DETALLE</th>
+              <th class="p-3.5 border-r border-slate-800">URBANIZACIÓN</th>
+              <th class="p-3.5 w-28 border-r border-slate-800">ZONA/SECTOR</th>
+              <th class="p-3.5 w-24 border-r border-slate-800">SISTEMA</th>
+              <th class="p-3.5 text-center w-36 border-r border-slate-800">CONEXIÓN</th>
+              <th class="p-3.5 border-r border-slate-800">DETALLES</th>
+              <th class="p-3.5 w-32 border-r border-slate-800">ESTACIÓN</th>
+              <th class="p-3.5 text-center w-28">ACCIONES</th>
+            </tr>
+          </thead>
+          <tbody id="vecinalesTableBody" class="text-slate-200 font-medium">
+          </tbody>
+        </table>
+      </div>
+    </main>
+  </div>
+
+  <!-- MODAL: Crear / Editar Cámara Vecinal -->
+  <div id="vecinalModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm hidden items-center justify-center p-4 z-50">
+    <div class="bg-[#0a0f1d] border border-slate-800 rounded-2xl max-w-lg w-full p-6 shadow-2xl relative">
+      <h2 class="text-base font-black text-white mb-4 flex items-center gap-2">
+        <i class="fa-solid fa-users-viewfinder text-amber-500"></i> <span id="vecinalModalTitle">Agregar Cámara Vecinal</span>
+      </h2>
+      <form id="vecinalForm" onsubmit="saveVecinalCamera(event)" class="space-y-3">
+        <input type="hidden" id="vecinalIdx">
+        <input type="hidden" id="vecinalInsertAfter">
+        <input type="hidden" id="vecAddMode" value="new">
+
+        <div id="vecBarrioTextWrap">
+          <label class="text-xs text-slate-400 font-semibold block mb-1">Barrio</label>
+          <input type="text" id="vecBarrio" placeholder="Ej: B1 - JR. VENUS / PARQUE PARACAS" required class="w-full bg-[#030712] border border-slate-800 rounded-xl p-2.5 text-xs text-white focus:outline-none focus:border-amber-500">
+        </div>
+
+        <div id="vecBarrioSelectWrap" class="hidden">
+          <label class="text-xs text-slate-400 font-semibold block mb-1">¿En qué Barrio (B) irá esta cámara?</label>
+          <select id="vecBarrioSelect" class="w-full bg-[#030712] border border-emerald-700 rounded-xl p-2.5 text-xs text-emerald-300 font-bold focus:outline-none focus:border-emerald-500">
+            <option value="">Seleccione un barrio...</option>
+          </select>
+          <p class="text-[10px] text-slate-500 mt-1">La nueva cámara se colocará automáticamente al final de ese B.</p>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="text-xs text-slate-400 font-semibold block mb-1">N° Cámara / Detalle</label>
+            <input type="text" id="vecCamara" placeholder="Ej: JR. VENUS-MANCO CAPAC" required class="w-full bg-[#030712] border border-slate-800 rounded-xl p-2.5 text-xs text-white focus:outline-none focus:border-amber-500">
+          </div>
+          <div>
+            <label class="text-xs text-slate-400 font-semibold block mb-1">Estación</label>
+            <input type="text" id="vecEstacion" placeholder="Ej: ESTACIÓN 18" required class="w-full bg-[#030712] border border-slate-800 rounded-xl p-2.5 text-xs text-white focus:outline-none focus:border-amber-500">
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="text-xs text-slate-400 font-semibold block mb-1">Urbanización</label>
+            <input type="text" id="vecUrb" placeholder="Ej: AA.HH. MORADORES DEL..." class="w-full bg-[#030712] border border-slate-800 rounded-xl p-2.5 text-xs text-white focus:outline-none focus:border-amber-500">
+          </div>
+          <div>
+            <label class="text-xs text-slate-400 font-semibold block mb-1">Zona / Sector</label>
+            <input type="text" id="vecZona" placeholder="Ej: SUR 3 B" class="w-full bg-[#030712] border border-slate-800 rounded-xl p-2.5 text-xs text-white focus:outline-none focus:border-amber-500">
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="text-xs text-slate-400 font-semibold block mb-1">Sistema</label>
+            <input type="text" id="vecSistema" placeholder="Ej: PSS" required class="w-full bg-[#030712] border border-slate-800 rounded-xl p-2.5 text-xs text-white focus:outline-none focus:border-amber-500">
+          </div>
+          <div>
+            <label class="text-xs text-slate-400 font-semibold block mb-1">Conexión</label>
+            <select id="vecConexion" class="w-full bg-[#030712] border border-slate-800 rounded-xl p-2.5 text-xs text-white focus:outline-none focus:border-amber-500">
+              <option value="OPERATIVA">OPERATIVA</option>
+              <option value="INOPERATIVA">INOPERATIVA</option>
+              <option value="MANTENIMIENTO">MANTENIMIENTO</option>
+            </select>
+          </div>
+        </div>
+
+        <div>
+          <label class="text-xs text-slate-400 font-semibold block mb-1">Detalles</label>
+          <input type="text" id="vecDetalles" placeholder="Ej: FUNCIONA / PTZ" class="w-full bg-[#030712] border border-slate-800 rounded-xl p-2.5 text-xs text-white focus:outline-none focus:border-amber-500">
+        </div>
+
+        <div class="flex justify-end gap-2 pt-2">
+          <button type="button" onclick="closeVecinalModal()" class="px-4 py-2 rounded-xl bg-slate-800 text-slate-300 text-xs font-bold hover:bg-slate-700">Cancelar</button>
+          <button type="submit" class="px-5 py-2 rounded-xl bg-amber-500 text-black text-xs font-black hover:bg-amber-400">Guardar Vecinal</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: DETALLES / HISTORIAL / NOVEDADES -->
+  <div id="detailReportModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm hidden items-center justify-center p-4 z-50">
+    <div class="bg-[#0a0f1d] border border-slate-800 rounded-2xl max-w-lg w-full p-6 shadow-2xl relative">
+      <h2 class="text-xs font-black text-slate-300 uppercase tracking-wider mb-3">
+        DETALLES / HISTORIAL / NOVEDADES
+      </h2>
+      <input type="hidden" id="editReportCamId">
+      <textarea id="editReportText" rows="4" class="w-full bg-[#030712] border border-slate-800 rounded-xl p-3 text-xs text-white focus:outline-none focus:border-amber-500 font-medium"></textarea>
+      
+      <div class="flex justify-end gap-2 pt-4 border-t border-slate-800/80 mt-4">
+        <button type="button" onclick="closeDetailReportModal()" class="px-5 py-2 rounded-xl bg-slate-800 text-slate-300 text-xs font-bold hover:bg-slate-700">Cancelar</button>
+        <button type="button" onclick="saveDetailReport()" class="px-5 py-2 rounded-xl bg-amber-500 text-black text-xs font-black hover:bg-amber-400">Guardar Registro</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: Crear / Editar Cámara -->
+  <div id="cameraModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm hidden items-center justify-center p-4 z-50">
+    <div class="bg-[#0a0f1d] border border-slate-800 rounded-2xl max-w-lg w-full p-6 shadow-2xl relative">
+      <h2 class="text-base font-black text-white mb-4 flex items-center gap-2">
+        <i class="fa-solid fa-video text-amber-500"></i> <span id="modalTitle">Agregar Nueva Cámara</span>
+      </h2>
+      <form id="cameraForm" onsubmit="saveCamera(event)" class="space-y-3">
+        <input type="hidden" id="camId">
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="text-xs text-slate-400 font-semibold block mb-1">N° Cámara</label>
+            <input type="number" id="camNum" required class="w-full bg-[#030712] border border-slate-800 rounded-xl p-2.5 text-xs text-white focus:outline-none focus:border-amber-500">
+          </div>
+          <div>
+            <label class="text-xs text-slate-400 font-semibold block mb-1">Estación</label>
+            <input type="text" id="camEstacion" placeholder="Ej: ESTACION 9" required class="w-full bg-[#030712] border border-slate-800 rounded-xl p-2.5 text-xs text-white focus:outline-none focus:border-amber-500">
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="text-xs text-slate-400 font-semibold block mb-1">Sistema</label>
+            <input type="text" id="camSistema" placeholder="Ej: DSS / HIK / IVS" required class="w-full bg-[#030712] border border-slate-800 rounded-xl p-2.5 text-xs text-white focus:outline-none focus:border-amber-500">
+          </div>
+          <div>
+            <label class="text-xs text-slate-400 font-semibold block mb-1">Estado</label>
+            <select id="camEstado" class="w-full bg-[#030712] border border-slate-800 rounded-xl p-2.5 text-xs text-white focus:outline-none focus:border-amber-500">
+              <option value="OPERATIVA">OPERATIVA</option>
+              <option value="INOPERATIVA">INOPERATIVA</option>
+              <option value="MANTENIMIENTO">MANTENIMIENTO</option>
+            </select>
+          </div>
+        </div>
+
+        <div>
+          <label class="text-xs text-slate-400 font-semibold block mb-1">Ubicación</label>
+          <input type="text" id="camUbicacion" placeholder="Ej: AV. TOMAS VALLE CDRA 17..." required class="w-full bg-[#030712] border border-slate-800 rounded-xl p-2.5 text-xs text-white focus:outline-none focus:border-amber-500">
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="text-xs text-slate-400 font-semibold block mb-1">Urbanización</label>
+            <input type="text" id="camUrb" placeholder="Ej: URB. EL TREBOL" class="w-full bg-[#030712] border border-slate-800 rounded-xl p-2.5 text-xs text-white focus:outline-none focus:border-amber-500">
+          </div>
+          <div>
+            <label class="text-xs text-slate-400 font-semibold block mb-1">Zona / Sector</label>
+            <input type="text" id="camZona" placeholder="Ej: SUR 5 B" class="w-full bg-[#030712] border border-slate-800 rounded-xl p-2.5 text-xs text-white focus:outline-none focus:border-amber-500">
+          </div>
+        </div>
+
+        <div>
+          <label class="text-xs text-slate-400 font-semibold block mb-1">Suministro</label>
+          <input type="text" id="camSuministro" placeholder="Ingrese el código de suministro..." class="w-full bg-[#030712] border border-slate-800 rounded-xl p-2.5 text-xs text-white focus:outline-none focus:border-amber-500">
+        </div>
+
+        <div class="flex justify-end gap-2 pt-2">
+          <button type="button" onclick="closeModal()" class="px-4 py-2 rounded-xl bg-slate-800 text-slate-300 text-xs font-bold hover:bg-slate-700">Cancelar</button>
+          <button type="submit" class="px-5 py-2 rounded-xl bg-amber-500 text-black text-xs font-black hover:bg-amber-400">Guardar Cámara</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    const CURRENT_SYS_VERSION = "cioe_v300_vecinales_editable_dropdown";
+    if (localStorage.getItem("sys_ver") !== CURRENT_SYS_VERSION) {
+      localStorage.clear();
+      localStorage.setItem("sys_ver", CURRENT_SYS_VERSION);
+    }
+
+    const SUMINISTROS_LIST = [
+      "2519868","2519882","2519892","2519901","2519905","2519922","2519959","2519964","2519999","2520008",
+      "2520012","2520014","2520026","2520028","MDLO/PALACIO","2520031","2520036","2520041","2520050","2520060",
+      "2520065","2520069","2520078","2520080","2520091","2520096","2520101","2520113","2520118","2520121",
+      "2520123","2520129","MDLO/BOMBA H2O","2520132","2520135","2520138","2520141","MDLO/BOMBA H2O/1674323","2520144","2520146",
+      "2520148","2520150","2520154","2520159","2642269","2600933","2600945","2600947","2600948","2600949",
+      "2600950","2600951","2600966","2600970","2600997","2599043","2599072","2599112","2599113","2599122",
+      "2599123","2599394","2599400","2599401","2599402","2599405","2599407","2599726","2599761","2599779",
+      "2599781","2599784","2599789","2599796","2599801","2599806","2599809","2599810","2600020","2600877",
+      "2600883","2600899","2600904","2600914","2600930","2765427","2765434","2765440","2765466","2765467",
+      "2765492","2765493","2765498","2765500","2765501","2766034","2767923","2766038","2766042","2766046",
+      "2766052","2766053","2766055","2766057","2766058","2766059","2766061","2766062","2766063","2766065",
+      "2766066","2766067","2766070","2766071","2766073","2766075","2766234","2766289","2766305","2766309",
+      "2766312","2766316","2766493","2766340","2766341","2766342","2760496","2766344","2766500","2766345",
+      "2766346","2766348","2766349","2766350","2766377","2766384","2766391","2766399","2766406","2766413",
+      "2766419","2766423","2766425","2766437","2766441","2766447","2826756","2826758","2826760","2826763",
+      "2826765","2826768","2827723","2827739","2827748","2827757","2841135","2827454","2827448","2827628",
+      "2827631","2841139","2827644","2827646","2827651","2827650","2853862","2827653","2841137","2826770",
+      "2826777","2827662","2827664","2827667","2827668","2846057","2841141","2827671","2902124","2902121",
+      "2902119","2902117","2902114","2902112","2902111","2902103","2902098","2902043","2902097","2902096",
+      "2902095","2902129","2902131","2961188","2961190","2961193","2961194","2961201","2961203","2961332",
+      "2963439","2961221","2961224","2961375","2961233","2961377","2961378","2961380","2961234","2988550",
+      "2961236","2961239","2961241","2961381","2961247","2961248","2961257","2961296","2961298","2961301",
+      "2961364","2961315","2961320","2961323","3007661","3007662","3007663","3007668","3007755","3007756",
+      "3007757","3007759","3007760","3007763","3007766","3007770","3007774","3007777","3007778","3007781",
+      "3007784","3007785","2766312CAM121","3007788","3007796","3007802","3007803","3007805","3007808","3007809",
+      "3007811","3007813","3007815","3007816","3052047","3052649","3052051","3052650","3052056","3052061",
+      "3052062","3052064","3079579","3052647","3052642","3052640","3052633","3052629","3052628","3052626",
+      "3052622","CAM-036","CAM-058","NO CUENTA CON SUMINISTRO","NO CUENTA CON SUMINISTRO","NO CUENTA CON SUMINISTRO",
+      "NO CUENTA CON SUMINISTRO","NO CUENTA CON SUMINISTRO","NO CUENTA CON SUMINISTRO","NO CUENTA CON SUMINISTRO",
+      "NO CUENTA CON SUMINISTRO","NO CUENTA CON SUMINISTRO","NO CUENTA CON SUMINISTRO","NO CUENTA CON SUMINISTRO","NO CUENTA CON SUMINISTRO"
+    ];
+
+    const RAW_CAMERAS = [
+      { id: 1, camara: 1, estacion: "ESTACION 9", sistema: "DSS", ubicacion: "AV. TOMAS VALLE CDRA 17 / AV. UNIVERSITARIA CDRA 10", urbanizacion: "AA.HH. DANIEL ALCIDES CARRION", zona: "SUR 5 B" },
+      { id: 2, camara: 2, estacion: "ESTACION 8", sistema: "DSS", ubicacion: "AV. TOMAS VALLE CDRA 13 / CALLE SAN ALBERTO", urbanizacion: "AA.HH. SAN ALBERTO", zona: "SUR 5 B" },
+      { id: 3, camara: 3, estacion: "ESTACION 3", sistema: "HIK", ubicacion: "AV. TOMAS VALLE CDRA 11 / CALLE LOS GERANIOS", urbanizacion: "AA.HH. 5 DE AGOSTO", zona: "SUR 5 B" },
+      { id: 4, camara: 4, estacion: "ESTACION 3", sistema: "HIK", ubicacion: "AV. TOMAS VALLE CDRA 10 / AV. BETA", urbanizacion: "URB. VIRGEN DE LA PUERTA", zona: "SUR 5 B" },
+      { id: 5, camara: 5, estacion: "ESTACION 18", sistema: "IVS", ubicacion: "AV. TOMAS VALLE CDRA 09 / AV. ALFA", urbanizacion: "URB. EL TREBOL IV ETAPA", zona: "SUR 5 D" },
+      { id: 6, camara: 6, estacion: "ESTACION 8", sistema: "DSS", ubicacion: "AV. TOMAS VALLE CDRA 07 / JR. MIGUEL BASTIDAS PUMACAHUA", urbanizacion: "URB. EL TREBOL I ETAPA", zona: "SUR 5 D" },
+      { id: 7, camara: 7, estacion: "ESTACION 19", sistema: "IVS", ubicacion: "AV. TOMAS VALLE CDRA 5 / AV. ALFREDO MENDIOLA CDRA 19", urbanizacion: "URB. EL TREBOL I ETAPA", zona: "SUR 5 D" },
+      { id: 8, camara: 8, estacion: "ESTACION 8", sistema: "DSS", ubicacion: "AV. ALFREDO MENDIOLA / AV. ANGÉLICA GAMARRA (PILAS) CDRA 01", urbanizacion: "URB. SOL DE ORO", zona: "SUR 4 B" },
+      { id: 9, camara: 9, estacion: "ESTACION 3", sistema: "HIK", ubicacion: "AV. ANGÉLICA GAMARRA CDRA 03 / AV. TRÉBOL", urbanizacion: "URB. EL TREBOL II ETAPA", zona: "SUR 4 B" },
+      { id: 10, camara: 10, estacion: "ESTACION 3", sistema: "HIK", ubicacion: "AV. ANGÉLICA GAMARRA CDRA 5 / CALLE 8", urbanizacion: "URB. TAURIJA", zona: "SUR 5 C" },
+      { id: 11, camara: 11, estacion: "ESTACION 3", sistema: "HIK", ubicacion: "AV. ANGÉLICA GAMARRA CDRA 8 / AV. BETA", urbanizacion: "URB. EL TREBOL III ETAPA", zona: "SUR 5 B" },
+      { id: 12, camara: 12, estacion: "ESTACION 3", sistema: "HIK", ubicacion: "AV. ANGÉLICA GAMARRA CDRA 11 / CALLE LAS ROSAS", urbanizacion: "URB. SANTA ROSA DE LIMA", zona: "SUR 5 B" },
+      { id: 13, camara: 13, estacion: "ESTACION 18", sistema: "IVS", ubicacion: "AV. ANGÉLICA GAMARRA CDRA 13 / CALLE CESAR VALLEJO", urbanizacion: "AA.HH. MARTIRES DEL SUTEP", zona: "SUR 5 A" },
+      { id: 14, camara: 14, estacion: "PAR OLIVAR", sistema: "IVS", ubicacion: "AV. ANGÉLICA GAMARRA CDRA 18 / AV. UNIVERSITARIA CDRA 36", urbanizacion: "URB. SANTA ROSA DE LIMA", zona: "SUR 5 B" },
+      { id: 15, camara: 15, estacion: "ESTACION 15", sistema: "HIK", ubicacion: "AV. UNIVERSITARIA CDRA 20 / CALLE LAS TORRES", urbanizacion: "COOP. LA LIBERTAD", zona: "SUR 5 A" },
+      { id: 16, camara: 16, estacion: "ESTACION 15", sistema: "HIK", ubicacion: "AV. UNIVERSITARIA CDRA 34/ AV. ANTÚNEZ DE MAYOLO CDRA 16", urbanizacion: "COOP. EL OLIVAR", zona: "SUR 3 B" },
+      { id: 17, camara: 17, estacion: "ESTACION 11", sistema: "DSS", ubicacion: "AV. UNIVERSITARIA CDRA 37 / AV. CARLOS IZAGUIRRE CDRA 15", urbanizacion: "COOP. CAJABAMBA", zona: "SUR 2 B" },
+      { id: 18, camara: 18, estacion: "PAR AZNAPUQUIO", sistema: "DSS", ubicacion: "AV. UNIVERSITARIA CDRA 41 / CALLE MARFIL", urbanizacion: "COOP. HUAYTAPALLANA", zona: "SUR 2 B" },
+      { id: 19, camara: 19, estacion: "ESTACION 3", sistema: "HIK", ubicacion: "AV. UNIVERSITARIA CDRA 46 / AV. ALISOS CDRA 11", urbanizacion: "AA.HH. LOS JAZMINES DEL NARANJAL", zona: "SUR 1 A" },
+      { id: 20, camara: 20, estacion: "ESTACION 3", sistema: "HIK", ubicacion: "AV. ALISOS CDRA 13 / CALLE NO 29", urbanizacion: "AA.HH. LOS JAZMINES DEL NARANJAL", zona: "SUR 1 A" },
+      { id: 21, camara: 21, estacion: "ESTACION 3", sistema: "HIK", ubicacion: "AV. ALISOS CDRA 15 / AV. PRÓCERES DE HUANDOY CDRA 47", urbanizacion: "AA.HH. LOS JAZMINES DEL NARANJAL", zona: "SUR 1 A" },
+      { id: 22, camara: 22, estacion: "ESTACION 3", sistema: "HIK", ubicacion: "AV. PRÓCERES DE HUANDOY CDRA 48 / CALLE LOS JAZMINES", urbanizacion: "AA.HH. LOS JAZMINES DEL NARANJAL", zona: "SUR 1 A" },
+      { id: 23, camara: 23, estacion: "PAR CANTA CALLAO", sistema: "DSS", ubicacion: "AV. PRÓCERES DE HUANDOY CDRA 49/ AV. NARANJAL CDRA 15", urbanizacion: "URB. EL PARQUE DEL NARANJAL", zona: "CENTRO 1 A" },
+      { id: 24, camara: 24, estacion: "ESTACION 3", sistema: "HIK", ubicacion: "AV. NARANJAL CDRA 13", urbanizacion: "AA.HH. 19 DE MAYO", zona: "CENTRO 2 A" },
+      { id: 25, camara: 25, estacion: "ESTACION 8", sistema: "DSS", ubicacion: "AV. NARANJAL CDRA 12 / AV. UNIVERSITARIA CDRA. 49 (FRENTE A GRIFO)", urbanizacion: "URB. PARQUE DE NARANJAL II ETAPA", zona: "SUR 1 A" },
+      { id: 26, camara: 26, estacion: "PAR CENTRO CÍVICO", sistema: "IVS", ubicacion: "NARANJAL CDRA 11 / AV. UNIVERSITARIA CDRA. 49 (CENTRO DE PISTA)", urbanizacion: "URB. PARQUE DE NARANJAL II ETAPA", zona: "SUR 2 A" },
+      { id: 27, camara: 27, estacion: "PAR CENTRO CÍVICO", sistema: "DSS", ubicacion: "AV. ALISOS CDRA 09 / CALLE FRANCISCO IZQUIERDO", urbanizacion: "AA.HH. 13 DE MAYO", zona: "SUR 2 A" },
+      { id: 28, camara: 28, estacion: "ESTACION 3", sistema: "HIK", ubicacion: "AV. ALISOS CDRA 7 / AV. PALMERAS CDRA 43", urbanizacion: "URB. MICAELA BASTIDAS I ETAPA", zona: "SUR 2 B" },
+      { id: 29, camara: 29, estacion: "ESTACION 4", sistema: "HIK", ubicacion: "AV. PALMERAS CDRA 45 / ALAMEDA. VICTORIA BARCIA BONIFATI", urbanizacion: "C.H. CARLOS CUETO FERNANDINI", zona: "SUR 2 C" },
+      { id: 30, camara: 30, estacion: "ESTACION 4", sistema: "HIK", ubicacion: "AV. PALMERAS CDRA 47 / AV. NARANJAL CDRA 07", urbanizacion: "URB. PARQUE DE NARANJAL II ETAPA", zona: "SUR 2 A" },
+      { id: 31, camara: 31, estacion: "ESTACION 4", sistema: "HIK", ubicacion: "AV. NARANJAL CDRA 05 / JR. MARCARÁ", urbanizacion: "URB. PARQUE DE NARANJAL I ETAPA", zona: "SUR 2 C" },
+      { id: 32, camara: 32, estacion: "ESTACION 19", sistema: "IVS", ubicacion: "AV. NARANJAL / ALFREDO MENDIOLA CDRA. 50", urbanizacion: "URB. PARQUE DE NARANJAL I ETAPA", zona: "SUR 2 D" },
+      { id: 33, camara: 33, estacion: "ESTACION 19", sistema: "IVS", ubicacion: "AV. ALFREDO MENDIOLA CDRA 47 / CALLE PARIAHUANCA", urbanizacion: "URB. PREVI NARANJAL", zona: "SUR 2 C" },
+      { id: 34, camara: 34, estacion: "ESTACION 8", sistema: "DSS", ubicacion: "AV. ALFREDO MENDIOLA CDRA 41 / AV. ALISOS CDRA 05", urbanizacion: "URB. MICAELA BASTIDAS I ETAPA", zona: "SUR 2 D" },
+      { id: 35, camara: 35, estacion: "ESTACION 19", sistema: "IVS", ubicacion: "AV. ALFREDO MENDIOLA CDRA 37 / AV. CARLOS IZAGUIRRE CDRA 3", urbanizacion: "URB. PANAMERICANA NORTE", zona: "SUR 2 D" },
+      { id: 36, camara: 36, estacion: "ESTACION 19", sistema: "IVS", ubicacion: "AV. ALFREDO MENDIOLA CDRA 33 / CALLE. MANUEL A. SEGURA", urbanizacion: "URB. PANAMERICANA NORTE", zona: "SUR 4 A" },
+      { id: 37, camara: 37, estacion: "ESTACION 19", sistema: "IVS", ubicacion: "AV. ALFREDO MENDIOLA CDRA 25/ PASAJE. LOS PLANETAS (SENATI)", urbanizacion: "URB. SOL DE ORO", zona: "SUR 4 A" },
+      { id: 38, camara: 38, estacion: "PAR MAYOLO", sistema: "IVS", ubicacion: "AV. CARLOS IZAGUIRRE CDRA 8 / AV. PALMERAS CDRA 39", urbanizacion: "URB. MERCURIO I ETAPA", zona: "SUR 3 B" },
+      { id: 39, camara: 39, estacion: "PAR MAYOLO", sistema: "DSS", ubicacion: "AV. ANTÚNEZ DE MAYOLO CDRA 11 / JR. ESCORPIÓN", urbanizacion: "URB. MERCURIO I ETAPA", zona: "SUR 3 B" },
+      { id: 40, camara: 40, estacion: "ESTACION 4", sistema: "HIK", ubicacion: "AV. UNIVERSITARIA CDRA 47 / TERESA G", urbanizacion: "AA.HH. SANTA ROSA DE NARANJAL", zona: "SUR 2 A" },
+      { id: 41, camara: 41, estacion: "PAR CUETO", sistema: "DSS", ubicacion: "AV. ALISOS CDRA 06 / CALLE. JAIME BAUZATE", urbanizacion: "C.H. CARLOS CUETO FERNANDINI", zona: "SUR 2 C" },
+      { id: 42, camara: 42, estacion: "ESTACION 19", sistema: "IVS", ubicacion: "AV. PALMERAS CDRA 41 /JR. LOS AMARANTOS", urbanizacion: "URB. LAS PALMERAS II ETAPA", zona: "SUR 2 D" },
+      { id: 43, camara: 43, estacion: "ESTACION 19", sistema: "IVS", ubicacion: "AV. CARLOS IZAGUIRRE CDRA 05 / JR. SANTOS CHOCANO", urbanizacion: "URB. LAS PALMERAS II ETAPA", zona: "SUR 2 D" },
+      { id: 44, camara: 44, estacion: "ESTACION 8", sistema: "DSS", ubicacion: "AV. CARLOS IZAGUIRRE CDRA 11 / JR. CONOCOCHA", urbanizacion: "URB. COVIDA III ETAPA", zona: "SUR 2 B" },
+      { id: 45, camara: 45, estacion: "ESTACION 8", sistema: "DSS", ubicacion: "AV. UNIVERSITARIA CDRA 15 / CALLE SANTA ROSA", urbanizacion: "PARCELA REF EL CAMAL", zona: "SUR 5 B" },
+      { id: 46, camara: 46, estacion: "ESTACION 8", sistema: "DSS", ubicacion: "AV. TOMAS CATARÍ / JR. PEDRO SANTOS (REF. CDRA 05-06 T. VALLE)", urbanizacion: "URB. EL TREBOL I ETAPA", zona: "SUR 5 D" },
+      { id: 47, camara: 47, estacion: "ESTACION 9", sistema: "DSS", ubicacion: "CALLE. G. CARO / CALLE. 6 DE NOVIEMBRE", urbanizacion: "AA.HH 6 DE NOVIEMBRE", zona: "SUR 5 A" },
+      { id: 48, camara: 48, estacion: "ESTACION 8", sistema: "DSS", ubicacion: "JR. LOS CHASQUIS / JR. LOS GORRIONES", urbanizacion: "URB. EL TREBOL II ETAPA", zona: "SUR 5 C" },
+      { id: 49, camara: 49, estacion: "ESTACION 4", sistema: "HIK", ubicacion: "AV. VENUS CDRA 72 / AV. TREBOL (REF. CDRA 3 GAMARRA)", urbanizacion: "URB. EL TREBOL II ETAPA", zona: "SUR 4 B" },
+      { id: 50, camara: 50, estacion: "ESTACION 8", sistema: "DSS", ubicacion: "JR. ALFREDO MENDIOLA CDRA 35/ JR. PACHACÚTEC", urbanizacion: "URB. PANAMERICANA NORTE", zona: "SUR 4 A" },
+      { id: 51, camara: 51, estacion: "ESTACION 8", sistema: "DSS", ubicacion: "JR. PACHACÚTEC / PARQUE MARÍA DE LOS ÁNGELES", urbanizacion: "URB. VILLA LOS ANGELES", zona: "SUR 4 A" },
+      { id: 52, camara: 52, estacion: "ESTACION 5", sistema: "HIK", ubicacion: "AV. MANUEL GONZALES PRADA / JR. MAX PALMA ARRUÉ / PARQUE EL TRIANGULO", urbanizacion: "URB. MERCURIO III ETAPA", zona: "SUR 4 A" },
+      { id: 53, camara: 53, estacion: "ESTACION 9", sistema: "DSS", ubicacion: "AV. SANTIAGO ANTÚNEZ DE MAYOLO CDRA 10 / CA. LAS HILADAS", urbanizacion: "URB. MERCURIO I ETAPA", zona: "SUR 3 B" },
+      { id: 54, camara: 54, estacion: "PAR MAYOLO", sistema: "DSS", ubicacion: "JR. 17 DE DICIEMBRE / CALLE. CHIMBOTE", urbanizacion: "URB. COVIDA II ETAPA", zona: "SUR 3 B" },
+      { id: 55, camara: 55, estacion: "ESTACION 5", sistema: "IVS", ubicacion: "JR. POMABAMBA / CA. VIRGEN DEL CARMEN", urbanizacion: "URB. LOS PINARES", zona: "SUR 3 A" },
+      { id: 56, camara: 56, estacion: "ESTACION 4", sistema: "HIK", ubicacion: "JR. CHACAS / JR. ORIÓN", urbanizacion: "URB. MERCURIO I ETAPA", zona: "SUR 3 A" },
+      { id: 57, camara: 57, estacion: "ESTACION 9", sistema: "DSS", ubicacion: "AV. AMARGÓN / PSJE. LA HIEDRA (ALTURA DE LA CDRA. 39)", urbanizacion: "URB. LAS PALMERAS IV ETAPA", zona: "SUR 2 B" },
+      { id: 58, camara: 58, estacion: "PAR AZNAPUQUIO", sistema: "DSS", ubicacion: "JR. AMARANTOS / PSJE. LARCO HERRERA", urbanizacion: "URB. MICAELA BASTIDAS I ETAPA", zona: "SUR 2 D" },
+      { id: 59, camara: 59, estacion: "PAR CUETO", sistema: "DSS", ubicacion: "AV. PALMERAS CDRA 46 / JR. PARIAHUANCA CDRA 7", urbanizacion: "URB. PARQUE DE NARANJAL I ETAPA", zona: "SUR 2 C" },
+      { id: 60, camara: 60, estacion: "ESTACION 19", sistema: "IVS", ubicacion: "JR. LOS HORNOS ALFREDO MENDIOLA CDRA 52", urbanizacion: "INDUSTRIAL INFANTAS I ETAPA II SECTOR", zona: "CENTRO 4 B" },
+      { id: 61, camara: 61, estacion: "ESTACION 8", sistema: "DSS", ubicacion: "AV. NARANJAL CDRA 3/ JR. LOS YUNQUES (HOSPITAL MUNICIPAL)", urbanizacion: "INDUSTRIAL INFANTAS I ETAPA II SECTOR", zona: "CENTRO 4 B" },
+      { id: 62, camara: 62, estacion: "ESTACION 9", sistema: "DSS", ubicacion: "CALL. 1 / CALLE 1 (POLICLÍNICO VILLA SOL)", urbanizacion: "URB. LOS PARQUES DE VILLA SOL", zona: "CENTRO 3 B" },
+      { id: 63, camara: 63, estacion: "ESTACION 4", sistema: "HIK", ubicacion: "AV. LOS PLATINOS CDRA 55/ CAR. PANAMERICANA NORTE", urbanizacion: "INDUSTRIAL INFANTAS I ETAPA II SECTOR", zona: "CENTRO 4 B" },
+      { id: 64, camara: 64, estacion: "ESTACION 9", sistema: "DSS", ubicacion: "AV. MARAÑÓN / AV. ALFREDO MENDIOLA CDRA 55", urbanizacion: "URB. VILLA DEL NORTE", zona: "CENTRO 3 D" },
+      { id: 65, camara: 65, estacion: "ESTACION 5", sistema: "HIK", ubicacion: "AV. PALMERAS CDRA 57/ AV. ALFREDO MENDIOLA CDRA 56", urbanizacion: "URB. VILLA DEL NORTE", zona: "CENTRO 3 B" },
+      { id: 66, camara: 66, estacion: "ESTACION 18", sistema: "IVS", ubicacion: "AV. UNIVERSITARIA CDRA 62 / UNIVERSIDAD UCH", urbanizacion: "LOTIZACIÓN INDUSTRIAL MOLITALIA", zona: "NORTE 4 B" },
+      { id: 67, camara: 67, estacion: "ESTACION 7", sistema: "HIK", ubicacion: "AV. EL ZINC CDRA 01 / AV. GERARDO UNGER", urbanizacion: "INDUSTRIAL INFANTAS III ETAPA I SECTOR", zona: "CENTRO 4 A" },
+      { id: 68, camara: 68, estacion: "ESTACION 5", sistema: "HIK", ubicacion: "AV. LAS PALMERAS CDRA 56 / CAL. MARIANO BENAVIDES", urbanizacion: "URB. VILLA SOL IV ETAPA", zona: "CENTRO 3 B" },
+      { id: 69, camara: 69, estacion: "ESTACION 11", sistema: "DSS", ubicacion: "AV. LAS PALMERAS CDRA 53 / AV. MARAÑÓN CDRA 6", urbanizacion: "URB. VILLA DEL NORTE", zona: "CENTRO 3 D" },
+      { id: 70, camara: 70, estacion: "ESTACION 9", sistema: "DSS", ubicacion: "AV. MARAÑÓN CDRA 07 / AV. UNIVERSITARIA CDRA 54", urbanizacion: "URB. VILLA SOL IV ETAPA", zona: "CENTRO 3 B" },
+      { id: 71, camara: 71, estacion: "PAR CANTA CALLAO", sistema: "DSS", ubicacion: "CA. NO 31 / AV. LOS PROCERES DE HUANDOY CDRA 51", urbanizacion: "AA.HH. LAURA CALLER", zona: "CENTRO 2 A" },
+      { id: 72, camara: 72, estacion: "PAR CANTA CALLAO", sistema: "DSS", ubicacion: "AV. PROCERES DE HUANDOY CDRA 8 / AV. MARAÑÓN", urbanizacion: "AA.HH. LAURA CALLER", zona: "CENTRO 2 B" },
+      { id: 73, camara: 73, estacion: "ESTACION 4", sistema: "HIK", ubicacion: "AV. PROCERES DE HUANDOY CDRA 22 / CA. 40", urbanizacion: "AA.HH. LAURA CALLER", zona: "CENTRO 2 B" },
+      { id: 74, camara: 74, estacion: "ESTACION 10", sistema: "IVS", ubicacion: "AV. PROCERES DE HUANDOY CDRA 19 / AV. A CDRA 7", urbanizacion: "AA.HH. SAN MARTÍN DE PORRES", zona: "CENTRO 1 C" },
+      { id: 75, camara: 75, estacion: "ESTACION 9", sistema: "DSS", ubicacion: "CA. ORIÓN / JR. ATENAS", urbanizacion: "URB. ASOC. DE VIVIENDA URBANIZADORA SAN ROQUE", zona: "CENTRO 1 C" },
+      { id: 76, camara: 76, estacion: "ESTACION 10", sistema: "DSS", ubicacion: "AV. SANTA ELVIRA CDRA 59 / AV. UNIVERSITARIA CDRA 61", urbanizacion: "URB. VILLA SOL II ETAPA", zona: "CENTRO 2 C" },
+      { id: 77, camara: 77, estacion: "ESTACION 4", sistema: "HIK", ubicacion: "AV. ALFREDO MENDIOLA CDRA 60/ PASAJE (PARQUE CENEPA)", urbanizacion: "URB. VILLA SOL I ETAPA", zona: "CENTRO 2 C" },
+      { id: 78, camara: 78, estacion: "ESTACION 9", sistema: "DSS", ubicacion: "AV. ALFREDO MENDIOLA / MANUEL DE LARA", urbanizacion: "URB. VILLA SOL I ETAPA", zona: "CENTRO 2 C" },
+      { id: 79, camara: 79, estacion: "ESTACION 10", sistema: "DSS", ubicacion: "AV. PROCERES DE HUANDOY CDRA 14/ AV. CENTRAL CDRA 06", urbanizacion: "URB. ASOC. DE VIVIENDA URBANIZADORA SAN ROQUE", zona: "NORTE 5 A" },
+      { id: 80, camara: 80, estacion: "ESTACION 5", sistema: "HIK", ubicacion: "AV. BETANCOURT (AV. B) CDRA / AV. CENTRAL CDRA 09", urbanizacion: "AA.HH. ENRIQUE MILLA OCHOA", zona: "CENTRO 1 C" },
+      { id: 81, camara: 81, estacion: "ESTACION 5", sistema: "IVS", ubicacion: "AV. BETANCOURT CDRA 10 / AV. SAN MARTÍN", urbanizacion: "AA.HH. ENRIQUE MILLA OCHOA", zona: "NORTE 5 A" },
+      { id: 82, camara: 82, estacion: "ESTACION 9", sistema: "DSS", ubicacion: "AV. BETANCOURT / AV. 2 DE OCTUBRE CDRA. 10", urbanizacion: "RB. SANTA ANA", zona: "NORTE 5 A" },
+      { id: 83, camara: 83, estacion: "ESTACION 9", sistema: "DSS", ubicacion: "AV. PROCERES DE HUANDOY CDRA 66 / AV. 2 DE OCTUBRE CDRA 07", urbanizacion: "AA.HH. LOS ROSALES DE PRO", zona: "NORTE 4 A" },
+      { id: 84, camara: 84, estacion: "ESTACION 10", sistema: "HIK", ubicacion: "AV. SANTA ELVIRA CDRA 61 / AV. CENTRAL CDRA 4", urbanizacion: "URB. PARC. RESIDENCIAL SANTA LUISA II ETAPA", zona: "NORTE 4 A" },
+      { id: 85, camara: 85, estacion: "ESTACION 8", sistema: "DSS", ubicacion: "AV. CENTRAL CDRA 01 / AV. ALFREDO MENDIOLA CDRA 61", urbanizacion: "URB. PARC. RESIDENCIAL SANTA LUISA II ETAPA", zona: "NORTE 4 A" },
+      { id: 86, camara: 86, estacion: "PAR BETA", sistema: "DSS", ubicacion: "JR. GAMA (CALLE 26)", urbanizacion: "URB. EL TREBOL III ETAPA", zona: "SUR 5 B" },
+      { id: 87, camara: 87, estacion: "PAR BETA", sistema: "DSS", ubicacion: "JR. GUAYABAS / CALLE LOS GUINDONES", urbanizacion: "URB. VIRGEN DE LA PUERTA", zona: "SUR 5 B" },
+      { id: 88, camara: 88, estacion: "PAR OLIVAR", sistema: "DSS", ubicacion: "JR. LOS CARRIZOS MZ. L LTE. 15 / (PARQUE SAN VALENTÍN)", urbanizacion: "URB. VIRGEN DE LA PUERTA", zona: "SUR 5 B" },
+      { id: 89, camara: 89, estacion: "PAR OLIVAR", sistema: "DSS", ubicacion: "JR. LOS ROSALES / JR. GIRASOLES", urbanizacion: "AA.HH. DANIEL ALCIDES CARRION", zona: "SUR 5 B" },
+      { id: 90, camara: 90, estacion: "PAR BETA", sistema: "DSS", ubicacion: "JR. LAS GUAYABAS / JR. SIMÓN BOLÍVAR", urbanizacion: "URB. EL TREBOL III ETAPA", zona: "SUR 5 B" },
+      { id: 91, camara: 91, estacion: "PAR BETA", sistema: "DSS", ubicacion: "JR. JUAN SANTOS ATAHUALPA MZ. M / JR. LOS PINOS", urbanizacion: "URB. EL TREBOL III ETAPA", zona: "SUR 5 B" },
+      { id: 92, camara: 92, estacion: "ESTACION 9", sistema: "DSS", ubicacion: "CALLE VIRGEN DE LAS MERCEDES MZ. E LT. 4 / MZ. A", urbanizacion: "AA.HH. MARGINAL LAS MERCEDES", zona: "SUR 5 C" },
+      { id: 93, camara: 93, estacion: "ESTACION 6", sistema: "HIK", ubicacion: "JR. CAJAHUAMAN (PARQUE BETA)", urbanizacion: "URB. EL TREBOL III ETAPA", zona: "SUR 5 B" },
+      { id: 94, camara: 94, estacion: "ESTACION 6", sistema: "HIK", ubicacion: "AV. BETA/ JR. LOS GIRASOLES", urbanizacion: "URB. EL TREBOL III ETAPA", zona: "SUR 5 B" },
+      { id: 95, camara: 95, estacion: "PAR BETA", sistema: "DSS", ubicacion: "JR. ANTONIO CABO NO 843/ CALLE 34", urbanizacion: "URB. EL TREBOL III ETAPA", zona: "SUR 5 D" },
+      { id: 96, camara: 96, estacion: "PAR BETA", sistema: "DSS", ubicacion: "CALLE 32 MZ. E LT. 31 Nº2096 (PARQUE LOS BANCARIOS)", urbanizacion: "URB. EL TREBOL III ETAPA", zona: "SUR 5 D" },
+      { id: 97, camara: 97, estacion: "ESTACION 9", sistema: "DSS", ubicacion: "CALLE CHAYANTA / JR. CAJAHUAMAN (PARQUE GLORIA PORTOCARRERO)", urbanizacion: "URB. EL TREBOL IV ETAPA", zona: "SUR 5 D" },
+      { id: 98, camara: 98, estacion: "ESTACION 9", sistema: "DSS", ubicacion: "CALLE IGNACIO TOROTE / CALLE MIGUEL BASTIDAS PUMACAHUA", urbanizacion: "URB. EL TREBOL IV ETAPA", zona: "SUR 5 D" },
+      { id: 99, camara: 99, estacion: "ESTACION 6", sistema: "HIK", ubicacion: "CA. GLADIOLOS/ CA. LOS ALAMOS", urbanizacion: "URB. PEREGRINO DEL SEÑOR", zona: "CENTRO 3 A" },
+      { id: 100, camara: 100, estacion: "ESTACION 10", sistema: "DSS", ubicacion: "AV. UNIVERSITARIA MZ. C LT. 22/ CA. MANTENEROS", urbanizacion: "ASOC. LOS OLIVOS(RESIDENCIAL)", zona: "CENTRO 3 A" },
+      { id: 101, camara: 101, estacion: "PAR CUETO", sistema: "DSS", ubicacion: "CALLE ORTIZ FRENTE MZ. L LT. 7 /CALLE EUCALIPTOS", urbanizacion: "ASOC. LOS OLIVOS(RESIDENCIAL)", zona: "CENTRO 3 A" },
+      { id: 102, camara: 102, estacion: "PAR CENTRO CÍVICO", sistema: "DSS", ubicacion: "CA. LOS CIPRESES MZ. H / CA. S/N", urbanizacion: "ASOC. AMÉRICA", zona: "CENTRO 3 A" },
+      { id: 103, camara: 103, estacion: "ESTACION 19", sistema: "IVS", ubicacion: "ALT. DE LA CDRA 52 DE AV. UNIVERSITARIA/ENTRE LA MZ. C Y G", urbanizacion: "ASOC. LOS OLIVOS(RESIDENCIAL)", zona: "CENTRO 3 A" },
+      { id: 104, camara: 104, estacion: "ESTACION 11", sistema: "DSS", ubicacion: "JR. LA CATÓLICA PARQUE SIGLO XXI ALT. DEL COMEDOR 19 DE MAYO (MZ. K)", urbanizacion: "URB. VILLA UNIVERSITARIA", zona: "CENTRO 2 A" },
+      { id: 105, camara: 105, estacion: "ESTACION 11", sistema: "DSS", ubicacion: "R. SAN IGNACIO DEL LOYOLA /PARQUE PRINCIPE DE ASTURIAS (ALT. DE LA MZ. L LT. 09", urbanizacion: "URB. VILLA UNIVERSITARIA", zona: "CENTRO 2 A" },
+      { id: 106, camara: 106, estacion: "PAR MAYOLO", sistema: "DSS", ubicacion: "CALLE HILADAS/ PARQUE TULIPANES", urbanizacion: "URB. MERCURIO II ETAPA", zona: "SUR 3 B" },
+      { id: 107, camara: 107, estacion: "ESTACION 19", sistema: "IVS", ubicacion: "JR. LOS ALHELÍES / JR. LAS MAGNOLIAS", urbanizacion: "URB. PEREGRINO DEL SEÑOR", zona: "CENTRO 3 A" },
+      { id: 108, camara: 108, estacion: "ESTACION 6", sistema: "HIK", ubicacion: "JR. LAS BEGONIAS /ALMENDROS REF.: MZ. C LT. 11", urbanizacion: "ASOC. SUIZA PERUANA", zona: "CENTRO 3 A" },
+      { id: 109, camara: 109, estacion: "ESTACION 11", sistema: "DSS", ubicacion: "JR. SAN MARCOS MZ K LT. 21 / JR. PACIFICO (PQ. ALFRED NOBELL)", urbanizacion: "URB. VILLA UNIVERSITARIA", zona: "CENTRO 2 A" },
+      { id: 110, camara: 110, estacion: "ESTACION 11", sistema: "DSS", ubicacion: "CALLE RAQUIA / CALLE LLUMPA", urbanizacion: "URB. PARQUE DE NARANJAL II ETAPA", zona: "SUR 1 A" },
+      { id: 111, camara: 111, estacion: "ESTACION 11", sistema: "DSS", ubicacion: "CALLE HUAYLAS / CALLE PAMPAS", urbanizacion: "URB. PARQUE DE NARANJAL II ETAPA", zona: "SUR 1 A" },
+      { id: 112, camara: 112, estacion: "PAR CANTA CALLAO", sistema: "DSS", ubicacion: "JR. YARACMARCA / CALLE. 19", urbanizacion: "URB. LOS NARANJOS", zona: "CENTRO 1 A" },
+      { id: 113, camara: 113, estacion: "ESTACION 6", sistema: "HIK", ubicacion: "JR. YARACMARCA / JR. COLCAS", urbanizacion: "URB. LOS NARANJOS", zona: "CENTRO 1 A" },
+      { id: 114, camara: 114, estacion: "ESTACION 11", sistema: "DSS", ubicacion: "CA. JUSTO ARIAS ARAGUEZ CON JR. CLETO MARTÍNEZ", urbanizacion: "URB. VILLA SOL I ETAPA", zona: "CENTRO 2 C" },
+      { id: 115, camara: 115, estacion: "ESTACION 6", sistema: "HIK", ubicacion: "CA. CLETO MARTÍNEZ Nº170 /CA. RICARDO O'DONOVAN", urbanizacion: "URB. VILLA SOL I ETAPA", zona: "CENTRO 2 C" },
+      { id: 116, camara: 116, estacion: "ESTACION 9", sistema: "DSS", ubicacion: "CA. ORDOÑEZ VARGAS /JR. MARIANO BUSTAMANTE Nº173", urbanizacion: "URB. VILLA SOL I ETAPA", zona: "CENTRO 2 C" },
+      { id: 117, camara: 117, estacion: "ESTACION 10", sistema: "IVS", ubicacion: "JR. MANUEL DEL LARA / JR. RAMON ZAVALA", urbanizacion: "URB. VILLA SOL I ETAPA", zona: "CENTRO 2 C" },
+      { id: 118, camara: 118, estacion: "ESTACION 11", sistema: "DSS", ubicacion: "PARQUE HÉROES DEL CENEPA (AL COSTADO DE LA LOZA DEPORTIVA)", urbanizacion: "URB. VILLA SOL I ETAPA", zona: "CENTRO 2 C" },
+      { id: 119, camara: 119, estacion: "ESTACION 10", sistema: "DSS", ubicacion: "CA. 55 (FRENTE A LA MZ. LL LT. 03)/ CA. 17", urbanizacion: "AA.H. ARMANDO VILLANUEVA DEL CAMPO", zona: "CENTRO 2 C" },
+      { id: 120, camara: 120, estacion: "ESTACION 10", sistema: "HIK", ubicacion: "CA. MANUEL DEL LARA/ CA. 50 (LOCAL PRONOI)", urbanizacion: "AA.H. ARMANDO VILLANUEVA DEL CAMPO", zona: "CENTRO 2 C" },
+      { id: 121, camara: 121, estacion: "ESTACION 10", sistema: "HIK", ubicacion: "CA 17 / CA 49", urbanizacion: "AA.H. ARMANDO VILLANUEVA DEL CAMPO", zona: "CENTRO 2 C" },
+      { id: 122, camara: 122, estacion: "ESTACION 10", sistema: "DSS", ubicacion: "CA 49 / PSJE 20A", urbanizacion: "AA.H. ARMANDO VILLANUEVA DEL CAMPO", zona: "CENTRO 2 C" },
+      { id: 123, camara: 123, estacion: "ESTACION 11", sistema: "DSS", ubicacion: "CL. GUANÁBANAS /PSJE. 73B (PQ. LOS NORTEÑOS)", urbanizacion: "AA.HH.LOS NORTEÑOS", zona: "NORTE 5 B" },
+      { id: 124, camara: 124, estacion: "ESTACION 11", sistema: "DSS", ubicacion: "CA. INNOVACIÓN / JR. PERCEPCIÓN", urbanizacion: "URB. PRO 4TO SECTOR I ETAPA", zona: "NORTE 2 B" },
+      { id: 125, camara: 125, estacion: "ESTACION 11", sistema: "DSS", ubicacion: "CA. COMPENSACIÓN / CA. LOS PRINCIPIOS", urbanizacion: "URB. PRO 4TO SECTOR I ETAPA", zona: "NORTE 2 A" },
+      { id: 126, camara: 126, estacion: "ESTACION 11", sistema: "DSS", ubicacion: "CA. NO 7 / AV. LA HONRADEZ MZ. BBB5", urbanizacion: "URB. PRO 5TO SECTOR I ETAPA", zona: "NORTE 1 B" },
+      { id: 127, camara: 127, estacion: "ESTACION 18", sistema: "IVS", ubicacion: "JR. MANUEL GONZALES PRADA / JR. CESAR VALLEJO", urbanizacion: "URB. MERCURIO I ETAPA", zona: "SUR 4 A" },
+      { id: 128, camara: 128, estacion: "ESTACION 7", sistema: "HIK", ubicacion: "CA. HORACIO ZEVALLOS / CA. ARGUEDAS", urbanizacion: "AA.HH. MARTIRES DEL SUTEP", zona: "SUR 5 A" },
+      { id: 129, camara: 129, estacion: "PAR OLIVAR", sistema: "IVS", ubicacion: "PSJE. 7 Y 14 /MZ. H3 REF :CDRA 15 DE TOMAS VALLE", urbanizacion: "AA.HH. SAN ALBERTO", zona: "SUR 5 B" },
+      { id: 130, camara: 130, estacion: "ESTACION 19", sistema: "IVS", ubicacion: "MZ C2 LT. 8 / VILLA LIBERTAD", urbanizacion: "AA.HH. DANIEL ALCIDES CARRION", zona: "SUR 5 B" },
+      { id: 131, camara: 131, estacion: "ESTACION 11", sistema: "DSS", ubicacion: "CA. LOS TULIPANES MZ. K LT. 1/AV. REPUBLICA CÁNADA", urbanizacion: "AA.HH. ALTO MERCURIO", zona: "SUR 3 B" },
+      { id: 132, camara: 132, estacion: "ESTACION 19", sistema: "IVS", ubicacion: "CDRA 7 JR. TAURO /PARQUE LOS GEMELOS", urbanizacion: "URB. MERCURIO II ETAPA", zona: "SUR 3 B" },
+      { id: 133, camara: 133, estacion: "PAR MAYOLO", sistema: "DSS", ubicacion: "CALLE 1440 Y 1450 DEL JR. PALLASCA", urbanizacion: "URB. COVIDA II ETAPA", zona: "SUR 3 B" },
+      { id: 134, camara: 134, estacion: "ESTACION 13", sistema: "IVS", ubicacion: "JR. ISAC. NEWTON 7399 JR. JÚPITER", urbanizacion: "URB. SOL DE ORO", zona: "SUR 4 B" },
+      { id: 135, camara: 135, estacion: "ESTACION 12", sistema: "IVS", ubicacion: "JR. ISAC. NEWTON JR. NEPTUNO", urbanizacion: "URB. SOL DE ORO", zona: "SUR 4 B" },
+      { id: 136, camara: 136, estacion: "ESTACION 6", sistema: "HIK", ubicacion: "CA. MELONES / AV. MARGARITAS", urbanizacion: "URB. MICAELA BASTIDAS I ETAPA", zona: "SUR 2 B" },
+      { id: 137, camara: 137, estacion: "ESTACION 7", sistema: "HIK", ubicacion: "JR. PISCOBAMBA / PARQUE SEÑOR DE LOS MILAGROS", urbanizacion: "URB. LOS NARANJOS", zona: "CENTRO 1 A" },
+      { id: 138, camara: 138, estacion: "PAR CUETO", sistema: "DSS", ubicacion: "CA. LUZ CASANOVA / PSJE. EL LENGUAJE", urbanizacion: "C.H. CARLOS CUETO FERNANDINI", zona: "SUR 2 A" },
+      { id: 139, camara: 139, estacion: "ESTACION 7", sistema: "HIK", ubicacion: "CA. UCHUPATA / JR. COLCAS", urbanizacion: "URB. LOS NARANJOS", zona: "CENTRO 1 A" },
+      { id: 140, camara: 140, estacion: "ESTACION 20", sistema: "DSS", ubicacion: "JR. RIO OXAPAMPA / JR. RIO HUAURA", urbanizacion: "URB. VILLA DEL NORTE", zona: "CENTRO 3 D" },
+      { id: 141, camara: 141, estacion: "ESTACION 7", sistema: "HIK", ubicacion: "PSJE. 73 A / PSJE. 73B / PARQUE LOS CONEJITOS", urbanizacion: "AA.HH. ENRIQUE MILLA OCHOA", zona: "NORTE 5 B" },
+      { id: 142, camara: 142, estacion: "PAR CANTA", sistema: "DSS", ubicacion: "CALLE 16 ESQUINA DE LA MZ 34 A / PARQUE ADECLA", urbanizacion: "AA.HH. LAURA CALLER", zona: "CENTRO 2 B" },
+      { id: 143, camara: 143, estacion: "ESTACION 13", sistema: "IVS", ubicacion: "CA. TUCANES / CA. 28 / PARQUE JUAN PABLO II", urbanizacion: "AA.HH. JUAN PABLO II", zona: "NORTE 5 A" },
+      { id: 144, camara: 144, estacion: "ESTACION 11", sistema: "DSS", ubicacion: "CALLE VERACIDAD / CALLE PERSEVERANCIA / PARQUE LA", urbanizacion: "URB. PRO 5TO SECTOR I ETAPA", zona: "NORTE 1 B" },
+      { id: 145, camara: 145, estacion: "ESTACION 6", sistema: "HIK", ubicacion: "AV. GUANÁBANAS / AV. SAN MARTÍN", urbanizacion: "AA.HH. ENRIQUE MILLA OCHOA", zona: "NORTE 5 B" },
+      { id: 146, camara: 146, estacion: "ESTACION 18", sistema: "IVS", ubicacion: "CA. 4 / CA. 15 / PARQUE NO 3 DE PRO LIMA", urbanizacion: "URB. PRO LIMA II ETAPA", zona: "NORTE 1 A" },
+      { id: 147, camara: 147, estacion: "ESTACION 19", sistema: "IVS", ubicacion: "AV. MALECÓN CHILLÓN / REF. COLEGIO PERÚ KAWACHI", urbanizacion: "AA.HH. MUNICIPAL CHILLON", zona: "NORTE 1 A" },
+      { id: 148, camara: 148, estacion: "ESTACION 7", sistema: "HIK", ubicacion: "AV. ALFREDO MENDIOLA/JAVIER HERAUD", urbanizacion: "AA.HH. MUNICIPAL CHILLON", zona: "NORTE 1 A" },
+      { id: 149, camara: 149, estacion: "ESTACION 7", sistema: "HIK", ubicacion: "AV. CANTA CALLAO / CALLE 1", urbanizacion: "URB. PRO 5TO SECTOR III ETAPA", zona: "NORTE 1 B" },
+      { id: 150, camara: 150, estacion: "PAR ZARAGOZA", sistema: "IVS", ubicacion: "JIRÓN. CANTA CALLAO /JIRÓN LABORIOSIDAD", urbanizacion: "URB. PRO 5TO SECTOR II ETAPA", zona: "NORTE 1 B" },
+      { id: 151, camara: 151, estacion: "ESTACION 6", sistema: "HIK", ubicacion: "JR. LA HONRADEZ / JR. LA VERACIDAD", urbanizacion: "URB. PRO 5TO SECTOR I ETAPA", zona: "NORTE 1 B" },
+      { id: 152, camara: 152, estacion: "ESTACION 08", sistema: "DSS", ubicacion: "AV. ALFREDO MENDIOLA/PRÓCERES DE HUANDOY", urbanizacion: "URB. PRO 4TO SECTOR I ETAPA", zona: "NORTE 2 A" },
+      { id: 153, camara: 153, estacion: "ESTACION 7", sistema: "HIK", ubicacion: "AV. LA CORDIALIDAD/AV. PRÓCERES DE HUANDOY", urbanizacion: "URB. PRO 5TO SECTOR I ETAPA", zona: "NORTE 1 A" },
+      { id: 154, camara: 154, estacion: "ESTACION 19", sistema: "IVS", ubicacion: "AV. CANTA CALLAO / AV. CORDIALIDAD", urbanizacion: "URB. PRO 5TO SECTOR II ETAPA", zona: "NORTE 1 B" },
+      { id: 155, camara: 155, estacion: "ESTACION 14", sistema: "HIK", ubicacion: "AV. ZARAGOZA / JR. LA VERACIDAD", urbanizacion: "URB. PRO 4TO SECTOR I ETAPA", zona: "NORTE 2 A" },
+      { id: 156, camara: 156, estacion: "ESTACION 5", sistema: "IVS", ubicacion: "CA. MADRID / JR. BARCELONA ESQUINA CE. INMACULADA CONCEPCIÓN", urbanizacion: "URB. PUERTA DE PRO", zona: "NORTE 2 B" },
+      { id: 157, camara: 157, estacion: "ESTACION 7", sistema: "HIK", ubicacion: "AV. PANAMERICANA NORTE/ AV. 2 DE OCTUBRE", urbanizacion: "URB. EL OLIVAR DEL NORTE", zona: "NORTE 4 A" },
+      { id: 158, camara: 158, estacion: "ESTACION 12", sistema: "IVS", ubicacion: "AV. PANAMERICANA NORTE/CALLE SAN LORENZO", urbanizacion: "SIN HAB. URBANA ( REF. EX FUNDO SANTA LUZMILA)", zona: "NORTE 4 A" },
+      { id: 159, camara: 159, estacion: "ESTACION 16", sistema: "HIK", ubicacion: "CA. SAN ERNESTO / PARQUE SANTA LUISA", urbanizacion: "URB. PARC. RESIDENCIAL SANTA LUISA II ETAPA", zona: "NORTE 4 A" },
+      { id: 160, camara: 160, estacion: "ESTACION 12", sistema: "IVS", ubicacion: "CA 107 / AV. BETANCOURT", urbanizacion: "AA.HH. LOS OLIVOS DE PRO", zona: "NORTE 3 B" },
+      { id: 161, camara: 161, estacion: "ESTACION 5", sistema: "IVS", ubicacion: "CALLE DALIAS/LOS JAZMINES", urbanizacion: "AA.HH. LOS OLIVOS DE PRO", zona: "NORTE 3 B" },
+      { id: 162, camara: 162, estacion: "ESTACION 13", sistema: "IVS", ubicacion: "CA 4 / CA 13 / PARQUE SANTA ANA", urbanizacion: "URB. SANTA ANA", zona: "NORTE 5 A" },
+      { id: 163, camara: 163, estacion: "ESTACION 10", sistema: "IVS", ubicacion: "CA ELEODORO ZEVALLOS / PARQUE FERMÍN NACARINO", urbanizacion: "URB. VILLA SOL III ETAPA", zona: "CENTRO 2 C" },
+      { id: 164, camara: 164, estacion: "ESTACION 14", sistema: "HIK", ubicacion: "AV. A / AV. B / MERCADO SAN MARTÍN", urbanizacion: "AA.HH. SAN MARTÍN DE PORRES", zona: "CENTRO 1 C" },
+      { id: 165, camara: 165, estacion: "ESTACION 14", sistema: "HIK", ubicacion: "AV. MARAÑÓN / CA. 1", urbanizacion: "COOP. SANTA ELISA I ETAPA", zona: "CENTRO 1 B" },
+      { id: 166, camara: 166, estacion: "ESTACION 4", sistema: "HIK", ubicacion: "AV. UNIVERSITARIA / CA ARÍSTIDES SOLOGUREN", urbanizacion: "URB. LOS PARQUES DE VILLA SOL", zona: "CENTRO 3 B" },
+      { id: 167, camara: 167, estacion: "ESTACION 19", sistema: "IVS", ubicacion: "CA RIO PAUCARTAMBO / CA HELMES", urbanizacion: "URB. VILLA DEL NORTE", zona: "CENTRO 3 C" },
+      { id: 168, camara: 168, estacion: "PAR CENTRO", sistema: "DSS", ubicacion: "CA LAURELES (PARQUE LA JUSTICIA)", urbanizacion: "AA.HH. LOS JAZMINES DEL", zona: "SUR 1 A" },
+      { id: 169, camara: 169, estacion: "ESTACION 19", sistema: "IVS", ubicacion: "CA LOS SAUCOS (PARQUE MICAELA BASTIDAS)", urbanizacion: "URB. PANAMERICANA NORTE", zona: "SUR 2 D" },
+      { id: 170, camara: 170, estacion: "PAR CUETO", sistema: "IVS", ubicacion: "CA MORÓN MUÑOZ / CA. MERCEDES INDACOCHEA", urbanizacion: "C.H. CARLOS CUETO FERNANDINI", zona: "SUR 2 C" },
+      { id: 171, camara: 171, estacion: "ESTACION 19", sistema: "IVS", ubicacion: "AV. IZAGUIRRE/JR. ESTIBINA", urbanizacion: "URB. ANGÉLICA GAMARRA II ETAPA", zona: "SUR 3 A" },
+      { id: 172, camara: 172, estacion: "ESTACION 20", sistema: "DSS", ubicacion: "CA. CESAR VALLEJO / PARQUE LA ESMERALDA", urbanizacion: "URB. COVIDA I ETAPA", zona: "SUR 3 A" },
+      { id: 173, camara: 173, estacion: "PAR MAYOLO", sistema: "IVS", ubicacion: "AV. MAYOLO / JR. HUARI", urbanizacion: "URB. LOS PINARES", zona: "SUR 3 B" },
+      { id: 174, camara: 174, estacion: "ESTACION 14", sistema: "HIK", ubicacion: "AV. UNIVERSITARIA (PARQUE EL OLIVAR)", urbanizacion: "COOP. EL OLIVAR", zona: "SUR 3 B" },
+      { id: 175, camara: 175, estacion: "PAR MAYOLO", sistema: "IVS", ubicacion: "AV. VENUS/CALLE BUEN PASTOR", urbanizacion: "URB. SOL DE ORO", zona: "SUR 4 B" },
+      { id: 176, camara: 176, estacion: "ESTACION 12", sistema: "IVS", ubicacion: "AV. EL SOL DE ORO / PARQUE LA ESTRELLA", urbanizacion: "URB. SOL DE ORO", zona: "SUR 4 B" },
+      { id: 177, camara: 177, estacion: "ESTACION 20", sistema: "DSS", ubicacion: "JR. IGNACIO TOROTE (PARQUE SAN MARTÍN)", urbanizacion: "URB. EL TREBOL I ETAPA", zona: "SUR 5 D" },
+      { id: 178, camara: 178, estacion: "ESTACION 18", sistema: "IVS", ubicacion: "AV. UNIVERSITARIA (I.E DANIEL ALCIDES CARRRIÓN)", urbanizacion: "AA.HH. DANIEL ALCIDES CARRION", zona: "SUR 5 B" },
+      { id: 179, camara: 179, estacion: "ESTACION 08", sistema: "DSS", ubicacion: "CA. URANO / AV. ALFREDO MENDIOLA", urbanizacion: "URB. SOL DE ORO", zona: "SUR 4 B" },
+      { id: 180, camara: 180, estacion: "ESTACION 10", sistema: "DSS", ubicacion: "JR. MANUEL DE LARA CDRA. 4 MZ LL LOTE 20", urbanizacion: "URB. VILLA SOL III ETAPA", zona: "CENTRO 2 C" },
+      { id: 181, camara: 181, estacion: "ESTACION 14", sistema: "HIK", ubicacion: "CA. LAS TUNAS / PQ. LOS NOVIOS", urbanizacion: "AA.HH. LOS OLIVOS DE PRO", zona: "NORTE 3 B" },
+      { id: 182, camara: 182, estacion: "PAR ZARAGOZA", sistema: "IVS", ubicacion: "CA. LOS DURAZNOS / CA. LAS VIÑAS / PQ. VIRGEN DEL", urbanizacion: "AA.HH. LOS OLIVOS DE PRO", zona: "NORTE 3 B" },
+      { id: 183, camara: 183, estacion: "PAR ZARAGOZA", sistema: "IVS", ubicacion: "AV. ZARAGOZA / AV. PROCERES DE HUANDOY", urbanizacion: "URB. PUERTA DE PRO", zona: "NORTE 2 B" },
+      { id: 184, camara: 184, estacion: "ESTACION 19", sistema: "IVS", ubicacion: "JR. LOS PEPINOS / JR. LAS AZUCENAS", urbanizacion: "URB. COVIDA III ETAPA", zona: "SUR 2 B" },
+      { id: 185, camara: 185, estacion: "ESTACION 12", sistema: "IVS", ubicacion: "CALLE 37 CON CALLE 18 / PARQUE LAURA CALLER", urbanizacion: "AA.HH. LAURA CALLER", zona: "SUR 2 B" },
+      { id: 186, camara: 186, estacion: "ESTACION 12", sistema: "IVS", ubicacion: "JR. SOL DE ORO / PASAJE LOS PLANETAS / PARQUE LA LUNA", urbanizacion: "URB. SOL DE ORO", zona: "SUR 4 B" },
+      { id: 187, camara: 187, estacion: "ESTACION 12", sistema: "IVS", ubicacion: "CALLE 58 CON CALLE 59 / PARQUE ENRIQUE MILLA", urbanizacion: "AA.HH. ENRIQUE MILLA OCHOA", zona: "CENTRO 1 C" },
+      { id: 188, camara: 188, estacion: "ESTACION 18", sistema: "IVS", ubicacion: "CALLE 6 DE ENERO / CALLE CONQUISTADORES / LOZA DEPORTIVA VILLA MERCEDES", urbanizacion: "AA.HH. VILLA MERCEDES", zona: "SUR 5 A" },
+      { id: 189, camara: 189, estacion: "ESTACION 20", sistema: "DSS", ubicacion: "CALLE ACACIAS CON CALLE LAS MORAS /PARQUE", urbanizacion: "AA.HH. LOS OLIVOS DE PRO", zona: "NORTE 3 B" },
+      { id: 190, camara: 190, estacion: "PAR CANTA", sistema: "IVS", ubicacion: "CALLE 40 / CALLE 20 / PARQUE VIRGEN DEL CARMEN", urbanizacion: "AA.HH. LAURA CALLER", zona: "CENTRO 2 B" },
+      { id: 191, camara: 191, estacion: "PAR ZARAGOZA", sistema: "IVS", ubicacion: "CALLE JUSTICIA CON CALLE 10 / PARQUE RENACIMIENTO", urbanizacion: "URB. PRO 5TO SECTOR 2DA ETAPA", zona: "NORTE 1 B" },
+      { id: 192, camara: 192, estacion: "ESTACION 5", sistema: "IVS", ubicacion: "CALLE LOS FLAMINGOS / PARQUE LOS NOGALES", urbanizacion: "URB. LOS NOGALES", zona: "SUR 5 C" },
+      { id: 193, camara: 193, estacion: "ESTACION 20", sistema: "DSS", ubicacion: "JR. TARICA / JR. CAJACAY /PARQUE CRISTO REY", urbanizacion: "URB. PARQUE NARANJAL I ETAPA", zona: "SUR 2 C" },
+      { id: 194, camara: 194, estacion: "PAR CENTRO", sistema: "DSS", ubicacion: "CA. MALLASH / JR. LLUMPA / PARQUE ANTONIO RAYMONDI", urbanizacion: "URB. PARQUE DE NARANJAL II", zona: "SUR 2 A" },
+      { id: 195, camara: 195, estacion: "ESTACION 12", sistema: "IVS", ubicacion: "CA. AQUIA / CA. LOS JAZMINES / MERCADO PRODUCTORES", urbanizacion: "AAHH. LOS JAZMINES DE", zona: "SUR 1 A" },
+      { id: 196, camara: 196, estacion: "PAR CENTRO", sistema: "IVS", ubicacion: "CA. MADRESELVAS / CA. CLAVELES", urbanizacion: "URB. MICAELA BASTIDAS I ETAPA", zona: "SUR 2 D" },
+      { id: 197, camara: 197, estacion: "PAR ZARAGOZA", sistema: "IVS", ubicacion: "CA. 15 / CA. 35 / PARQUE SANTA ROSA (NORTE)", urbanizacion: "URB. PUERTA DE PRO", zona: "NORTE 2 B" },
+      { id: 198, camara: 198, estacion: "ESTACION 18", sistema: "IVS", ubicacion: "CA. 58 / CA. 52 / PARQUE 10-2", urbanizacion: "URB. PUERTA DE PRO", zona: "NORTE 3 A" },
+      { id: 199, camara: 199, estacion: "PAR OLIVAR", sistema: "IVS", ubicacion: "CA. STA. EULALIA / PJ. SN / PARQUE INMACULADA", urbanizacion: "AA.HH. SAN ALBERTO", zona: "SUR 5 B" },
+      { id: 200, camara: 200, estacion: "ESTACION 17", sistema: "HIK", ubicacion: "CA. HUIRACOCHA / JR. CONDORCANQUI / PQ. LUCHA REYES", urbanizacion: "URB. EL TREBOL II ETAPA", zona: "SUR 4 B" },
+      { id: 201, camara: 201, estacion: "ESTACION 12", sistema: "IVS", ubicacion: "CA. JOSÉ SATO / PSJ. SN", urbanizacion: "URB. VILLA SOL II ETAPA", zona: "CENTRO 3 B" },
+      { id: 202, camara: 202, estacion: "ESTACION 12", sistema: "IVS", ubicacion: "AV. 2 DE OCTUBRE / AV. CANTA CALLAO", urbanizacion: "AA.HH. LOS OLIVOS DE PRO", zona: "NORTE 5 B" },
+      { id: 203, camara: 203, estacion: "PAR OLIVAR", sistema: "IVS", ubicacion: "CA. DANIEL A. CARRIÓN / PARQUE NUEVO MILENIO", urbanizacion: "AA.HH. DANIEL ALCIDES CARRION", zona: "SUR 5 B" },
+      { id: 204, camara: 204, estacion: "ESTACION 12", sistema: "IVS", ubicacion: "CA. CUCARDAS / LOZA DEPORTIVA MERCURIO ALTO", urbanizacion: "AA.HH. ALTO MERCURIO", zona: "SUR 3 B" },
+      { id: 205, camara: 205, estacion: "ESTACION 12", sistema: "IVS", ubicacion: "AV. PALMERAS / CA. EUCALIPTOS", urbanizacion: "ASOC. LA ESPERANZA", zona: "CENTRO 3 A" },
+      { id: 206, camara: 206, estacion: "ESTACION 3", sistema: "HIK", ubicacion: "CALLE 2 / PARQUE EL MIRADOR", urbanizacion: "AA.HH. JUAN PABLO PEREGRINO", zona: "SUR 5 A" },
+      { id: 207, camara: 207, estacion: "ESTACION 5", sistema: "IVS", ubicacion: "JR. VENUS / CA. FORTÓN CAYCHO", urbanizacion: "AA.HH. MORADORES DEL PSJE", zona: "SUR 3 B" },
+      { id: 208, camara: 208, estacion: "ESTACION 14", sistema: "HIK", ubicacion: "CA. RIO CHIRA / CA. RIO CHICAMA", urbanizacion: "URB. VILLA DEL NORTE", zona: "CENTRO 3 D" },
+      { id: 209, camara: 209, estacion: "PAR CUETO", sistema: "IVS", ubicacion: "CA. 13 DE MAYO / ALAMEDA VICTORIA BARCIA", urbanizacion: "C.H.CARLOS CUETO FERNANDINI", zona: "SUR 2 A" },
+      { id: 210, camara: 210, estacion: "PAR CANTA", sistema: "IVS", ubicacion: "CA. 20 / PSJE. SN / PARQUE N° 9", urbanizacion: "AA.HH. LAURA CALLER", zona: "CENTRO 2 B" },
+      { id: 211, camara: 211, estacion: "ESTACION 12", sistema: "IVS", ubicacion: "CA. CAJACAY / PSJ. SN / PARQUE PERÚ JAPÓN", urbanizacion: "URB. PARQUE DE NARANJAL I", zona: "SUR 2 C" },
+      { id: 212, camara: 212, estacion: "PAR CUETO", sistema: "IVS", ubicacion: "JR. TERESA G. / JR. CULTURA", urbanizacion: "C.H. CARLOS CUETO FERNANDINI", zona: "SUR 2 A" },
+      { id: 213, camara: 213, estacion: "ESTACION 5", sistema: "IVS", ubicacion: "CA. CESAR VALLEJO / CA. 6 DE NOVIEMBRE", urbanizacion: "AA.HH. MARTIRES DEL SUTEP", zona: "SUR 5 A" },
+      { id: 214, camara: 214, estacion: "PAR MAYOLO", sistema: "DSS", ubicacion: "CA. RÍO SANTA / CA. HUARMEY", urbanizacion: "URB. COVIDA II ETAPA", zona: "SUR 3 B" },
+      { id: 215, camara: 215, estacion: "PAR CENTRO", sistema: "CA.", ubicacion: "CA. ALAMEDA CENTRAL / CA. EL OLIVAR", urbanizacion: "URB. AMAUTA", zona: "SUR 2 A" },
+      { id: 216, camara: 216, estacion: "PAR OLIVAR", sistema: "IVS", ubicacion: "CA. SAN GABRIEL / CA. STA. PATRICIA", urbanizacion: "URB. SANTA ROSA DE LIMA", zona: "SUR 5 B" },
+      { id: 217, camara: 217, estacion: "PAR OLIVAR", sistema: "IVS", ubicacion: "CA. TAURIJA / CALLE 2", urbanizacion: "URB. TAURIJA", zona: "SUR 5 C" },
+      { id: 218, camara: 218, estacion: "PAR BETA", sistema: "IVS", ubicacion: "CA. LOS DAMASCOS / JR. LAS GUAYABAS", urbanizacion: "URB. VIRGEN DE LA PUERTA", zona: "SUR 5 B" },
+      { id: 219, camara: 219, estacion: "PAR AZNAPUQUIO", sistema: "IVS", ubicacion: "CA. EL AMARGÓN / CA. GRANADILLAS", urbanizacion: "AA.HH. 12 DE AGOSTO", zona: "SUR 2 B" },
+      { id: 220, camara: 220, estacion: "PAR CANTA", sistema: "DSS", ubicacion: "CA. 14 / CA. 15", urbanizacion: "URB. LOS NARANJOS", zona: "CENTRO 1 A" },
+      { id: 221, camara: 221, estacion: "ESTACION 12", sistema: "IVS", ubicacion: "CA. MARTE / CA. CENTAURO / PARQUE EL OLIMPO", urbanizacion: "URB. ASOC. DE VIVIENDA URBANIZADORA SAN ROQUE", zona: "CENTRO 1 C" },
+      { id: 222, camara: 222, estacion: "PAR CUETO", sistema: "IVS", ubicacion: "AV. NARANJAL / AV. CANTA CALLAO / AV. CANTA", urbanizacion: "URB. LOS NARANJOS", zona: "CENTRO 1 A" },
+      { id: 223, camara: 223, estacion: "ESTACION 10", sistema: "IVS", ubicacion: "CA. FRANCISCO CORNEJO / CA. GENARO VIZCARRA", urbanizacion: "URB. VILLA SOL III ETAPA", zona: "CENTRO 2 C" },
+      { id: 224, camara: 224, estacion: "PAR AZNAPUQUIO", sistema: "DSS", ubicacion: "CA. RIO SANTA / AV. ALFREDO MENDIOLA /CONDOMINIO LAS TORRES DE LOS OLIVOS", urbanizacion: "ASOC. RÍO SANTA", zona: "NORTE 4 A" },
+      { id: 225, camara: 225, estacion: "ESTACION 18", sistema: "IVS", ubicacion: "CA. 31DE JULIO CON CA. 5 DE AGOSTO REF. PARQUE 28 DE", urbanizacion: "AAHH. 5 ESTRELLAS", zona: "SUR 5 A" },
+      { id: 226, camara: 226, estacion: "ESTACION 14", sistema: "HIK", ubicacion: "CA. 34 CON CA. 16 REF. PARQUE N°1 DE LAURA CALLER", urbanizacion: "AA.HH. LAURA CALLER", zona: "CENTRO 2 A" },
+      { id: 227, camara: 227, estacion: "ESTACION 14", sistema: "HIK", ubicacion: "AV. SANTA ELVIRA CON CA. 3", urbanizacion: "AA.HH. LOS ROSALES DE PRO", zona: "NORTE 4 A" },
+      { id: 228, camara: 228, estacion: "ESTACION 16", sistema: "HIK", ubicacion: "CA. EL PACIFICO CON CA. 5 ESTRELLAS", urbanizacion: "AA.HH. VILLA MERCEDES", zona: "SUR 5 A" },
+      { id: 229, camara: 229, estacion: "ESTACION 16", sistema: "HIK", ubicacion: "PJ. HISTORIA CON PJ. TERESA G. FANNING REF. PQ. PEDRO", urbanizacion: "C.H. CARLOS CUETO FERNANDINI", zona: "SUR 2 A" },
+      { id: 230, camara: 230, estacion: "ESTACION 16", sistema: "HIK", ubicacion: "CA. APOLO XI CON CA. SOL DE ORO", urbanizacion: "URB. SOL DE ORO", zona: "SUR 4 B" },
+      { id: 231, camara: 231, estacion: "ESTACION 10", sistema: "DSS", ubicacion: "AV. HUANDOY CON PJE. 54A", urbanizacion: "AA.H. ARMANDO VILLANUEVA DEL CAMPO", zona: "CENTRO 2 C" },
+      { id: 232, camara: 232, estacion: "ESTACION 16", sistema: "HIK", ubicacion: "AV. CANTA CALLAO CON CA. 14", urbanizacion: "URB. LOS NARANJOS", zona: "CENTRO 1 A" },
+      { id: 233, camara: 233, estacion: "ESTACION 20", sistema: "DSS", ubicacion: "AV. CANTA CALLAO CON CA. 4", urbanizacion: "URB. PRO 5TO SECTOR II ETAPA", zona: "CENTRO 2 C" },
+      { id: 234, camara: 234, estacion: "ESTACION 16", sistema: "HIK", ubicacion: "CA. FRANCIA CON CA. 2 REF. PARQUE BETA", urbanizacion: "AA.HH. LOS ROSALES DE PRO", zona: "NORTE 4 0" },
+      { id: 235, camara: 235, estacion: "ESTACION 16", sistema: "HIK", ubicacion: "CA. 39 CON CA. 36 REF. PARQUE", urbanizacion: "AA.HH. LAURA CALLER", zona: "CENTRO 2 B" },
+      { id: 236, camara: 236, estacion: "ESTACION 16", sistema: "HIK", ubicacion: "CA. LOS HIGOS CON CA. LOS DURAZNOS REF PARQUE SAN MARTÍN DE PORRES", urbanizacion: "AA.HH. LOS OLIVOS DE PRO", zona: "NORTE 5 B" },
+      { id: 237, camara: 237, estacion: "ESTACION 8", sistema: "DSS", ubicacion: "CA. 60A CON CA. 60B REF. PARQUE 20 DE ABRIL", urbanizacion: "AA.HH. ENRIQUE MILLA OCHOA", zona: "CENTRO 1 C" },
+      { id: 238, camara: 238, estacion: "ESTACION 16", sistema: "HIK", ubicacion: "CALLE THOR / CALLE 48 - AA.HH. SAN MARTÍN DE PORRES", urbanizacion: "AA.HH. SAN MARTÍN DE PORRES", zona: "CENTRO 1 C" },
+      { id: 239, camara: 239, estacion: "ESTACION 17", sistema: "HIK", ubicacion: "CA. 6 CON JR. LA SINCERIDAD REF. PARQUE BELEN", urbanizacion: "URB. PRO 5TO SECTOR II ETAPA", zona: "NORTE 1 B" },
+      { id: 240, camara: 240, estacion: "ESTACION 16", sistema: "HIK", ubicacion: "CA. LOS OPALOS CON CA. LAS VIÑAS REF. PARQUE No 7", urbanizacion: "AA.HH. LOS OLIVOS DE PRO", zona: "NORTE 3 B" },
+      { id: 241, camara: 241, estacion: "ESTACION 17", sistema: "HIK", ubicacion: "AV. ALISOS CON CA. CAMPANITAS", urbanizacion: "AA.HH. LOS JAZMINES DEL", zona: "SUR 1 A" },
+      { id: 242, camara: 242, estacion: "ESTACION 17", sistema: "HIK", ubicacion: "CA. ORION COM CA 56", urbanizacion: "AA.HH. ENRIQUE MILLA OCHOA", zona: "CENTRO 1 C" },
+      { id: 243, camara: 243, estacion: "ESTACION 10", sistema: "HIK", ubicacion: "PASAJE S/N COM PARQUE N° 2 DE ARMANDO VILLANUEVA", urbanizacion: "AA.H. ARMANDO VILLANUEVA DEL CAMPO", zona: "CENTRO 2 C" },
+      { id: 244, camara: 244, estacion: "ESTACION 17", sistema: "HIK", ubicacion: "CA. DANIEL A. CARRION CON PJE. 19 REF ESPALDA PLAZA VEA", urbanizacion: "AA.HH. DANIEL ALCIDES CARRION", zona: "SUR 5 B" },
+      { id: 245, camara: 245, estacion: "ESTACION 17", sistema: "HIK", ubicacion: "PJE. 20 REF PAQUE CRUZ DE MOTUPE", urbanizacion: "AA.HH. DANIEL ALCIDES CARRION", zona: "SUR 5 B" },
+      { id: 246, camara: 246, estacion: "ESTACION 20", sistema: "DSS", ubicacion: "CA. ZARZAMORAS CON PJE. LAS FRAMBUESAS", urbanizacion: "URB. VIRGEN DE LA PUERTA", zona: "SUR 5 B" },
+      { id: 247, camara: 247, estacion: "ESTACION 19", sistema: "IVS", ubicacion: "CA. HORACIO CEVALLOS CON CA. 28 DE JULIO", urbanizacion: "AA.HH. 6 DE NOVIEMBRE", zona: "SUR 5 A" },
+      { id: 248, camara: 248, estacion: "ESTACION 9", sistema: "DSS", ubicacion: "CA. GEMINIS CON PJE. QUILLA", urbanizacion: "URB. MERCURIO II ETAPA", zona: "SUR 3 B" },
+      { id: 249, camara: 249, estacion: "ESTACION 5", sistema: "IVS", ubicacion: "CA. 4 CON CA. PISCOBAMBA", urbanizacion: "AA.HH. 19 DE MAYO", zona: "CENTRO 2 A" },
+      { id: 250, camara: 250, estacion: "ESTACION 9", sistema: "DSS", ubicacion: "CALLE C CON PASAJE S/N REF COLEGIO SEÑOR DE LOS MILAGROS 2004", urbanizacion: "AA.HH. 19 DE MAYO", zona: "CENTRO 2 A" },
+      { id: 251, camara: 251, estacion: "ESTACION 14", sistema: "HIK", ubicacion: "CA. 1 CON CA. 4 REF PQ. ALFA", urbanizacion: "AA.HH. LOS ROSALES DE PRO", zona: "NORTE 4 A" },
+      { id: 252, camara: 252, estacion: "ESTACION 14", sistema: "HIK", ubicacion: "CA. FRANCIA CON CA BELGICA REF PARQUE NACIONES", urbanizacion: "URB. SAN ELIAS", zona: "NORTE 4 A" },
+      { id: 253, camara: 253, estacion: "ESTACION 17", sistema: "HIK", ubicacion: "CA. LABORIOSIDAD CON AV. CANTA CALLAO", urbanizacion: "URB. PRO 5TO SECTOR II ETAPA", zona: "NORTE 1 B" },
+      { id: 254, camara: 254, estacion: "ESTACION 16", sistema: "HIK", ubicacion: "CA. PISCOBAMBA CON P.J.E. S/N REF COLEGIO SEÑOR DE LOS MILAGROS", urbanizacion: "AA.HH. 19 DE MAYO", zona: "CENTRO 2 A" },
+      { id: 255, camara: 255, estacion: "ESTACION 08", sistema: "DSS", ubicacion: "AV. TOMAS VALLE - PARQUE ITERNACIONAL", urbanizacion: "URB. EL TREBOL I ETAPA", zona: "SUR 5 D" },
+      { id: 256, camara: 256, estacion: "ESTACION 20", sistema: "DSS", ubicacion: "JR. SOL DE ORO CON LORENZO FARFAN", urbanizacion: "URB. EL TREBOL I ETAPA", zona: "SUR 5 D" },
+      { id: 257, camara: 257, estacion: "PAR OLIVAR", sistema: "DSS", ubicacion: "CALLE B CON AV. SANTA CATALINA", urbanizacion: "URB. SANTA ROSA DE LIMA", zona: "SUR 5 B" },
+      { id: 258, camara: 258, estacion: "ESTACION 08", sistema: "DSS", ubicacion: "CA. STA DE PACHACUTED / JR. CARLOS SALAVERRY", urbanizacion: "URB. PANAMERICANA NORTE", zona: "SUR 4 A" },
+      { id: 259, camara: 259, estacion: "PAR AZNAPUQUIO", sistema: "DSS", ubicacion: "JR. GUANDU CON JIRON LAS HIEDRA", urbanizacion: "URB. LAS PALMERAS III ETAPA", zona: "SUR 2 B" },
+      { id: 260, camara: 260, estacion: "PAR AZNAPUQUIO", sistema: "DSS", ubicacion: "ACACIAS ALTURA PARQUE EL SOL", urbanizacion: "URB. LAS PALMERAS III ETAPA", zona: "SUR 2 B" },
+      { id: 261, camara: 261, estacion: "ESTACION 10", sistema: "DSS", ubicacion: "CALLE 18 CON CALLE 19 AH. LOS OLIVOS", urbanizacion: "AA.H. ARMANDO VILLANUEVA DEL CAMPO", zona: "CENTRO 2 C" },
+      { id: 262, camara: 262, estacion: "ESTACION 20", sistema: "DSS", ubicacion: "MELANEO CON ORFEO PARQUE VIRGEN DE SANTA ROSA", urbanizacion: "AA.HH. ENRIQUE MILLA OCHOA", zona: "NORTE 5 B" },
+      { id: 263, camara: 263, estacion: "PAR CANTA", sistema: "DSS", ubicacion: "CA. 20 YARACMARCA ESQUINA PISCINA MUNICIPAL SANTA", urbanizacion: "URB. LOS NARANJOS", zona: "CENTRO 1 A" },
+      { id: 264, camara: 264, estacion: "ESTACION 20", sistema: "DSS", ubicacion: "CONFRATERNIDAD CON AV. ALFREDO MENDIOLA", urbanizacion: "URB. PRO 5TO SECTOR I ETAPA", zona: "NORTE 1 B" },
+      { id: 265, camara: 265, estacion: "ESTACION 20", sistema: "DSS", ubicacion: "CALLE 14 CON CALLE 37 PARQUE LOS CIPRESES", urbanizacion: "URB. PRO 5TO SECTOR III ETAPA", zona: "NORTE 1 B" },
+      { id: 266, camara: 266, estacion: "ESTACION 20", sistema: "DSS", ubicacion: "CALLE 3 CON CALLE 46 PARQUE VIRGEN DE FATIMA", urbanizacion: "URB. PRO 5TO SECTOR I ETAPA", zona: "NORTE 1 B" },
+      { id: 267, camara: 267, estacion: "ESTACION 20", sistema: "DSS", ubicacion: "CALLE 14 CON CALLE 37 PARQUE LOS CIPRESES", urbanizacion: "URB. PRO 5TO SECTOR I ETAPA", zona: "NORTE 1 B" },
+      { id: 268, camara: 268, estacion: "ESTACION 20", sistema: "DSS", ubicacion: "CALLE 27 CON CALLE 7 PARQUE VIRGEN DE LA PUERTA", urbanizacion: "URB. PUERTA DE PRO", zona: "NORTE 2 B" },
+      { id: 269, camara: 269, estacion: "ESTACION 20", sistema: "DSS", ubicacion: "CALLE 57 ASENTAMIENTO HUMANO ENRIQUE MILLA OCHOA", urbanizacion: "AA.HH. ENRIQUE MILLA OCHOA", zona: "CENTRO 1 C" },
+      { id: 270, camara: 270, estacion: "ESTACION 20", sistema: "DSS", ubicacion: "CALLE 58 CON C.1", urbanizacion: "AA.HH. ENRIQUE MILLA OCHOA", zona: "CENTRO 1 C" },
+      { id: 271, camara: 271, estacion: "PAR AZNAPUQUIO", sistema: "DSS", ubicacion: "MICAELA BASTIDAS HUACA AZNAPUQUIO", urbanizacion: "URB. MICAELA BASTIDAS I ETAPA", zona: "SUR 2 B" },
+      { id: 272, camara: 272, estacion: "ESTACION 17", sistema: "HIK", ubicacion: "CALLE. MANUEL A. SEGURA / AV. JOSE SANTOS CHOCANO", urbanizacion: "URB. VILLA LOS ANGELES", zona: "SUR 4 A" },
+      { id: 273, camara: 273, estacion: "ESTACION 4", sistema: "HIK", ubicacion: "PSJE. LOS CEREZOS / CA. LARCO ERRERA (PARQUE EL EDEN)", urbanizacion: "URB. MICAELA BASTIDAS I ETAPA", zona: "SUR 2 D" },
+      { id: 274, camara: 274, estacion: "ESTACION 12", sistema: "IVS", ubicacion: "AV. ANGELICA GAMARRA / JR ISAAC NEWTON", urbanizacion: "URB. SOL DE ORO", zona: "SUR 4 B" },
+      { id: 275, camara: 275, estacion: "ESTACION 12", sistema: "IVS", ubicacion: "AV. APOLO XI/ JR ISAAC NEWTON", urbanizacion: "URB. SOL DE ORO", zona: "SUR 4 B" },
+      { id: 276, camara: 276, estacion: "ESTACION 12", sistema: "IVS", ubicacion: "AV. MARIO DE LAS NUECES / AAHH. MUNICIPAL CHILLÓN", urbanizacion: "AA.HH. MUNICIPAL CHILLON", zona: "NORTE 1 A" },
+      { id: 277, camara: 277, estacion: "ESTACION 12", sistema: "IVS", ubicacion: "PARQUE MAGDALENA", urbanizacion: "COOP. MAGDALENA", zona: "SUR 4 A" },
+      { id: 278, camara: 278, estacion: "PAR ZARAGOZA", sistema: "IVS", ubicacion: "PARQUE LA ESTRELLA N 2", urbanizacion: "ASOC. DE VIV. LA ESTRELLA", zona: "NORTE 2 A" },
+      { id: 279, camara: 279, estacion: "ESTACION 18", sistema: "IVS", ubicacion: "JR HONESTIDAD/ CALLE LA HIDALGUIA", urbanizacion: "ASOC. DE VIDA LA ESTRELLA", zona: "NORTE 2 A" },
+      { id: 280, camara: 280, estacion: "ESTACION 18", sistema: "IVS", ubicacion: "CALLE LA FORTALEZA / CALLE GRACIA", urbanizacion: "ASOC. DE VIV. LA ESTRELLA", zona: "NORTE 2 A" },
+      { id: 281, camara: 281, estacion: "ESTACION 13", sistema: "IVS", ubicacion: "CALLE 2 - CALLE 14 URB. SANTA ANA", urbanizacion: "URB. SANTA ANA", zona: "NORTE 5 A" },
+      { id: 282, camara: 282, estacion: "ESTACION 13", sistema: "IVS", ubicacion: "AV. PROCERES DE HUANDOY / CALLE 12", urbanizacion: "AA.HH. LOS ROSALES DE PRO", zona: "NORTE 4A" },
+      { id: 283, camara: 283, estacion: "ESTACION 13", sistema: "IVS", ubicacion: "CALLE 15 / CALLE 1", urbanizacion: "AA.HH. LOS ROSALES DE PRO", zona: "NORTE 4A" },
+      { id: 284, camara: 284, estacion: "ESTACION 13", sistema: "IVS", ubicacion: "AV. PROCERES DE HUANDOY / CALLE 15", urbanizacion: "AA.HH. LOS ROSALES DE PRO", zona: "NORTE 4A" },
+      { id: 285, camara: 285, estacion: "PAR ZARAGOZA", sistema: "IVS", ubicacion: "CALLE GRACIA / C. LA SANTIDAD", urbanizacion: "ASOC. DE VIV. LA ESTRELLA", zona: "NORTE 2A" }
+    ];
+
+    const INITIAL_VECINAL_CAMERAS = [
+      { barrio: "B1 - JR. VENUS / PARQUE PARACAS", camara: "JR. VENUS-MANCO CAPAC", urbanizacion: "AA.HH. MORADORES DEL PASAJE VENUS", zona: "SUR 3 B", sistema: "PSS", conexion: "OPERATIVA", detalles: "FUNCIONA", estacion: "ESTACIÓN 18" },
+      { barrio: "B1 - JR. VENUS / PARQUE PARACAS", camara: "JR. VENUS 7324 NORTE", urbanizacion: "AA.HH. MORADORES DEL PASAJE VENUS", zona: "SUR 4 B", sistema: "PSS", conexion: "OPERATIVA", detalles: "FUNCIONA", estacion: "ESTACIÓN 18" },
+      { barrio: "B1 - JR. VENUS / PARQUE PARACAS", camara: "LOZA NORTE", urbanizacion: "AA.HH. MORADORES DEL PASAJE VENUS", zona: "SUR 5 B", sistema: "PSS", conexion: "OPERATIVA", detalles: "FUNCIONA", estacion: "ESTACIÓN 18" },
+      { barrio: "B1 - JR. VENUS / PARQUE PARACAS", camara: "JR. VENUS 7324 SUR", urbanizacion: "AA.HH. MORADORES DEL PASAJE VENUS", zona: "SUR 6 B", sistema: "PSS", conexion: "OPERATIVA", detalles: "FUNCIONA", estacion: "ESTACIÓN 18" },
+      { barrio: "B1 - JR. VENUS / PARQUE PARACAS", camara: "JR.VENUS 7390", urbanizacion: "AA.HH. MORADORES DEL PASAJE VENUS", zona: "SUR 7 B", sistema: "PSS", conexion: "OPERATIVA", detalles: "FUNCIONA", estacion: "ESTACIÓN 18" },
+      { barrio: "B1 - JR. VENUS / PARQUE PARACAS", camara: "PJ. VENUS", urbanizacion: "AA.HH. MORADORES DEL PASAJE VENUS", zona: "SUR 8 B", sistema: "PSS", conexion: "OPERATIVA", detalles: "FUNCIONA", estacion: "ESTACIÓN 18" },
+      { barrio: "B1 - JR. VENUS / PARQUE PARACAS", camara: "LOZA SUR", urbanizacion: "AA.HH. MORADORES DEL PASAJE VENUS", zona: "SUR 9 B", sistema: "PSS", conexion: "OPERATIVA", detalles: "FUNCIONA", estacion: "ESTACIÓN 18" },
+      
+      { barrio: "B2 - FLORESTA DE PRO", camara: "P4 - CALLE. 55-69", urbanizacion: "URB. LA FLORESTA DE PRO", zona: "NORTE 3 B", sistema: "PSS", conexion: "OPERATIVA", detalles: "FUNCIONA", estacion: "ESTACIÓN 18" },
+      { barrio: "B2 - FLORESTA DE PRO", camara: "P3 - CALLE 49", urbanizacion: "URB. LA FLORESTA DE PRO", zona: "NORTE 3 B", sistema: "PSS", conexion: "OPERATIVA", detalles: "FUNCIONA", estacion: "ESTACIÓN 18" },
+      { barrio: "B2 - FLORESTA DE PRO", camara: "CALLE 52", urbanizacion: "URB. LA FLORESTA DE PRO", zona: "NORTE 3 B", sistema: "PSS", conexion: "OPERATIVA", detalles: "FUNCIONA", estacion: "ESTACIÓN 18" },
+      { barrio: "B2 - FLORESTA DE PRO", camara: "CALLE 53", urbanizacion: "URB. LA FLORESTA DE PRO", zona: "NORTE 3 B", sistema: "PSS", conexion: "OPERATIVA", detalles: "FUNCIONA", estacion: "ESTACIÓN 18" },
+      { barrio: "B2 - FLORESTA DE PRO", camara: "CALLE 52", urbanizacion: "URB. LA FLORESTA DE PRO", zona: "NORTE 3 B", sistema: "PSS", conexion: "OPERATIVA", detalles: "FUNCIONA", estacion: "ESTACIÓN 18" },
+      { barrio: "B2 - FLORESTA DE PRO", camara: "CALLE Z", urbanizacion: "URB. LA FLORESTA DE PRO", zona: "NORTE 3 B", sistema: "PSS", conexion: "OPERATIVA", detalles: "FUNCIONA", estacion: "ESTACIÓN 18" },
+      { barrio: "B2 - FLORESTA DE PRO", camara: "HUANDOY - C.53", urbanizacion: "URB. LA FLORESTA DE PRO", zona: "NORTE 3 B", sistema: "PSS", conexion: "OPERATIVA", detalles: "FUNCIONA", estacion: "ESTACIÓN 18" },
+      { barrio: "B2 - FLORESTA DE PRO", camara: "C. 55. AV.HUANDOY", urbanizacion: "URB. LA FLORESTA DE PRO", zona: "NORTE 3 B", sistema: "PSS", conexion: "OPERATIVA", detalles: "FUNCIONA", estacion: "ESTACIÓN 18" },
+
+      { barrio: "B3 - JR. CAYETANO HEREDIA/JR. JOSÉ PEREYRA", camara: "CAYETANO - HEREDIA", urbanizacion: "URB. PANAMERICANA NORTE", zona: "SUR 2 D", sistema: "PSS", conexion: "OPERATIVA", detalles: "PTZ", estacion: "ESTACIÓN 18" },
+
+      { barrio: "B4 - PARQUE SANTA ANA", camara: "2 DE OCTUBRE - CALLE 3", urbanizacion: "URB. SANTA ANA", zona: "NORTE 5 A", sistema: "PSS", conexion: "INOPERATIVA", detalles: "FUNCIONA", estacion: "ESTACIÓN 18" },
+      { barrio: "B4 - PARQUE SANTA ANA", camara: "CALLE 13", urbanizacion: "URB. SANTA ANA", zona: "NORTE 5 A", sistema: "PSS", conexion: "INOPERATIVA", detalles: "FUNCIONA", estacion: "ESTACIÓN 18" },
+      { barrio: "B4 - PARQUE SANTA ANA", camara: "2 DE OCTUBRE", urbanizacion: "URB. SANTA ANA", zona: "NORTE 5 A", sistema: "PSS", conexion: "INOPERATIVA", detalles: "FUNCIONA", estacion: "ESTACIÓN 18" },
+      { barrio: "B4 - PARQUE SANTA ANA", camara: "CALLE 3 - CALLE 13", urbanizacion: "URB. SANTA ANA", zona: "NORTE 5 A", sistema: "PSS", conexion: "INOPERATIVA", detalles: "FUNCIONA", estacion: "ESTACIÓN 18" },
+      { barrio: "B4 - PARQUE SANTA ANA", camara: "CALLE 2 NORTE", urbanizacion: "URB. SANTA ANA", zona: "NORTE 5 A", sistema: "PSS", conexion: "INOPERATIVA", detalles: "FUNCIONA", estacion: "ESTACIÓN 18" },
+      { barrio: "B4 - PARQUE SANTA ANA", camara: "LOZA", urbanizacion: "URB. SANTA ANA", zona: "NORTE 5 A", sistema: "PSS", conexion: "INOPERATIVA", detalles: "FUNCIONA", estacion: "ESTACIÓN 18" },
+      { barrio: "B4 - PARQUE SANTA ANA", camara: "CALLE 1 - CALLE 13 (1)", urbanizacion: "URB. SANTA ANA", zona: "NORTE 5 A", sistema: "PSS", conexion: "INOPERATIVA", detalles: "FUNCIONA", estacion: "ESTACIÓN 18" },
+      { barrio: "B4 - PARQUE SANTA ANA", camara: "CALLE 2 SUR", urbanizacion: "URB. SANTA ANA", zona: "NORTE 5 A", sistema: "PSS", conexion: "INOPERATIVA", detalles: "FUNCIONA", estacion: "ESTACIÓN 18" },
+      { barrio: "B4 - PARQUE SANTA ANA", camara: "CALLE 2 - CALLE 13 (3)", urbanizacion: "URB. SANTA ANA", zona: "NORTE 5 A", sistema: "PSS", conexion: "INOPERATIVA", detalles: "FUNCIONA", estacion: "ESTACIÓN 18" },
+      { barrio: "B4 - PARQUE SANTA ANA", camara: "CALLE 14 IZQUIERDA", urbanizacion: "URB. SANTA ANA", zona: "NORTE 5 A", sistema: "PSS", conexion: "INOPERATIVA", detalles: "FUNCIONA", estacion: "ESTACIÓN 18" },
+      { barrio: "B4 - PARQUE SANTA ANA", camara: "CALLE 14 DERECHA", urbanizacion: "URB. SANTA ANA", zona: "NORTE 5 A", sistema: "PSS", conexion: "INOPERATIVA", detalles: "FUNCIONA", estacion: "ESTACIÓN 18" },
+      { barrio: "B4 - PARQUE SANTA ANA", camara: "CALLE 1 - CALLE 13 (2)", urbanizacion: "URB. SANTA ANA", zona: "NORTE 5 A", sistema: "PSS", conexion: "INOPERATIVA", detalles: "FUNCIONA", estacion: "ESTACIÓN 18" },
+
+      { barrio: "B5 - PARQUE TULIPANES / CA.PISCIS / CA. ARIES", camara: "ACUARIO CDR 10", urbanizacion: "URB. MERCURIO II ETAPA", zona: "SUR 3 B", sistema: "PSS", conexion: "INOPERATIVA", detalles: "FUNCIONA", estacion: "ESTACIÓN 18" },
+      { barrio: "B5 - PARQUE TULIPANES / CA.PISCIS / CA. ARIES", camara: "ACUARIO CDR 9", urbanizacion: "URB. MERCURIO II ETAPA", zona: "SUR 3 B", sistema: "PSS", conexion: "OPERATIVA", detalles: "FUNCIONA", estacion: "ESTACIÓN 18" },
+      { barrio: "B5 - PARQUE TULIPANES / CA.PISCIS / CA. ARIES", camara: "JR. ARIES CDR 10", urbanizacion: "URB. MERCURIO II ETAPA", zona: "SUR 3 B", sistema: "PSS", conexion: "OPERATIVA", detalles: "FUNCIONA", estacion: "ESTACIÓN 18" },
+      { barrio: "B5 - PARQUE TULIPANES / CA.PISCIS / CA. ARIES", camara: "PARQUE TULIPANES - CAM 1", urbanizacion: "URB. MERCURIO II ETAPA", zona: "SUR 3 B", sistema: "PSS", conexion: "OPERATIVA", detalles: "FUNCIONA", estacion: "ESTACIÓN 18" },
+      { barrio: "B5 - PARQUE TULIPANES / CA.PISCIS / CA. ARIES", camara: "PARQUE TULIPANES - CAM 2", urbanizacion: "URB. MERCURIO II ETAPA", zona: "SUR 3 B", sistema: "PSS", conexion: "OPERATIVA", detalles: "FUNCIONA", estacion: "ESTACIÓN 18" },
+      { barrio: "B5 - PARQUE TULIPANES / CA.PISCIS / CA. ARIES", camara: "PARQUE TULIPANES - CAM 3", urbanizacion: "URB. MERCURIO II ETAPA", zona: "SUR 3 B", sistema: "PSS", conexion: "OPERATIVA", detalles: "FUNCIONA", estacion: "ESTACIÓN 18" },
+
+      { barrio: "B7 - COOPERATIVO. DE VIV. NUESTRA SRA. DE GUADALUPE", camara: "CALLE SURICHAC + LORENZO FARFAN", urbanizacion: "COOP. DE VIV. NUESTRA SRA. DE GUADALUPE", zona: "SUR 5 D", sistema: "PSS", conexion: "OPERATIVA", detalles: "FUNCIONA", estacion: "ESTACIÓN 18" },
+      { barrio: "B7 - COOPERATIVO. DE VIV. NUESTRA SRA. DE GUADALUPE", camara: "CALLE POCOTA PORTON 3", urbanizacion: "COOP. DE VIV. NUESTRA SRA. DE GUADALUPE", zona: "SUR 5 D", sistema: "PSS", conexion: "OPERATIVA", detalles: "FUNCIONA", estacion: "ESTACIÓN 18" },
+      { barrio: "B7 - COOPERATIVO. DE VIV. NUESTRA SRA. DE GUADALUPE", camara: "PUERTA PRINCIPAL TUPAC YUPANQUI", urbanizacion: "COOP. DE VIV. NUESTRA SRA. DE GUADALUPE", zona: "SUR 5 D", sistema: "PSS", conexion: "OPERATIVA", detalles: "FUNCIONA", estacion: "ESTACIÓN 18" },
+
+      { barrio: "B8 - ASOC DE VIVIENDA LA ESTRELLA", camara: "PARQUE ESTRELLA N1", urbanizacion: "ASOC. DE VIDA LA ESTRELLA", zona: "NORTE 2 A", sistema: "PSS", conexion: "OPERATIVA", detalles: "FUNCIONA", estacion: "ESTACIÓN 18" },
+      { barrio: "B8 - ASOC DE VIVIENDA LA ESTRELLA", camara: "PARQUE ESTRELLA N2", urbanizacion: "ASOC. DE VIDA LA ESTRELLA", zona: "NORTE 2 A", sistema: "PSS", conexion: "OPERATIVA", detalles: "FUNCIONA", estacion: "ESTACIÓN 18" },
+
+      { barrio: "B9 - PARQUE JAZMINES", camara: "CALLE CAMPANITAS PTZ", urbanizacion: "AA.HH. LOS JAZMINES DEL NARANJAL", zona: "SUR 1 A", sistema: "PSS", conexion: "OPERATIVA", detalles: "FUNCIONA", estacion: "ESTACIÓN 18" },
+
+      { barrio: "B10 - PARQUE SAN ANTONIO", camara: "CHANNEL 1", urbanizacion: "URB. VIRGEN DE LA PUERTA", zona: "SUR 5 B", sistema: "PSS", conexion: "OPERATIVA", detalles: "FUNCIONA", estacion: "ESTACIÓN 18" },
+
+      { barrio: "B14 - BULGARIA", camara: "JR. BULGARIA-CALLE 9", urbanizacion: "URB. VILLA SOL IV ETAPA", zona: "CENTRO 3 B", sistema: "PSS", conexion: "OPERATIVA", detalles: "FUNCIONA", estacion: "ESTACIÓN 18" },
+
+      { barrio: "B19 - AA.HH. MUNICIPAL CHILLÓN", camara: "A. Mendiola (Sur) - Rio Chillón", urbanizacion: "AA.HH. MUNICIPAL CHILLÓN", zona: "NORTE 1 A", sistema: "PSS", conexion: "INOPERATIVA", detalles: "PERDIÓ CONEXIÓN CON LA ESTACIÓN 18", estacion: "ESTACIÓN 18" },
+      { barrio: "B19 - AA.HH. MUNICIPAL CHILLÓN", camara: "Psj. Chocano - Rio Chillón (S)", urbanizacion: "AA.HH. MUNICIPAL CHILLÓN", zona: "NORTE 1 A", sistema: "PSS", conexion: "OPERATIVA", detalles: "FUNCIONA", estacion: "ESTACIÓN 18" },
+
+      { barrio: "B22 - PARQUE FUJIMORI", camara: "MANDARINAS-LIMONCILLOS", urbanizacion: "AAHH. LOS OLIVOS DE PRO", zona: "NORTE 5B", sistema: "PSS", conexion: "INOPERATIVA", detalles: "FUNCIONA", estacion: "ESTACIÓN 18" },
+      { barrio: "B22 - PARQUE FUJIMORI", camara: "JAZMINES-VIOLETAS", urbanizacion: "AAHH. LOS OLIVOS DE PRO", zona: "NORTE 5B", sistema: "PSS", conexion: "INOPERATIVA", detalles: "FUNCIONA", estacion: "ESTACIÓN 18" },
+
+      { barrio: "B46 - JR. CHASQUITAMBO - AV. PALMERAS / JR. CHASQUITAMBO", camara: "JR. CHASQUITAMBO 543", urbanizacion: "URB. VILLA DEL NORTE", zona: "CENTRO 3D", sistema: "PSS", conexion: "OPERATIVA", detalles: "FUNCIONA", estacion: "ESTACIÓN 18" },
+
+      { barrio: "B47 - PARQUE LA LIBERTAD LAS PALMERAS", camara: "PARQUE LA LIBERTAD LAS PALMERAS", urbanizacion: "URB. LAS PALMERAS II ETAPA", zona: "SUR 2D", sistema: "PSS", conexion: "OPERATIVA", detalles: "FUNCIONA", estacion: "ESTACIÓN 18" }
+    ];
+
+    function formatCamName(num) {
+      return `CAMARA-${String(num).padStart(2, '0')}`;
+    }
+
+    const INITIAL_CAMERAS = RAW_CAMERAS.map((cam, idx) => ({
+      ...cam,
+      suministro: SUMINISTROS_LIST[idx] || "NO CUENTA CON SUMINISTRO"
+    }));
+
+    const STATUS_LIST = [
+      "INOPERATIVA","OPERATIVA","OPERATIVA","OPERATIVA","OPERATIVA","OPERATIVA","OPERATIVA","OPERATIVA","OPERATIVA","OPERATIVA",
+      "OPERATIVA","INOPERATIVA","OPERATIVA","OPERATIVA","OPERATIVA","OPERATIVA","OPERATIVA","OPERATIVA","OPERATIVA","OPERATIVA",
+      "INOPERATIVA","OPERATIVA","OPERATIVA","OPERATIVA","INOPERATIVA","OPERATIVA","OPERATIVA","INOPERATIVA","OPERATIVA","OPERATIVA",
+      "OPERATIVA","OPERATIVA","INOPERATIVA","INOPERATIVA","OPERATIVA","OPERATIVA","OPERATIVA","OPERATIVA","OPERATIVA","OPERATIVA",
+      "OPERATIVA","OPERATIVA","OPERATIVA","OPERATIVA","OPERATIVA","OPERATIVA","OPERATIVA","OPERATIVA","OPERATIVA","OPERATIVA",
+      "OPERATIVA","OPERATIVA","OPERATIVA","OPERATIVA","OPERATIVA","OPERATIVA","OPERATIVA","OPERATIVA","OPERATIVA","OPERATIVA",
+      "OPERATIVA","INOPERATIVA","OPERATIVA","INOPERATIVA","OPERATIVA","OPERATIVA","INOPERATIVA","OPERATIVA","OPERATIVA","INOPERATIVA",
+      "OPERATIVA","OPERATIVA","INOPERATIVA","OPERATIVA","OPERATIVA","INOPERATIVA","INOPERATIVA","OPERATIVA","OPERATIVA","OPERATIVA",
+      "OPERATIVA","INOPERATIVA","OPERATIVA","OPERATIVA","OPERATIVA","OPERATIVA","OPERATIVA","OPERATIVA","OPERATIVA","OPERATIVA",
+      "OPERATIVA","INOPERATIVA","OPERATIVA","OPERATIVA","OPERATIVA","OPERATIVA","OPERATIVA","OPERATIVA","OPERATIVA","OPERATIVA",
+      "OPERATIVA","OPERATIVA","OPERATIVA","INOPERATIVA","OPERATIVA","OPERATIVA","OPERATIVA","OPERATIVA","OPERATIVA","INOPERATIVA",
+      "OPERATIVA","OPERATIVA","OPERATIVA","INOPERATIVA","INOPERATIVA","INOPERATIVA","INOPERATIVA","INOPERATIVA","INOPERATIVA","INOPERATIVA",
+      "INOPERATIVA","INOPERATIVA","OPERATIVA","INOPERATIVA","INOPERATIVA","OPERATIVA","OPERATIVA","OPERATIVA","OPERATIVA","OPERATIVA",
+      "OPERATIVA","OPERATIVA","OPERATIVA","OPERATIVA","OPERATIVA","OPERATIVA","OPERATIVA","OPERATIVA","OPERATIVA","OPERATIVA",
+      "OPERATIVA","INOPERATIVA","OPERATIVA","OPERATIVA","OPERATIVA","OPERATIVA","OPERATIVA","OPERATIVA","OPERATIVA","OPERATIVA",
+      "OPERATIVA","OPERATIVA","OPERATIVA","OPERATIVA","OPERATIVA","OPERATIVA","OPERATIVA","INOPERATIVA","INOPERATIVA","OPERATIVA",
+      "OPERATIVA","OPERATIVA","INOPERATIVA","INOPERATIVA","INOPERATIVA","OPERATIVA","OPERATIVA","INOPERATIVA","OPERATIVA","OPERATIVA",
+      "OPERATIVA","OPERATIVA","OPERATIVA","OPERATIVA","OPERATIVA","OPERATIVA","INOPERATIVA","OPERATIVA","OPERATIVA","INOPERATIVA",
+      "OPERATIVA","OPERATIVA","OPERATIVA","OPERATIVA","INOPERATIVA","OPERATIVA","INOPERATIVA","OPERATIVA","OPERATIVA","OPERATIVA",
+      "OPERATIVA","OPERATIVA","INOPERATIVA","OPERATIVA","INOPERATIVA","INOPERATIVA","OPERATIVA","OPERATIVA","OPERATIVA","OPERATIVA",
+      "INOPERATIVA","OPERATIVA","OPERATIVA","INOPERATIVA","INOPERATIVA","OPERATIVA","OPERATIVA","OPERATIVA","OPERATIVA","INOPERATIVA",
+      "INOPERATIVA","OPERATIVA","OPERATIVA","OPERATIVA","OPERATIVA","OPERATIVA","OPERATIVA","OPERATIVA","OPERATIVA","OPERATIVA",
+      "OPERATIVA","OPERATIVA","INOPERATIVA","OPERATIVA","OPERATIVA","INOPERATIVA","INOPERATIVA","OPERATIVA","OPERATIVA","OPERATIVA",
+      "INOPERATIVA","OPERATIVA","OPERATIVA","INOPERATIVA","OPERATIVA","OPERATIVA","INOPERATIVA","OPERATIVA","OPERATIVA","INOPERATIVA",
+      "INOPERATIVA","OPERATIVA","INOPERATIVA","OPERATIVA","INOPERATIVA","INOPERATIVA","OPERATIVA","OPERATIVA","OPERATIVA","INOPERATIVA",
+      "OPERATIVA","OPERATIVA","OPERATIVA","INOPERATIVA","OPERATIVA","OPERATIVA","INOPERATIVA","OPERATIVA","INOPERATIVA","OPERATIVA",
+      "OPERATIVA","OPERATIVA","OPERATIVA","OPERATIVA","OPERATIVA","INOPERATIVA","OPERATIVA","OPERATIVA","OPERATIVA","INOPERATIVA",
+      "OPERATIVA","OPERATIVA","OPERATIVA","OPERATIVA","INOPERATIVA","OPERATIVA","OPERATIVA","OPERATIVA","OPERATIVA","OPERATIVA",
+      "INOPERATIVA","INOPERATIVA","INOPERATIVA","INOPERATIVA","INOPERATIVA","OPERATIVA","OPERATIVA","OPERATIVA"
+    ];
+
+    function buildMappedCameraLogs() {
+      const logs = {};
+      STATUS_LIST.forEach((status, index) => {
+        const camId = index + 1;
+        logs[camId] = {
+          status: status,
+          details: status === "OPERATIVA" ? "FUNCIONAL - SIN NOVEDAD" : "PERDIÓ CONEXIÓN / REQUIERE REVISIÓN"
+        };
+      });
+      return logs;
+    }
+
+    const INITIAL_LOGS = {
+      "21/09/2026": {
+        timestamp: "21/09/2026 - 10:30:00 PM",
+        cameras: buildMappedCameraLogs()
+      }
+    };
+
+    let cameras = INITIAL_CAMERAS;
+    let vecinalCameras = JSON.parse(localStorage.getItem("cioe_vecinales_v300")) || INITIAL_VECINAL_CAMERAS;
+    let dailyLogs = INITIAL_LOGS;
+    let currentFilter = 'ALL';
+    let selectedDateStr = "21/09/2026";
+
+    function saveToStorage() {
+      localStorage.setItem("cioe_cameras_v100", JSON.stringify(cameras));
+      localStorage.setItem("cioe_daily_logs_v100", JSON.stringify(dailyLogs));
+      localStorage.setItem("cioe_vecinales_v300", JSON.stringify(vecinalCameras));
+      updateStats();
+    }
+
+    function getLogForCamera(camId) {
+      if (dailyLogs[selectedDateStr] && dailyLogs[selectedDateStr].cameras && dailyLogs[selectedDateStr].cameras[camId]) {
+        return dailyLogs[selectedDateStr].cameras[camId];
+      }
+      return { status: 'OPERATIVA', details: 'FUNCIONAL - SIN NOVEDAD' };
+    }
+
+    function setLogForCamera(camId, status, details) {
+      if (!dailyLogs[selectedDateStr]) {
+        dailyLogs[selectedDateStr] = {
+          timestamp: `${selectedDateStr} - ${new Date().toLocaleTimeString('es-ES')}`,
+          cameras: {}
+        };
+      }
+      dailyLogs[selectedDateStr].timestamp = `${selectedDateStr} - ${new Date().toLocaleTimeString('es-ES')}`;
+      dailyLogs[selectedDateStr].cameras[camId] = { status, details };
+      saveToStorage();
+    }
+
+    function updateStats() {
+      const total = cameras.length;
+      let operativas = 0, inoperativas = 0, mantenimiento = 0;
+
+      cameras.forEach(c => {
+        const log = getLogForCamera(c.id);
+        if (log.status === 'OPERATIVA') operativas++;
+        else if (log.status === 'INOPERATIVA') inoperativas++;
+        else if (log.status === 'MANTENIMIENTO') mantenimiento++;
+      });
+
+      const rate = total > 0 ? Math.round((operativas / total) * 100) : 0;
+
+      document.getElementById('stat-total').innerText = total;
+      document.getElementById('stat-operativas').innerText = operativas;
+      document.getElementById('stat-inoperativas').innerText = inoperativas;
+      document.getElementById('stat-mantenimiento').innerText = mantenimiento;
+      document.getElementById('stat-rate').innerText = rate + '%';
+    }
+
+    function setFilter(filter) {
+      currentFilter = filter;
+      ['ALL', 'OPERATIVA', 'INOPERATIVA', 'MANTENIMIENTO'].forEach(f => {
+        const btn = document.getElementById(`filter-${f}`);
+        if (f === filter) {
+          btn.className = "px-5 py-1.5 rounded-lg text-xs font-bold transition bg-amber-500 text-black";
+        } else {
+          btn.className = "px-5 py-1.5 rounded-lg text-xs font-semibold text-slate-400 hover:text-white transition";
+        }
+      });
+      renderTable();
+    }
+
+    function renderTable() {
+      const search = document.getElementById('searchInput').value.toLowerCase();
+      const tbody = document.getElementById('tableBody');
+      tbody.innerHTML = '';
+
+      const filtered = cameras.filter(cam => {
+        const log = getLogForCamera(cam.id);
+        const camLabel = formatCamName(cam.camara).toLowerCase();
+        const matchesFilter = currentFilter === 'ALL' || log.status === currentFilter;
+        const matchesSearch = Object.values(cam).some(val => String(val).toLowerCase().includes(search)) || 
+                              camLabel.includes(search) || 
+                              log.details.toLowerCase().includes(search);
+        return matchesFilter && matchesSearch;
+      });
+
+      document.getElementById('recordCount').innerText = `${filtered.length} Registros`;
+
+      filtered.forEach(cam => {
+        const log = getLogForCamera(cam.id);
+        const tr = document.createElement('tr');
+        tr.className = "border-b border-slate-800/60 hover:bg-slate-800/30 transition text-slate-200";
+
+        tr.innerHTML = `
+          <td class="p-3.5 text-center font-bold text-white">${formatCamName(cam.camara)}</td>
+          <td class="p-3.5">${cam.estacion}</td>
+          <td class="p-3.5">${cam.sistema}</td>
+          <td class="p-2 text-center">
+            <select onchange="changeCameraStatus(${cam.id}, this.value)" class="w-full py-1.5 px-2 rounded-lg text-[10px] uppercase font-black cursor-pointer focus:outline-none transition status-${log.status}">
+              <option value="OPERATIVA" ${log.status === 'OPERATIVA' ? 'selected' : ''}>OPERATIVA</option>
+              <option value="INOPERATIVA" ${log.status === 'INOPERATIVA' ? 'selected' : ''}>INOPERATIVA</option>
+              <option value="MANTENIMIENTO" ${log.status === 'MANTENIMIENTO' ? 'selected' : ''}>MANTENIMIENTO</option>
+            </select>
+          </td>
+          <td class="p-3.5">${cam.ubicacion}</td>
+          <td class="p-3.5">${cam.urbanizacion}</td>
+          <td class="p-3.5">${cam.zona}</td>
+          <td class="p-3.5 text-slate-300 font-semibold uppercase">${cam.suministro || 'NO CUENTA CON SUMINISTRO'}</td>
+          <td class="p-3.5 text-center space-x-1">
+            <button onclick="editModal(${cam.id})" class="p-1.5 text-blue-400 hover:text-blue-300 rounded-lg hover:bg-slate-800 transition" title="Editar Cámara">
+              <i class="fa-solid fa-pen-to-square"></i>
+            </button>
+            <button onclick="deleteCamera(${cam.id})" class="p-1.5 text-rose-400 hover:text-rose-300 rounded-lg hover:bg-slate-800 transition" title="Eliminar">
+              <i class="fa-solid fa-trash"></i>
+            </button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+
+      updateStats();
+    }
+
+    function changeCameraStatus(camId, newStatus) {
+      const log = getLogForCamera(camId);
+      setLogForCamera(camId, newStatus, log.details);
+      renderTable();
+    }
+
+    function toggleOcurrenciasMenu(e) {
+      if (e) e.stopPropagation();
+      document.getElementById('ocurrenciasMenu').classList.toggle('hidden');
+    }
+
+    function showSearchReportView(e) {
+      if (e) e.stopPropagation();
+      document.getElementById('ocurrenciasMenu').classList.add('hidden');
+      document.getElementById('mainDashboardView').classList.add('hidden');
+      document.getElementById('vecinalesView').classList.add('hidden');
+      document.getElementById('searchReportView').classList.remove('hidden');
+      document.getElementById('searchReportView').classList.add('flex');
+
+      renderSearchReportTable();
+    }
+
+    function showVecinalesView(e) {
+      if (e) e.stopPropagation();
+      document.getElementById('ocurrenciasMenu').classList.add('hidden');
+      document.getElementById('mainDashboardView').classList.add('hidden');
+      document.getElementById('searchReportView').classList.add('hidden');
+      document.getElementById('vecinalesView').classList.remove('hidden');
+      document.getElementById('vecinalesView').classList.add('flex');
+
+      populateBarrioFilter();
+      renderVecinalesTable();
+    }
+
+    function showMainDashboardView() {
+      document.getElementById('searchReportView').classList.add('hidden');
+      document.getElementById('searchReportView').classList.remove('flex');
+      document.getElementById('vecinalesView').classList.add('hidden');
+      document.getElementById('vecinalesView').classList.remove('flex');
+      document.getElementById('mainDashboardView').classList.remove('hidden');
+      renderTable();
+    }
+
+    function setVecinalBarrioMode(mode, selectedBarrio = "") {
+      const modeInput = document.getElementById('vecAddMode');
+      const textWrap = document.getElementById('vecBarrioTextWrap');
+      const selectWrap = document.getElementById('vecBarrioSelectWrap');
+      const textInput = document.getElementById('vecBarrio');
+      const selectInput = document.getElementById('vecBarrioSelect');
+
+      modeInput.value = mode;
+
+      if (mode === 'existing') {
+        textWrap.classList.add('hidden');
+        selectWrap.classList.remove('hidden');
+        textInput.required = false;
+        selectInput.required = true;
+
+        selectInput.innerHTML = '<option value="">Seleccione un barrio...</option>';
+        [...new Set(vecinalCameras.map(v => v.barrio))].forEach(barrio => {
+          const opt = document.createElement('option');
+          opt.value = barrio;
+          opt.textContent = barrio;
+          if (barrio === selectedBarrio) opt.selected = true;
+          selectInput.appendChild(opt);
+        });
+      } else {
+        textWrap.classList.remove('hidden');
+        selectWrap.classList.add('hidden');
+        textInput.required = true;
+        selectInput.required = false;
+      }
+    }
+
+    function getVecinalBarrioValue() {
+      const mode = document.getElementById('vecAddMode').value;
+      return mode === 'existing'
+        ? document.getElementById('vecBarrioSelect').value.trim()
+        : document.getElementById('vecBarrio').value.trim();
+    }
+
+    function populateBarrioFilter() {
+      const select = document.getElementById('barrioFilter');
+      select.innerHTML = '<option value="ALL">TODOS LOS BARRIOS</option>';
+      const barrios = [...new Set(vecinalCameras.map(v => v.barrio))];
+      barrios.forEach(b => {
+        const opt = document.createElement('option');
+        opt.value = b;
+        opt.textContent = b;
+        select.appendChild(opt);
+      });
+    }
+
+    function changeVecinalConexion(originalIdx, newConexion) {
+      if (vecinalCameras[originalIdx]) {
+        vecinalCameras[originalIdx].conexion = newConexion;
+        saveToStorage();
+        renderVecinalesTable();
+      }
+    }
+
+    function updateVecinalStats() {
+      const total = vecinalCameras.length;
+      const operativas = vecinalCameras.filter(v => v.conexion === 'OPERATIVA').length;
+      const inoperativas = vecinalCameras.filter(v => v.conexion === 'INOPERATIVA').length;
+      const mantenimiento = vecinalCameras.filter(v => v.conexion === 'MANTENIMIENTO').length;
+
+      document.getElementById('vecinalCount').innerText = total;
+      document.getElementById('vec-stat-total').innerText = total;
+      document.getElementById('vec-stat-operativas').innerText = operativas;
+      document.getElementById('vec-stat-inoperativas').innerText = inoperativas;
+      document.getElementById('vec-stat-mantenimiento').innerText = mantenimiento;
+    }
+
+    function barrioSortKey(name) {
+      const match = String(name).match(/^B(\d+)/i);
+      return match ? parseInt(match[1], 10) : 9999;
+    }
+
+    function toggleBarrioSummary(cardIndex) {
+      const details = document.getElementById(`barrio-details-${cardIndex}`);
+      const arrow = document.getElementById(`barrio-arrow-${cardIndex}`);
+      if (!details || !arrow) return;
+
+      details.classList.toggle('hidden');
+      arrow.classList.toggle('rotate-180');
+    }
+
+    function addVecinalToSpecificBarrio(barrio) {
+      openVecinalAddToBarrio(barrio);
+    }
+
+    function renderVecinalSummary() {
+      const container = document.getElementById('vecinalBarrioSummary');
+      const totalLabel = document.getElementById('vecinalSummaryTotal');
+      if (!container) return;
+
+      const grouped = {};
+      vecinalCameras.forEach(item => {
+        if (!grouped[item.barrio]) grouped[item.barrio] = [];
+        grouped[item.barrio].push(item);
+      });
+
+      const barrios = Object.keys(grouped).sort((a, b) => barrioSortKey(a) - barrioSortKey(b));
+      container.innerHTML = '';
+      totalLabel.innerText = `${barrios.length} barrios registrados`;
+
+      barrios.forEach((barrio, index) => {
+        const items = grouped[barrio];
+        const operativas = items.filter(v => v.conexion === 'OPERATIVA').length;
+        const inoperativas = items.filter(v => v.conexion === 'INOPERATIVA').length;
+        const mantenimiento = items.filter(v => v.conexion === 'MANTENIMIENTO').length;
+
+        const card = document.createElement('div');
+        card.className = "bg-[#030712] border border-slate-800 rounded-xl overflow-hidden";
+        card.innerHTML = `
+          <button type="button" onclick="toggleBarrioSummary(${index})" class="w-full flex items-center justify-between gap-3 p-3 hover:bg-slate-900/70 transition text-left">
+            <div class="min-w-0">
+              <div class="text-xs font-black text-amber-400 truncate">${barrio}</div>
+              <div class="text-[10px] text-slate-400 mt-1">
+                Total: <span class="text-white font-bold">${items.length}</span>
+                <span class="mx-1">•</span>
+                <span class="text-amber-400 font-bold">${operativas} operativas</span>
+                <span class="mx-1">•</span>
+                <span class="text-rose-400 font-bold">${inoperativas} inoperativas</span>
+              </div>
+            </div>
+            <i id="barrio-arrow-${index}" class="fa-solid fa-chevron-down text-slate-400 text-xs transition-transform duration-200 shrink-0"></i>
+          </button>
+
+          <div id="barrio-details-${index}" class="hidden border-t border-slate-800 p-3 space-y-2">
+            <div class="grid grid-cols-3 gap-2 text-center">
+              <div class="rounded-lg bg-amber-500/10 border border-amber-500/20 px-2 py-2">
+                <div class="text-[9px] text-amber-400 font-bold uppercase">Operativas</div>
+                <div class="text-lg text-amber-400 font-black">${operativas}</div>
+              </div>
+              <div class="rounded-lg bg-rose-500/10 border border-rose-500/20 px-2 py-2">
+                <div class="text-[9px] text-rose-400 font-bold uppercase">Inoperativas</div>
+                <div class="text-lg text-rose-400 font-black">${inoperativas}</div>
+              </div>
+              <div class="rounded-lg bg-blue-500/10 border border-blue-500/20 px-2 py-2">
+                <div class="text-[9px] text-blue-400 font-bold uppercase">Mantenimiento</div>
+                <div class="text-lg text-blue-400 font-black">${mantenimiento}</div>
+              </div>
+            </div>
+
+            <div class="flex justify-end pt-1">
+              <button type="button" onclick="addVecinalToSpecificBarrio(${JSON.stringify(barrio).replace(/"/g, '&quot;')})" class="text-[10px] bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-3 py-2 rounded-lg transition flex items-center gap-1.5">
+                <i class="fa-solid fa-plus"></i> Añadir cámara a este B
+              </button>
+            </div>
+          </div>
+        `;
+        container.appendChild(card);
+      });
+    }
+
+    function renderVecinalesTable() {
+      const search = document.getElementById('searchVecinalInput').value.toLowerCase();
+      const selectedBarrio = document.getElementById('barrioFilter').value;
+      const tbody = document.getElementById('vecinalesTableBody');
+      tbody.innerHTML = '';
+
+      const filtered = vecinalCameras.filter(item => {
+        const matchesBarrio = selectedBarrio === 'ALL' || item.barrio === selectedBarrio;
+        const matchesSearch = Object.values(item).some(val => String(val).toLowerCase().includes(search));
+        return matchesBarrio && matchesSearch;
+      });
+
+      updateVecinalStats();
+
+      const groups = {};
+      filtered.forEach((item) => {
+        if (!groups[item.barrio]) groups[item.barrio] = [];
+        const originalIndex = vecinalCameras.indexOf(item);
+        groups[item.barrio].push({ ...item, originalIndex });
+      });
+
+      Object.keys(groups).sort((a, b) => barrioSortKey(a) - barrioSortKey(b)).forEach(barrioName => {
+        const items = groups[barrioName];
+        const rowSpan = items.length;
+
+        items.forEach((item, idx) => {
+          const tr = document.createElement('tr');
+          tr.className = "border-b border-slate-800/60 hover:bg-slate-800/30 transition text-slate-200";
+
+          let barrioCellHtml = '';
+          if (idx === 0) {
+            barrioCellHtml = `<td rowspan="${rowSpan}" class="p-3.5 font-bold text-amber-400 align-middle text-center bg-[#060b17] border-r border-b border-slate-800 tracking-wide">${barrioName}</td>`;
+          }
+
+          tr.innerHTML = `
+            ${barrioCellHtml}
+            <td class="p-3.5 font-bold text-white align-middle border-r border-slate-800/60">${item.camara}</td>
+            <td class="p-3.5 align-middle border-r border-slate-800/60">${item.urbanizacion}</td>
+            <td class="p-3.5 align-middle border-r border-slate-800/60">${item.zona}</td>
+            <td class="p-3.5 align-middle border-r border-slate-800/60">${item.sistema}</td>
+            <td class="p-2 text-center align-middle border-r border-slate-800/60">
+              <select onchange="changeVecinalConexion(${item.originalIndex}, this.value)" class="w-full py-1.5 px-2 rounded-lg text-[10px] uppercase font-black cursor-pointer focus:outline-none transition status-${item.conexion}">
+                <option value="OPERATIVA" ${item.conexion === 'OPERATIVA' ? 'selected' : ''}>OPERATIVA</option>
+                <option value="INOPERATIVA" ${item.conexion === 'INOPERATIVA' ? 'selected' : ''}>INOPERATIVA</option>
+                <option value="MANTENIMIENTO" ${item.conexion === 'MANTENIMIENTO' ? 'selected' : ''}>MANTENIMIENTO</option>
+              </select>
+            </td>
+            <td class="p-3.5 text-slate-300 font-medium align-middle border-r border-slate-800/60">${item.detalles}</td>
+            <td class="p-3.5 align-middle border-r border-slate-800/60">${item.estacion}</td>
+            <td class="p-3.5 text-center align-middle space-x-1">
+              <button onclick="addVecinalCameraRow(${item.originalIndex})" class="p-1.5 text-emerald-400 hover:text-emerald-300 rounded-lg hover:bg-slate-800 transition" title="Añadir Cámara en este Barrio">
+                <i class="fa-solid fa-plus-circle"></i>
+              </button>
+              <button onclick="editVecinalModal(${item.originalIndex})" class="p-1.5 text-blue-400 hover:text-blue-300 rounded-lg hover:bg-slate-800 transition" title="Editar Cámara Vecinal">
+                <i class="fa-solid fa-pen-to-square"></i>
+              </button>
+              <button onclick="deleteVecinalCamera(${item.originalIndex})" class="p-1.5 text-rose-400 hover:text-rose-300 rounded-lg hover:bg-slate-800 transition" title="Eliminar Cámara Vecinal">
+                <i class="fa-solid fa-trash"></i>
+              </button>
+            </td>
+          `;
+          tbody.appendChild(tr);
+        });
+      });
+
+      renderVecinalSummary();
+    }
+
+    function openVecinalModal() {
+      document.getElementById('vecinalModalTitle').innerText = "Agregar Cámara Vecinal";
+      document.getElementById('vecinalForm').reset();
+      document.getElementById('vecinalIdx').value = "";
+      document.getElementById('vecinalInsertAfter').value = "";
+      setVecinalBarrioMode('new');
+      document.getElementById('vecinalModal').classList.remove('hidden');
+      document.getElementById('vecinalModal').classList.add('flex');
+    }
+
+    function openVecinalAddToBarrio(selectedBarrio = "") {
+      document.getElementById('vecinalModalTitle').innerText = selectedBarrio
+        ? "Añadir Cámara a: " + selectedBarrio
+        : "Añadir Cámara a un Barrio (B)";
+      document.getElementById('vecinalForm').reset();
+      document.getElementById('vecinalIdx').value = "";
+      document.getElementById('vecinalInsertAfter').value = "";
+      setVecinalBarrioMode('existing', selectedBarrio);
+
+      if (selectedBarrio) {
+        const refItem = vecinalCameras.find(v => v.barrio === selectedBarrio);
+        if (refItem) {
+          document.getElementById('vecUrb').value = refItem.urbanizacion || "";
+          document.getElementById('vecZona').value = refItem.zona || "";
+          document.getElementById('vecSistema').value = refItem.sistema || "PSS";
+          document.getElementById('vecEstacion').value = refItem.estacion || "ESTACIÓN 18";
+        }
+      }
+
+      document.getElementById('vecConexion').value = "OPERATIVA";
+      document.getElementById('vecDetalles').value = "FUNCIONA";
+      document.getElementById('vecinalModal').classList.remove('hidden');
+      document.getElementById('vecinalModal').classList.add('flex');
+    }
+
+    function addVecinalCameraRow(insertAfterIdx) {
+      const refItem = vecinalCameras[insertAfterIdx];
+      if (!refItem) return;
+
+      document.getElementById('vecinalModalTitle').innerText = "Añadir Fila de Cámara a: " + refItem.barrio;
+      document.getElementById('vecinalForm').reset();
+      document.getElementById('vecinalIdx').value = "";
+      document.getElementById('vecinalInsertAfter').value = insertAfterIdx;
+      setVecinalBarrioMode('new');
+
+      document.getElementById('vecBarrio').value = refItem.barrio;
+      document.getElementById('vecUrb').value = refItem.urbanizacion;
+      document.getElementById('vecZona').value = refItem.zona;
+      document.getElementById('vecSistema').value = refItem.sistema;
+      document.getElementById('vecEstacion').value = refItem.estacion;
+      document.getElementById('vecConexion').value = "OPERATIVA";
+      document.getElementById('vecDetalles').value = "FUNCIONA";
+
+      document.getElementById('vecinalModal').classList.remove('hidden');
+      document.getElementById('vecinalModal').classList.add('flex');
+    }
+
+    function closeVecinalModal() {
+      document.getElementById('vecinalModal').classList.add('hidden');
+      document.getElementById('vecinalModal').classList.remove('flex');
+    }
+
+    function editVecinalModal(idx) {
+      const item = vecinalCameras[idx];
+      if(!item) return;
+
+      document.getElementById('vecinalModalTitle').innerText = "Editar Cámara Vecinal";
+      document.getElementById('vecinalIdx').value = idx;
+      document.getElementById('vecinalInsertAfter').value = "";
+      setVecinalBarrioMode('new');
+      document.getElementById('vecBarrio').value = item.barrio;
+      document.getElementById('vecCamara').value = item.camara;
+      document.getElementById('vecEstacion').value = item.estacion;
+      document.getElementById('vecUrb').value = item.urbanizacion;
+      document.getElementById('vecZona').value = item.zona;
+      document.getElementById('vecSistema').value = item.sistema;
+      document.getElementById('vecConexion').value = item.conexion;
+      document.getElementById('vecDetalles').value = item.detalles;
+
+      document.getElementById('vecinalModal').classList.remove('hidden');
+      document.getElementById('vecinalModal').classList.add('flex');
+    }
+
+    function saveVecinalCamera(e) {
+      e.preventDefault();
+      const idx = document.getElementById('vecinalIdx').value;
+      const insertAfter = document.getElementById('vecinalInsertAfter').value;
+
+      const barrioValue = getVecinalBarrioValue();
+
+      if (!barrioValue) {
+        alert("Selecciona o escribe el Barrio (B) donde irá la cámara.");
+        return;
+      }
+
+      const payload = {
+        barrio: barrioValue,
+        camara: document.getElementById('vecCamara').value.trim(),
+        urbanizacion: document.getElementById('vecUrb').value.trim(),
+        zona: document.getElementById('vecZona').value.trim(),
+        sistema: document.getElementById('vecSistema').value.trim(),
+        conexion: document.getElementById('vecConexion').value,
+        detalles: document.getElementById('vecDetalles').value.trim() || "FUNCIONA",
+        estacion: document.getElementById('vecEstacion').value.trim()
+      };
+
+      if (idx !== "") {
+        vecinalCameras[parseInt(idx)] = payload;
+      } else if (insertAfter !== "") {
+        const pos = parseInt(insertAfter) + 1;
+        vecinalCameras.splice(pos, 0, payload);
+      } else if (document.getElementById('vecAddMode').value === 'existing') {
+        // Inserta la nueva cámara al final del B seleccionado.
+        let lastIndex = -1;
+        vecinalCameras.forEach((item, i) => {
+          if (item.barrio === barrioValue) lastIndex = i;
+        });
+
+        if (lastIndex >= 0) {
+          vecinalCameras.splice(lastIndex + 1, 0, payload);
+        } else {
+          vecinalCameras.push(payload);
+        }
+      } else {
+        vecinalCameras.push(payload);
+      }
+
+      saveToStorage();
+      closeVecinalModal();
+      populateBarrioFilter();
+      renderVecinalesTable();
+    }
+
+    function deleteVecinalCamera(idx) {
+      if(confirm("¿Seguro que deseas eliminar esta cámara vecinal?")) {
+        vecinalCameras.splice(idx, 1);
+        saveToStorage();
+        populateBarrioFilter();
+        renderVecinalesTable();
+      }
+    }
+
+    function updateTopReportCard(camaraNum, timestampStr) {
+      document.getElementById('reportCameraDisplay').innerText = formatCamName(camaraNum);
+      document.getElementById('reportTimestampDisplay').innerText = timestampStr;
+      alert(`Reporte asignado a ${formatCamName(camaraNum)}\nFecha/Hora: ${timestampStr}`);
+    }
+
+    function renderSearchReportTable() {
+      const tbody = document.getElementById('searchTableBody');
+      tbody.innerHTML = '';
+
+      const currentLog = dailyLogs[selectedDateStr];
+      const timestampStr = currentLog && currentLog.timestamp ? currentLog.timestamp : `${selectedDateStr} - 08:00:00 AM`;
+      document.getElementById('reportTimestampDisplay').innerText = timestampStr;
+
+      cameras.forEach(cam => {
+        const log = getLogForCamera(cam.id);
+        const tr = document.createElement('tr');
+        tr.className = "border-b border-slate-800/60 hover:bg-slate-800/30 transition text-slate-200";
+
+        tr.innerHTML = `
+          <td class="p-3 text-center font-bold text-white border-r border-slate-800">${formatCamName(cam.camara)}</td>
+          <td class="p-3 font-semibold border-r border-slate-800">${cam.sistema}</td>
+          <td class="p-2 text-center border-r border-slate-800">
+            <span class="inline-block w-full py-1 px-2 rounded text-[10px] uppercase font-black status-${log.status}">
+              ${log.status}
+            </span>
+          </td>
+          <td class="p-3 text-slate-300 font-normal border-r border-slate-800">${log.details}</td>
+          <td class="p-3 text-center space-x-2">
+            <button onclick="updateTopReportCard(${cam.camara}, '${timestampStr}')" class="p-1.5 text-emerald-400 hover:text-emerald-300 hover:bg-slate-800 rounded-lg transition" title="Ver fecha y hora de publicación">
+              <i class="fa-regular fa-eye text-sm"></i>
+            </button>
+
+            <button onclick="openDetailReportModal(${cam.id})" class="p-1.5 text-sky-400 hover:text-sky-300 hover:bg-slate-800 rounded-lg transition" title="Ver / Editar Novedad">
+              <i class="fa-solid fa-pen-to-square text-sm"></i>
+            </button>
+
+            <button onclick="clearDetailReport(${cam.id})" class="p-1.5 text-rose-500 hover:text-rose-400 hover:bg-slate-800 rounded-lg transition" title="Borrar Reporte">
+              <i class="fa-solid fa-trash text-sm"></i>
+            </button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function openDetailReportModal(camId) {
+      const log = getLogForCamera(camId);
+      document.getElementById('editReportCamId').value = camId;
+      document.getElementById('editReportText').value = log.details;
+
+      document.getElementById('detailReportModal').classList.remove('hidden');
+      document.getElementById('detailReportModal').classList.add('flex');
+    }
+
+    function closeDetailReportModal() {
+      document.getElementById('detailReportModal').classList.add('hidden');
+      document.getElementById('detailReportModal').classList.remove('flex');
+    }
+
+    function saveDetailReport() {
+      const camId = parseInt(document.getElementById('editReportCamId').value);
+      const newText = document.getElementById('editReportText').value.trim();
+      const log = getLogForCamera(camId);
+
+      const camObj = cameras.find(c => c.id === camId);
+      const camNum = camObj ? camObj.camara : camId;
+
+      setLogForCamera(camId, log.status, newText || 'FUNCIONAL - SIN NOVEDAD');
+
+      const currentLog = dailyLogs[selectedDateStr];
+      const newTimestampStr = currentLog && currentLog.timestamp ? currentLog.timestamp : `${selectedDateStr} - ${new Date().toLocaleTimeString('es-ES')}`;
+
+      document.getElementById('reportCameraDisplay').innerText = formatCamName(camNum);
+      document.getElementById('reportTimestampDisplay').innerText = newTimestampStr;
+
+      closeDetailReportModal();
+      renderSearchReportTable();
+    }
+
+    function clearDetailReport(camId) {
+      if (confirm("¿Deseas restablecer las observaciones de esta cámara a su estado predeterminado?")) {
+        const log = getLogForCamera(camId);
+        setLogForCamera(camId, log.status, "FUNCIONAL - SIN NOVEDAD");
+        renderSearchReportTable();
+      }
+    }
+
+    function openModal() {
+      document.getElementById('modalTitle').innerText = "Agregar Nueva Cámara";
+      document.getElementById('cameraForm').reset();
+      document.getElementById('camId').value = "";
+      document.getElementById('cameraModal').classList.remove('hidden');
+      document.getElementById('cameraModal').classList.add('flex');
+    }
+
+    function closeModal() {
+      document.getElementById('cameraModal').classList.add('hidden');
+      document.getElementById('cameraModal').classList.remove('flex');
+    }
+
+    function editModal(id) {
+      const cam = cameras.find(c => c.id === id);
+      const log = getLogForCamera(id);
+      if(!cam) return;
+
+      document.getElementById('modalTitle').innerText = "Editar " + formatCamName(cam.camara);
+      document.getElementById('camId').value = cam.id;
+      document.getElementById('camNum').value = cam.camara;
+      document.getElementById('camEstacion').value = cam.estacion;
+      document.getElementById('camSistema').value = cam.sistema;
+      document.getElementById('camEstado').value = log.status;
+      document.getElementById('camUbicacion').value = cam.ubicacion;
+      document.getElementById('camUrb').value = cam.urbanizacion;
+      document.getElementById('camZona').value = cam.zona;
+      document.getElementById('camSuministro').value = cam.suministro || "";
+
+      document.getElementById('cameraModal').classList.remove('hidden');
+      document.getElementById('cameraModal').classList.add('flex');
+    }
+
+    function saveCamera(e) {
+      e.preventDefault();
+      const id = document.getElementById('camId').value;
+      const camNum = parseInt(document.getElementById('camNum').value);
+
+      const payload = {
+        camara: camNum,
+        estacion: document.getElementById('camEstacion').value,
+        sistema: document.getElementById('camSistema').value,
+        ubicacion: document.getElementById('camUbicacion').value,
+        urbanizacion: document.getElementById('camUrb').value,
+        zona: document.getElementById('camZona').value,
+        suministro: document.getElementById('camSuministro').value.trim() || "NO CUENTA CON SUMINISTRO"
+      };
+
+      let camIdInt = id ? parseInt(id) : Date.now();
+
+      if(id) {
+        const index = cameras.findIndex(c => c.id == id);
+        if(index !== -1) cameras[index] = { ...cameras[index], ...payload };
+      } else {
+        payload.id = camIdInt;
+        cameras.push(payload);
+      }
+
+      const existingLog = getLogForCamera(camIdInt);
+      setLogForCamera(camIdInt, document.getElementById('camEstado').value, existingLog.details);
+
+      saveToStorage();
+      closeModal();
+      renderTable();
+    }
+
+    function deleteCamera(id) {
+      if(confirm("¿Seguro que deseas eliminar esta cámara del sistema?")) {
+        cameras = cameras.filter(c => c.id !== id);
+        saveToStorage();
+        renderTable();
+      }
+    }
+
+    function copySummary() {
+      let total = cameras.length;
+      let operativas = 0;
+      let novedades = [];
+
+      cameras.forEach(c => {
+        const log = getLogForCamera(c.id);
+        if (log.status === 'OPERATIVA') operativas++;
+        else {
+          novedades.push(`- ${formatCamName(c.camara)} (${c.estacion}): [${log.status}] ${c.ubicacion} | ${log.details} | Sum: ${c.suministro}`);
+        }
+      });
+
+      let summary = `*REPORTE DIARIO DE CÁMARAS CIOE (${selectedDateStr})*\n`;
+      summary += `Total de Cámaras: ${total}\n`;
+      summary += `Operativas: ${operativas}\n`;
+      summary += `Inoperativas / Mantenimiento: ${novedades.length}\n\n`;
+
+      if(novedades.length > 0) {
+        summary += `*DETALLE DE NOVEDADES Y OBSERVACIONES:*\n` + novedades.join("\n");
+      }
+
+      navigator.clipboard.writeText(summary).then(() => {
+        alert(`¡Resumen del reporte del día (${selectedDateStr}) copiado al portapapeles!`);
+      });
+    }
+
+    function exportCSV() {
+      let csvContent = "data:text/csv;charset=utf-8,";
+      csvContent += "FECHA,CAMARA,ESTACIONES,SISTEMA,ESTADO,UBICACION,URBANIZACION,ZONA,SUMINISTROS,DETALLES_NOVEDADES\n";
+
+      cameras.forEach(c => {
+        const log = getLogForCamera(c.id);
+        const row = [
+          `"${selectedDateStr}"`,
+          `"${formatCamName(c.camara)}"`,
+          `"${c.estacion}"`,
+          `"${c.sistema}"`,
+          `"${log.status}"`,
+          `"${c.ubicacion}"`,
+          `"${c.urbanizacion}"`,
+          `"${c.zona}"`,
+          `"${c.suministro}"`,
+          `"${log.details}"`
+        ].join(",");
+        csvContent += row + "\n";
+      });
+
+      const encodedUri = encodeURI(csvContent);
+      const link = document.createElement("a");
+      link.setAttribute("href", encodedUri);
+      link.setAttribute("download", `Reporte_Camaras_${selectedDateStr.replace(/\//g, '-')}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+
+    const USUARIO_CORRECTO = "admin";
+    const CONTRASENA_CORRECTA = "1234";
+
+    function handleLogin(event) {
+      event.preventDefault();
+
+      const usuario = document.getElementById("loginUser").value.trim();
+      const contrasena = document.getElementById("loginPass").value;
+      const error = document.getElementById("loginError");
+
+      if (usuario === USUARIO_CORRECTO && contrasena === CONTRASENA_CORRECTA) {
+        error.classList.add("hidden");
+        document.getElementById("loginView").classList.add("hidden");
+        document.getElementById("mainDashboardView").classList.remove("hidden");
+        renderTable();
+      } else {
+        error.classList.remove("hidden");
+        document.getElementById("loginPass").value = "";
+        document.getElementById("loginPass").focus();
+      }
+    }
+
+    function cerrarSesion() {
+      document.getElementById("mainDashboardView").classList.add("hidden");
+      document.getElementById("searchReportView").classList.add("hidden");
+      document.getElementById("searchReportView").classList.remove("flex");
+      document.getElementById("vecinalesView").classList.add("hidden");
+      document.getElementById("vecinalesView").classList.remove("flex");
+      document.getElementById("loginView").classList.remove("hidden");
+      document.getElementById("loginUser").value = "";
+      document.getElementById("loginPass").value = "";
+      document.getElementById("loginError").classList.add("hidden");
+      document.getElementById("loginUser").focus();
+    }
+
+    document.addEventListener('click', (e) => {
+      const menu = document.getElementById('ocurrenciasMenu');
+      const btn = e.target.closest('#ocurrenciasBtn') || e.target.closest('#ocurrenciasMenu');
+      if (!btn && menu && !menu.classList.contains('hidden')) {
+        menu.classList.add('hidden');
+      }
+    });
+
+    renderTable();
+  </script>
+</body>
+</html>
