@@ -101,6 +101,7 @@
           <div class="flex items-center gap-2">
             <h1 class="text-xl font-black text-white tracking-wide">CENTRO DE CONTROL</h1>
             <span class="bg-amber-500/20 text-amber-400 border border-amber-500/30 text-[10px] font-black px-2 py-0.5 rounded-md uppercase">SISTEMA DIARIO</span>
+            <span class="bg-cyan-500/10 text-cyan-300 border border-cyan-500/40 text-[10px] font-black px-2.5 py-1 rounded-md uppercase whitespace-nowrap">TOTAL DE CÁMARAS - GENERAL&nbsp;&nbsp; <span id="stat-total-general">532</span></span>
           </div>
           <p class="text-xs text-slate-400">Gestión de Cámaras, Estado de Operatividad e Incidencias</p>
         </div>
@@ -130,6 +131,10 @@
             <button type="button" onclick="showEstacionesParesView(event)" class="w-full text-left px-3.5 py-2.5 rounded-xl hover:bg-amber-500 hover:text-black font-bold text-slate-200 transition flex items-center gap-2">
               <i class="fa-solid fa-tower-broadcast text-violet-400"></i>
               <span>Estaciones y Pares</span>
+            </button>
+            <button type="button" onclick="showTotemsView(event)" class="w-full text-left px-3.5 py-2.5 rounded-xl hover:bg-amber-500 hover:text-black font-bold text-slate-200 transition flex items-center gap-2">
+              <i class="fa-solid fa-tower-observation text-orange-400"></i>
+              <span>Tótems de cámaras - Municipalidad de Los Olivos</span>
             </button>
           </div>
         </div>
@@ -322,15 +327,15 @@
 
       <div class="w-full bg-[#0a0f1d] rounded-2xl border border-slate-800 p-4 shadow-2xl flex flex-col flex-1">
         <div class="overflow-x-auto w-full">
-          <table class="w-full text-left text-xs border-collapse">
+          <table class="w-full text-left text-xs border-collapse min-w-[1550px]">
             <thead>
               <tr class="bg-black text-white uppercase tracking-wider text-[11px] font-black border-b border-slate-800">
                 <th class="p-3 text-center border-r border-slate-800 w-28">CAMARA</th>
                 <th class="p-3 border-r border-slate-800 w-24">SISTEMA</th>
                 <th class="p-3 text-center border-r border-slate-800 w-32">OPERATIVAS</th>
-                <th class="p-3 border-r border-slate-800 min-w-[260px]">UBICACIÓN</th>
-                <th class="p-3 border-r border-slate-800 min-w-[200px]">URBANIZACIÓN</th>
-                <th class="p-3 border-r border-slate-800 min-w-[150px]">ZONA / SECTOR</th>
+                <th class="p-3 border-r border-slate-800 min-w-[320px]">UBICACIÓN</th>
+                <th class="p-3 border-r border-slate-800 min-w-[220px]">URBANIZACIÓN</th>
+                <th class="p-3 border-r border-slate-800 min-w-[130px]">ZONA/SECTOR</th>
                 <th class="p-3 border-r border-slate-800">DETALLES / NOVEDADES</th>
                 <th class="p-3 text-center w-24">ACCIONES</th>
               </tr>
@@ -428,7 +433,7 @@
               <th style="width:120px">ZONA/SECTOR/SUB SECTOR</th>
               <th style="width:90px">SISTEMA</th>
               <th style="width:145px">CONEXIÓN</th>
-              <th style="width:350px">DETALLES</th>
+              <th style="width:350px">REPORTES</th>
               <th style="width:130px">ESTACIÓN</th>
               <th style="width:80px">ACCIONES</th>
             </tr>
@@ -439,6 +444,18 @@
     </main>
   </div>
 
+
+  <!-- ==================== VISTA: TÓTEMS DE CÁMARAS ==================== -->
+  <div id="totemsView" class="hidden space-y-4 flex-col flex-1">
+    <header class="bg-[#0a0f1d] border border-orange-500/30 rounded-2xl p-4 shadow-xl flex flex-col lg:flex-row justify-between items-center gap-4 w-full">
+      <div class="flex items-center gap-3"><div class="p-3 bg-orange-500 rounded-xl text-black"><i class="fa-solid fa-tower-observation text-xl"></i></div><div><h1 class="text-xl font-black text-white uppercase">TÓTEMS DE CÁMARAS DE LA MUNICIPALIDAD DE LOS OLIVOS</h1><p class="text-xs text-slate-400">Registro y control de cámaras instaladas en tótems municipales</p></div></div>
+      <div class="flex gap-2"><button onclick="openTotemModal()" class="bg-amber-500 hover:bg-amber-400 text-black px-4 py-2 rounded-xl text-xs font-black"><i class="fa-solid fa-plus mr-2"></i>Añadir Tótem</button><button onclick="showMainDashboardView()" class="bg-slate-800 hover:bg-slate-700 border border-slate-700 px-4 py-2 rounded-xl text-xs font-bold"><i class="fa-solid fa-arrow-left text-amber-500 mr-2"></i>Volver al Centro de Control</button></div>
+    </header>
+    <section class="grid grid-cols-2 lg:grid-cols-4 gap-3"><div class="bg-[#0a0f1d] border border-slate-800 rounded-2xl p-4"><span class="text-[10px] text-slate-400 font-bold">TOTAL TÓTEMS</span><div id="totStatTotal" class="text-2xl font-black">0</div></div><div class="bg-[#0a0f1d] border border-slate-800 rounded-2xl p-4"><span class="text-[10px] text-emerald-400 font-bold">OPERATIVAS</span><div id="totStatOp" class="text-2xl font-black text-emerald-400">0</div></div><div class="bg-[#0a0f1d] border border-slate-800 rounded-2xl p-4"><span class="text-[10px] text-rose-400 font-bold">INOPERATIVAS</span><div id="totStatInop" class="text-2xl font-black text-rose-400">0</div></div><div class="bg-[#0a0f1d] border border-slate-800 rounded-2xl p-4"><span class="text-[10px] text-blue-400 font-bold">MANTENIMIENTO</span><div id="totStatMant" class="text-2xl font-black text-blue-400">0</div></div></section>
+    <div class="bg-[#0a0f1d] border border-slate-800 rounded-2xl p-3"><input id="totemSearch" oninput="renderTotems()" placeholder="Buscar tótem, sistema, ubicación, urbanización o zona..." class="w-full bg-[#030712] border border-slate-700 rounded-xl px-4 py-2.5 text-xs text-white outline-none focus:border-orange-500"></div>
+    <main class="bg-[#0a0f1d] border border-slate-800 rounded-2xl overflow-hidden flex-1"><div class="overflow-x-auto"><table class="w-full text-[11px] min-w-[1450px]"><thead class="bg-black text-white uppercase"><tr><th class="p-3">N°</th><th class="p-3">Sistema</th><th class="p-3">Tótem / Cámara</th><th class="p-3">Tipo</th><th class="p-3">Estado</th><th class="p-3">Ubicación</th><th class="p-3">Urbanización</th><th class="p-3">Zona / Sector</th><th class="p-3">Detalle</th><th class="p-3 text-center">Reportes</th><th class="p-3 text-center">Acciones</th></tr></thead><tbody id="totemsBody"></tbody></table></div></main>
+  </div>
+  <div id="totemModal" class="fixed inset-0 bg-black/80 hidden items-center justify-center z-[100] p-4"><div class="bg-[#0a0f1d] border border-orange-500/40 rounded-2xl w-full max-w-3xl p-6"><div class="flex justify-between mb-4"><h2 class="font-black">REGISTRAR / EDITAR CÁMARA DE TÓTEM</h2><button onclick="closeTotemModal()"><i class="fa-solid fa-xmark"></i></button></div><form onsubmit="saveTotem(event)" class="grid grid-cols-1 md:grid-cols-2 gap-3"><input type="hidden" id="totemEditIndex"><label class="text-xs text-slate-400 md:col-span-2">Tótem / Parque / Grupo<input id="totGrupo" placeholder="Ej: PARQUE CAJAMARCA T1" class="mt-1 w-full bg-[#030712] border border-orange-500/50 rounded-xl p-2.5 text-white font-black" required></label><label class="text-xs text-slate-400">Sistema<input id="totSistema" class="mt-1 w-full bg-[#030712] border border-slate-700 rounded-xl p-2.5 text-white" required></label><label class="text-xs text-slate-400">Tótem / Cámara<input id="totCamara" class="mt-1 w-full bg-[#030712] border border-slate-700 rounded-xl p-2.5 text-white" required></label><label class="text-xs text-slate-400">Tipo<input id="totTipo" placeholder="PTZ / FIJA / IPC" class="mt-1 w-full bg-[#030712] border border-slate-700 rounded-xl p-2.5 text-white"></label><label class="text-xs text-slate-400">Estado<select id="totEstado" class="mt-1 w-full bg-[#030712] border border-slate-700 rounded-xl p-2.5 text-white"><option>OPERATIVA</option><option>INOPERATIVA</option><option>MANTENIMIENTO</option></select></label><label class="text-xs text-slate-400 md:col-span-2">Ubicación<input id="totUbicacion" class="mt-1 w-full bg-[#030712] border border-slate-700 rounded-xl p-2.5 text-white"></label><label class="text-xs text-slate-400">Urbanización<input id="totUrb" class="mt-1 w-full bg-[#030712] border border-slate-700 rounded-xl p-2.5 text-white"></label><label class="text-xs text-slate-400">Zona / Sector<input id="totZona" class="mt-1 w-full bg-[#030712] border border-slate-700 rounded-xl p-2.5 text-white"></label><label class="text-xs text-slate-400 md:col-span-2">Detalle / Novedad / Reporte<textarea id="totDetalle" rows="3" class="mt-1 w-full bg-[#030712] border border-slate-700 rounded-xl p-2.5 text-white"></textarea></label><div class="md:col-span-2 flex justify-end gap-2"><button type="button" onclick="closeTotemModal()" class="bg-slate-800 px-4 py-2 rounded-xl text-xs font-bold">Cancelar</button><button class="bg-amber-500 text-black px-5 py-2 rounded-xl text-xs font-black">Guardar Tótem</button></div></form></div></div>
 
   <!-- ==================== VISTA: ESTACIONES Y PARES ==================== -->
   <div id="estacionesParesView" class="hidden space-y-4 flex-col flex-1">
@@ -517,7 +534,7 @@
         <label class="text-xs text-slate-400">Estado<select id="epEstado" class="mt-1 w-full bg-[#030712] border border-slate-700 rounded-xl p-2.5 text-white"><option>OPERATIVA</option><option>INOPERATIVA</option><option>MANTENIMIENTO</option><option value="">SIN ESTADO</option></select></label>
         <label class="text-xs text-slate-400">Zona / Sector<input id="epZona" class="mt-1 w-full bg-[#030712] border border-slate-700 rounded-xl p-2.5 text-white"></label>
         <label class="text-xs text-slate-400 md:col-span-2">Ubicación<input id="epUbicacion" class="mt-1 w-full bg-[#030712] border border-slate-700 rounded-xl p-2.5 text-white"></label>
-        <label class="text-xs text-slate-400 md:col-span-2">Detalle / Novedad<textarea id="epDetalle" rows="3" placeholder="Escribe únicamente el detalle o novedad de esta cámara..." class="mt-1 w-full bg-[#030712] border border-slate-700 rounded-xl p-2.5 text-white resize-y"></textarea><span class="block mt-1 text-[10px] text-slate-500">Este texto aparecerá en VER DETALLE.</span></label>
+        <label class="text-xs text-slate-400 md:col-span-2">Detalle / Novedad / Reporte<textarea id="epDetalle" rows="3" placeholder="Escribe únicamente el detalle o novedad de esta cámara..." class="mt-1 w-full bg-[#030712] border border-slate-700 rounded-xl p-2.5 text-white resize-y"></textarea><span class="block mt-1 text-[10px] text-slate-500">Este texto aparecerá en VER DETALLE.</span></label>
         <label class="text-xs text-slate-400">N° Perifoneo<input id="epPerifoneo" class="mt-1 w-full bg-[#030712] border border-slate-700 rounded-xl p-2.5 text-white"></label><label class="text-xs text-slate-400">Estado Perifoneo<select id="epPerifEstado" class="mt-1 w-full bg-[#030712] border border-slate-700 rounded-xl p-2.5 text-white"><option>OPERATIVO</option><option>INOPERATIVO</option><option>MANTENIMIENTO</option><option value="">SIN ESTADO</option></select></label>
         <div class="md:col-span-2 flex justify-end gap-2 pt-2"><button type="button" onclick="closeEpModal()" class="bg-slate-800 border border-slate-700 px-4 py-2 rounded-xl text-xs font-bold text-white">Cancelar</button><button class="bg-amber-500 hover:bg-amber-400 text-black px-4 py-2 rounded-xl text-xs font-black"><i class="fa-solid fa-floppy-disk mr-2"></i>Guardar Cámara</button></div>
       </form>
@@ -709,7 +726,7 @@
               <th class="p-3.5 w-28 border-r border-slate-800">ZONA/SECTOR</th>
               <th class="p-3.5 w-24 border-r border-slate-800">SISTEMA</th>
               <th class="p-3.5 text-center w-36 border-r border-slate-800">CONEXIÓN</th>
-              <th class="p-3.5 border-r border-slate-800">DETALLES</th>
+              <th class="p-3.5 border-r border-slate-800 text-center">REPORTES</th>
               <th class="p-3.5 w-32 border-r border-slate-800">ESTACIÓN</th>
               <th class="p-3.5 text-center w-28">ACCIONES</th>
             </tr>
@@ -739,10 +756,10 @@
 
         <div id="vecBarrioSelectWrap" class="hidden">
           <label class="text-xs text-slate-400 font-semibold block mb-1">¿En qué Barrio (B) irá esta cámara?</label>
-          <select id="vecBarrioSelect" class="w-full bg-[#030712] border border-emerald-700 rounded-xl p-2.5 text-xs text-emerald-300 font-bold focus:outline-none focus:border-emerald-500">
+          <select id="vecBarrioSelect" class="w-full bg-[#030712] border border-emerald-500 rounded-xl p-2.5 text-xs text-emerald-300 font-bold focus:outline-none focus:border-emerald-400">
             <option value="">Seleccione un barrio...</option>
           </select>
-          <p class="text-[10px] text-slate-500 mt-1">La nueva cámara se colocará automáticamente al final de ese B.</p>
+          <p class="mt-1 text-[10px] text-slate-500">La nueva cámara se colocará automáticamente al final de ese B.</p>
         </div>
 
         <div class="grid grid-cols-2 gap-3">
@@ -1853,6 +1870,7 @@
     }
 
     function renderTable() {
+      if (typeof updateTotalGeneral === 'function') updateTotalGeneral();
       const search = document.getElementById('searchInput').value.toLowerCase();
       const cameraFilter = document.getElementById('mainCameraFilter')?.value || 'ALL';
       const anexoFilter = document.getElementById('mainAnexoFilter')?.value || 'ALL';
@@ -2130,6 +2148,7 @@
     }
 
     function renderCamarasFijasTable() {
+      if (typeof updateTotalGeneral === 'function') updateTotalGeneral();
       const tbody = document.getElementById('camarasFijasTableBody');
       if (!tbody) return;
 
@@ -2207,6 +2226,21 @@
           else if (row.status === 'MANTENIMIENTO') mantenimiento++;
         });
 
+        // Barra de grupo por cada cámara fija, igual al estilo usado en Tótems.
+        const fijaGroupRow = document.createElement('tr');
+        fijaGroupRow.innerHTML = `
+          <td colspan="9" style="padding:0 !important; border-color:#92400e !important;">
+            <div class="flex items-center justify-between gap-3 px-4 py-2 bg-[#241a1b] border-y border-amber-700/50">
+              <span class="text-amber-300 font-black text-[11px] uppercase tracking-wide">
+                <i class="fa-solid fa-video mr-2"></i>CÁMARA ${String(cam.camara)}
+              </span>
+              <button type="button" onclick="addFijaSubRow(${cam.camara})" class="bg-amber-500 hover:bg-amber-400 text-black px-3 py-1.5 rounded-lg text-[10px] font-black transition whitespace-nowrap">
+                <i class="fa-solid fa-plus mr-1"></i>AÑADIR CÁMARA
+              </button>
+            </div>
+          </td>`;
+        tbody.appendChild(fijaGroupRow);
+
         visibleRows.forEach((row, visibleIndex) => {
           const originalIndex = rows.indexOf(row);
           const tr = document.createElement('tr');
@@ -2230,20 +2264,20 @@
                 <option value="MANTENIMIENTO" ${row.status === 'MANTENIMIENTO' ? 'selected' : ''}>MANTENIMIENTO</option>
               </select>
             </td>
-            <td class="detail-cell text-center"><span class="text-slate-500 text-[10px] font-bold uppercase"><i class="fa-solid fa-lock mr-1"></i>Oculto</span></td>
+            <td class="detail-cell text-center">
+              <button onclick="showFijaDetail(${cam.camara}, ${originalIndex})" class="px-3 py-1.5 rounded-lg bg-slate-800 text-amber-400 hover:bg-slate-700 text-[10px] font-black whitespace-nowrap transition" title="Ver reporte">
+                <i class="fa-regular fa-eye mr-1"></i> VER REPORTE
+              </button>
+            </td>
             <td class="text-center">${row.station || ''}</td>
             <td class="action-cell">
               <div class="flex items-center justify-center gap-1">
-                <button onclick="addFijaSubRow(${cam.camara})" class="action-add" title="Añadir una nueva fila a esta cámara">
-                  <i class="fa-solid fa-circle-plus"></i>
-                </button>
                 <button onclick="addFijaSubRow(${cam.camara}, ${originalIndex})" class="text-sky-400 hover:text-sky-300" title="Editar datos de esta fila">
                   <i class="fa-solid fa-pen"></i>
                 </button>
                 <button onclick="openUnifiedReportEditor('fija', ${cam.camara}, ${originalIndex})" class="action-edit" title="Añadir / Editar reporte">
                   <i class="fa-solid fa-file-pen"></i>
                 </button>
-                <button onclick="showFijaDetail(${cam.camara}, ${originalIndex})" class="text-amber-400 hover:text-amber-300" title="Ver reporte y hora de guardado"><i class="fa-regular fa-eye"></i></button>
                 <button onclick="deleteFijaSubRow(${cam.camara}, ${originalIndex})" class="action-delete" title="Eliminar esta fila">
                   <i class="fa-solid fa-circle-minus"></i>
                 </button>
@@ -2302,6 +2336,11 @@
       document.getElementById('camarasFijasView').classList.remove('flex');
       document.getElementById('estacionesParesView').classList.add('hidden');
       document.getElementById('estacionesParesView').classList.remove('flex');
+      const totemsView = document.getElementById('totemsView');
+      if (totemsView) {
+        totemsView.classList.add('hidden');
+        totemsView.classList.remove('flex');
+      }
       document.getElementById('mainDashboardView').classList.remove('hidden');
       renderTable();
     }
@@ -2317,7 +2356,13 @@
 
       if (mode === 'existing') {
         textWrap.classList.add('hidden');
-        selectWrap.classList.remove('hidden');
+        // V44: desde el botón general “Añadir a un Barrio” se mantiene el filtro.
+        // Si se abre desde la barra de un barrio concreto, ese barrio queda fijado y el filtro se oculta.
+        if (selectedBarrio) {
+          selectWrap.classList.add('hidden');
+        } else {
+          selectWrap.classList.remove('hidden');
+        }
         textInput.required = false;
         selectInput.required = true;
 
@@ -2531,6 +2576,21 @@
         const items = groups[barrioName];
         const rowSpan = items.length;
 
+        // Barra de grupo por cada Barrio Seguro / Vecinal.
+        const barrioHeaderRow = document.createElement('tr');
+        barrioHeaderRow.innerHTML = `
+          <td colspan="9" class="p-0 border-y border-amber-700/50">
+            <div class="flex items-center justify-between gap-3 px-4 py-2 bg-[#241a1b]">
+              <span class="text-amber-300 font-black text-[11px] uppercase tracking-wide">
+                <i class="fa-solid fa-users-viewfinder mr-2"></i>${barrioName}
+              </span>
+              <button type="button" onclick='openVecinalAddToBarrio(${JSON.stringify(barrioName)})' class="bg-amber-500 hover:bg-amber-400 text-black px-3 py-1.5 rounded-lg text-[10px] font-black transition whitespace-nowrap">
+                <i class="fa-solid fa-plus mr-1"></i>AÑADIR CÁMARA
+              </button>
+            </div>
+          </td>`;
+        tbody.appendChild(barrioHeaderRow);
+
         items.forEach((item, idx) => {
           const tr = document.createElement('tr');
           tr.className = "border-b border-slate-800/60 hover:bg-slate-800/30 transition text-slate-200";
@@ -2573,19 +2633,15 @@
                 <option value="MANTENIMIENTO" ${item.conexion === 'MANTENIMIENTO' ? 'selected' : ''}>MANTENIMIENTO</option>
               </select>
             </td>
-            <td class="p-3.5 text-center align-middle border-r border-slate-800/60"><span class="text-slate-500 text-[10px] font-bold uppercase"><i class="fa-solid fa-lock mr-1"></i>Oculto</span></td>
+            <td class="p-3.5 text-center align-middle border-r border-slate-800/60"><button onclick="showVecinalDetail(${item.originalIndex})" class="px-3 py-1.5 rounded-lg bg-slate-800 text-amber-400 hover:bg-slate-700 text-[10px] font-black whitespace-nowrap transition" title="Ver reporte y hora de guardado"><i class="fa-regular fa-eye mr-1"></i> VER REPORTE</button></td>
             <td class="p-3.5 align-middle border-r border-slate-800/60">${item.estacion}</td>
             <td class="p-3.5 text-center align-middle space-x-1">
-              <button onclick="addVecinalCameraRow(${item.originalIndex})" class="p-1.5 text-emerald-400 hover:text-emerald-300 rounded-lg hover:bg-slate-800 transition" title="Añadir Cámara en este Barrio">
-                <i class="fa-solid fa-plus-circle"></i>
-              </button>
               <button onclick="editVecinalModal(${item.originalIndex})" class="p-1.5 text-sky-400 hover:text-sky-300 rounded-lg hover:bg-slate-800 transition" title="Editar datos de esta fila">
                 <i class="fa-solid fa-pen"></i>
               </button>
               <button onclick="openUnifiedReportEditor('vecinal', ${item.originalIndex})" class="p-1.5 text-blue-400 hover:text-blue-300 rounded-lg hover:bg-slate-800 transition" title="Añadir / Editar reporte">
                 <i class="fa-solid fa-file-pen"></i>
               </button>
-              <button onclick="showVecinalDetail(${item.originalIndex})" class="p-1.5 text-amber-400 hover:text-amber-300 rounded-lg hover:bg-slate-800 transition" title="Ver reporte y hora de guardado"><i class="fa-regular fa-eye"></i></button>
               <button onclick="deleteVecinalCamera(${item.originalIndex})" class="p-1.5 text-rose-400 hover:text-rose-300 rounded-lg hover:bg-slate-800 transition" title="Eliminar Cámara Vecinal">
                 <i class="fa-solid fa-trash"></i>
               </button>
@@ -3064,9 +3120,9 @@
               ${log.status}
             </span>
           </td>
-          <td class="p-3 border-r border-slate-800 font-medium">${cam.ubicacion || '—'}</td>
-          <td class="p-3 border-r border-slate-800 font-medium">${cam.urbanizacion || '—'}</td>
-          <td class="p-3 border-r border-slate-800 font-medium">${cam.zona || '—'}</td>
+          <td class="p-3 font-semibold border-r border-slate-800">${cam.ubicacion || '—'}</td>
+          <td class="p-3 font-semibold border-r border-slate-800">${cam.urbanizacion || '—'}</td>
+          <td class="p-3 font-semibold border-r border-slate-800">${cam.zona || '—'}</td>
           <td class="p-3 text-center border-r border-slate-800"><button onclick="showReportDetail(${cam.id})" class="px-3 py-1.5 rounded-lg bg-slate-800 text-amber-400 hover:bg-slate-700 text-[10px] font-bold"><i class="fa-regular fa-eye mr-1"></i> VER REPORTE</button></td>
           <td class="p-3 text-center space-x-2">
             <button onclick="openUnifiedReportEditor('general', ${cam.id})" class="p-1.5 text-sky-400 hover:text-sky-300 hover:bg-slate-800 rounded-lg transition" title="Ver / Editar Novedad">
@@ -3512,6 +3568,105 @@
     populateMainCameraFilter();
     renderTable();
     refreshTopReportCard();
-  </script>
+  
+    // ===== V36: TÓTEMS DE CÁMARAS MUNICIPALES - AGRUPADOS =====
+    let totems = (() => { try { return JSON.parse(localStorage.getItem('cioe_totems_v36') || '[]'); } catch(e){ return []; } })();
+    // Migración: conserva lo que ya estaba guardado y lo coloca dentro de un grupo.
+    totems = totems.map(t => ({...t, grupo: t.grupo || ((t.camara||'').includes('PARQUE') ? (t.camara||'TÓTEM MUNICIPAL') : 'TÓTEM MUNICIPAL')}));
+
+    // V36: catálogo base de Tótems mostrado en la hoja de referencia.
+    // Se agregan únicamente los registros que todavía no existan, sin borrar cambios guardados.
+    const TOTEMS_BASE_V36 = [
+      {grupo:'PARQUE CAJAMARCA',sistema:'HIK',camara:'T1',tipo:'PTZ',estado:'OPERATIVA',ubicacion:'PARQUE CAJAMARCA - C. JOSE SALAZAR / C. JIRON PANCHO FIERRO',urb:'URB. PANAMERICANA NORTE',zona:'SUR 4 A',detalle:''},
+      {grupo:'PARQUE CAJAMARCA',sistema:'HIK',camara:'T1',tipo:'FIJA',estado:'OPERATIVA',ubicacion:'JR. PANCHO FIERRO / CA. JOSE SALAZAR',urb:'URB. PANAMERICANA NORTE',zona:'SUR 4 A',detalle:''},
+      {grupo:'PARQUE CAJAMARCA',sistema:'HIK',camara:'T1',tipo:'FIJA',estado:'OPERATIVA',ubicacion:'JR. PANCHO FIERRO / CA. JOSE SALAZAR',urb:'URB. PANAMERICANA NORTE',zona:'SUR 4 A',detalle:''},
+      {grupo:'PARQUE CAJAMARCA',sistema:'HIK',camara:'T1',tipo:'FIJA',estado:'OPERATIVA',ubicacion:'JR. PANCHO FIERRO / CA. JOSE SALAZAR',urb:'URB. PANAMERICANA NORTE',zona:'SUR 4 A',detalle:''},
+      {grupo:'PARQUE CAJAMARCA',sistema:'HIK',camara:'T1',tipo:'FIJA',estado:'INOPERATIVA',ubicacion:'JR. PANCHO FIERRO / CA. JOSE SALAZAR',urb:'URB. PANAMERICANA NORTE',zona:'SUR 4 A',detalle:''},
+
+      {grupo:'PARQUE LIMA',sistema:'HIK',camara:'T2',tipo:'PTZ',estado:'OPERATIVA',ubicacion:'PARQUE LIMA / MICAELA BASTIDAS - LAS JR. LAS ACUARINAS / CA. LAS GRANADAS',urb:'URB. PANAMERICANA NORTE',zona:'SUR 2 D',detalle:''},
+      {grupo:'PARQUE LIMA',sistema:'HIK',camara:'T2',tipo:'FIJA',estado:'OPERATIVA',ubicacion:'JR. LAS ACUARINAS / CA. LAS GRANADAS',urb:'URB. PANAMERICANA NORTE',zona:'SUR 2 D',detalle:''},
+      {grupo:'PARQUE LIMA',sistema:'HIK',camara:'T2',tipo:'FIJA',estado:'OPERATIVA',ubicacion:'JR. LAS ACUARINAS / CA. LAS GRANADAS',urb:'URB. PANAMERICANA NORTE',zona:'SUR 2 D',detalle:''},
+      {grupo:'PARQUE LIMA',sistema:'HIK',camara:'T2',tipo:'FIJA',estado:'OPERATIVA',ubicacion:'JR. LAS ACUARINAS / CA. LAS GRANADAS',urb:'URB. PANAMERICANA NORTE',zona:'SUR 2 D',detalle:''},
+      {grupo:'PARQUE LIMA',sistema:'HIK',camara:'T2',tipo:'FIJA',estado:'OPERATIVA',ubicacion:'JR. LAS ACUARINAS / CA. LAS GRANADAS',urb:'URB. PANAMERICANA NORTE',zona:'SUR 2 D',detalle:''},
+
+      {grupo:'PARQUE LA BANDERA',sistema:'DSS - NX WITNESS',camara:'T3',tipo:'PTZ',estado:'OPERATIVA',ubicacion:'PARQUE PLAZA CÍVICA LA BANDERA',urb:'AA.HH. SAN MARTÍN DE PORRES',zona:'CENTRO 1 C',detalle:''},
+      {grupo:'PARQUE LA BANDERA',sistema:'NX WITNESS',camara:'T3',tipo:'FIJA',estado:'OPERATIVA',ubicacion:'PARQUE PLAZA CÍVICA LA BANDERA',urb:'P.J.P.M.V. CONFRATERNIDAD (AA.HH. SAN MARTÍN DE PORRES)',zona:'CENTRO 1 C',detalle:''},
+      {grupo:'PARQUE LA BANDERA',sistema:'NX WITNESS',camara:'T3',tipo:'FIJA',estado:'OPERATIVA',ubicacion:'PARQUE PLAZA CÍVICA LA BANDERA',urb:'P.J.P.M.V. CONFRATERNIDAD (AA.HH. SAN MARTÍN DE PORRES)',zona:'CENTRO 1 C',detalle:''},
+      {grupo:'PARQUE LA BANDERA',sistema:'NX WITNESS',camara:'T3',tipo:'FIJA',estado:'OPERATIVA',ubicacion:'PARQUE PLAZA CÍVICA LA BANDERA',urb:'P.J.P.M.V. CONFRATERNIDAD (AA.HH. SAN MARTÍN DE PORRES)',zona:'CENTRO 1 C',detalle:''},
+      {grupo:'PARQUE LA BANDERA',sistema:'NX WITNESS',camara:'T3',tipo:'FIJA',estado:'OPERATIVA',ubicacion:'PARQUE PLAZA CÍVICA LA BANDERA',urb:'P.J.P.M.V. CONFRATERNIDAD (AA.HH. SAN MARTÍN DE PORRES)',zona:'CENTRO 1 C',detalle:''}
+    ];
+
+    // V45 CORREGIDA: si el almacenamiento de tótems está vacío, restaura las 15 cámaras base.
+    if (!Array.isArray(totems) || totems.length === 0) {
+      totems = TOTEMS_BASE_V36.map(t => ({...t}));
+    }
+
+    // Si el archivo anterior solo tenía el registro de demostración, reemplaza ese catálogo incompleto.
+    // En instalaciones ya editadas por el usuario, conserva todo y solo completa grupos ausentes.
+    const gruposActuales = new Set(totems.map(t => String(t.grupo || '').toUpperCase()));
+    ['PARQUE CAJAMARCA','PARQUE LIMA','PARQUE LA BANDERA'].forEach(grupo => {
+      if (!gruposActuales.has(grupo)) {
+        totems.push(...TOTEMS_BASE_V36.filter(t => t.grupo === grupo).map(t => ({...t})));
+      }
+    });
+    // La V36 inicial traía una sola fila de Parque Cajamarca; si sigue siendo el único grupo, complétalo hasta 5 cámaras.
+    const cajamarcaRows = totems.filter(t => String(t.grupo||'').toUpperCase()==='PARQUE CAJAMARCA');
+    if (cajamarcaRows.length > 0 && cajamarcaRows.length < 5) {
+      const faltan = 5 - cajamarcaRows.length;
+      totems.push(...TOTEMS_BASE_V36.filter(t=>t.grupo==='PARQUE CAJAMARCA').slice(cajamarcaRows.length, cajamarcaRows.length + faltan).map(t=>({...t})));
+    }
+    localStorage.setItem('cioe_totems_v36', JSON.stringify(totems));
+    function getTotalCamarasFijasGeneral(){
+      return Object.values(OVERRIDES).reduce((total, ov) => {
+        if (Array.isArray(ov.subStatuses) && ov.subStatuses.length) return total + ov.subStatuses.length;
+        return total + 1;
+      }, 0);
+    }
+    function updateTotalGeneral(){
+      const el = document.getElementById('stat-total-general');
+      if (!el) return;
+      const totalCentro = Array.isArray(cameras) ? cameras.length : 0;
+      const totalVecinales = Array.isArray(vecinalCameras) ? vecinalCameras.length : 0;
+      const totalFijas = getTotalCamarasFijasGeneral();
+      const totalTotems = Array.isArray(totems) ? totems.length : 0;
+      el.textContent = totalCentro + totalVecinales + totalFijas + totalTotems;
+    }
+    function saveTotems(){ localStorage.setItem('cioe_totems_v36', JSON.stringify(totems)); updateTotalGeneral(); }
+    function updateTotalGeneral(){ const el=document.getElementById('stat-total-general'); if(el) el.textContent='532'; }
+    function hideAllViewsV36(){ ['mainDashboardView','searchReportView','camarasFijasView','vecinalesView','estacionesParesView','totemsView'].forEach(id=>{const x=document.getElementById(id); if(x){x.classList.add('hidden');x.classList.remove('flex')}}); }
+    function showTotemsView(e){ if(e)e.stopPropagation(); const m=document.getElementById('ocurrenciasMenu'); if(m)m.classList.add('hidden'); hideAllViewsV36(); const v=document.getElementById('totemsView'); v.classList.remove('hidden');v.classList.add('flex'); renderTotems(); }
+    function escTot(v){ return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+    function renderTotems(){
+      if (typeof updateTotalGeneral === 'function') updateTotalGeneral();
+      const q=(document.getElementById('totemSearch')?.value||'').toLowerCase(); const body=document.getElementById('totemsBody'); if(!body)return;
+      const filtered=totems.filter(t=>Object.values(t).join(' ').toLowerCase().includes(q));
+      const groups=[]; filtered.forEach(t=>{const g=t.grupo||'TÓTEM MUNICIPAL'; let x=groups.find(a=>a.name===g); if(!x){x={name:g,rows:[]};groups.push(x)} x.rows.push(t)});
+      let html=''; let n=1;
+      groups.forEach(g=>{
+        html += `<tr class="bg-orange-500/10 border-y border-orange-500/40"><td colspan="11" class="px-4 py-2"><div class="flex items-center justify-between gap-3"><span class="font-black text-orange-300 text-sm uppercase"><i class="fa-solid fa-tower-observation mr-2"></i>${escTot(g.name)}</span><button type="button" onclick="openTotemModal('${encodeURIComponent(g.name)}')" class="bg-amber-500 hover:bg-amber-400 text-black px-3 py-1.5 rounded-lg text-[10px] font-black"><i class="fa-solid fa-plus mr-1"></i>AÑADIR CÁMARA</button></div></td></tr>`;
+        g.rows.forEach(t=>{const real=totems.indexOf(t); const c=t.estado==='OPERATIVA'?'text-emerald-400':t.estado==='INOPERATIVA'?'text-rose-400':'text-blue-400'; html += `<tr class="border-b border-slate-800/60 hover:bg-slate-900/60"><td class="p-3">${n++}</td><td class="p-3 font-bold">${escTot(t.sistema)}</td><td class="p-3 font-black text-amber-400">${escTot(t.camara)}</td><td class="p-3">${escTot(t.tipo)}</td><td class="p-3 font-black ${c}">${escTot(t.estado)}</td><td class="p-3">${escTot(t.ubicacion)}</td><td class="p-3">${escTot(t.urb)}</td><td class="p-3">${escTot(t.zona)}</td><td class="p-3">${escTot(t.detalle||'—')}</td><td class="p-3 text-center"><button type="button" onclick="showTotemReport(${real})" class="px-3 py-1.5 rounded-lg bg-slate-800 text-amber-400 hover:bg-slate-700 text-[10px] font-black whitespace-nowrap" title="Ver reporte"><i class="fa-regular fa-eye mr-1"></i> VER REPORTE</button></td><td class="p-3 text-center whitespace-nowrap"><button onclick="editTotem(${real})" class="text-sky-400 p-2"><i class="fa-solid fa-pen-to-square"></i></button><button onclick="deleteTotem(${real})" class="text-rose-400 p-2"><i class="fa-solid fa-trash"></i></button></td></tr>`;});
+      });
+      body.innerHTML=html || `<tr><td colspan="11" class="p-8 text-center text-slate-500">No se encontraron cámaras de tótems.</td></tr>`;
+      document.getElementById('totStatTotal').textContent=totems.length;document.getElementById('totStatOp').textContent=totems.filter(x=>x.estado==='OPERATIVA').length;document.getElementById('totStatInop').textContent=totems.filter(x=>x.estado==='INOPERATIVA').length;document.getElementById('totStatMant').textContent=totems.filter(x=>x.estado==='MANTENIMIENTO').length;
+    }
+    function showTotemReport(i){
+      const t=totems[i];
+      if(!t) return;
+      const titulo='REPORTE DE ' + (t.grupo || 'TÓTEM MUNICIPAL') + ' - ' + (t.camara || 'CÁMARA');
+      const contenido=(t.detalle || '').trim() || 'SIN REPORTE';
+      openTextDetailModal(titulo, contenido, '');
+    }
+    function openTotemModal(grupoEncoded=''){ ['totemEditIndex','totGrupo','totSistema','totCamara','totTipo','totUbicacion','totUrb','totZona','totDetalle'].forEach(id=>document.getElementById(id).value=''); if(grupoEncoded)document.getElementById('totGrupo').value=decodeURIComponent(grupoEncoded); document.getElementById('totEstado').value='OPERATIVA';const m=document.getElementById('totemModal');m.classList.remove('hidden');m.classList.add('flex');}
+    function closeTotemModal(){const m=document.getElementById('totemModal');m.classList.add('hidden');m.classList.remove('flex');}
+    function editTotem(i){const t=totems[i];document.getElementById('totemEditIndex').value=i;document.getElementById('totGrupo').value=t.grupo||'';document.getElementById('totSistema').value=t.sistema||'';document.getElementById('totCamara').value=t.camara||'';document.getElementById('totTipo').value=t.tipo||'';document.getElementById('totEstado').value=t.estado||'OPERATIVA';document.getElementById('totUbicacion').value=t.ubicacion||'';document.getElementById('totUrb').value=t.urb||'';document.getElementById('totZona').value=t.zona||'';document.getElementById('totDetalle').value=t.detalle||'';const m=document.getElementById('totemModal');m.classList.remove('hidden');m.classList.add('flex');}
+    function saveTotem(e){e.preventDefault();const t={grupo:totGrupo.value.trim().toUpperCase(),sistema:totSistema.value.trim().toUpperCase(),camara:totCamara.value.trim().toUpperCase(),tipo:totTipo.value.trim().toUpperCase(),estado:totEstado.value,ubicacion:totUbicacion.value.trim().toUpperCase(),urb:totUrb.value.trim().toUpperCase(),zona:totZona.value.trim().toUpperCase(),detalle:totDetalle.value.trim()};const i=totemEditIndex.value;if(i==='')totems.push(t);else totems[Number(i)]=t;saveTotems();closeTotemModal();renderTotems();}
+    function deleteTotem(i){if(confirm('¿Eliminar esta cámara del tótem?')){totems.splice(i,1);saveTotems();renderTotems();}}
+    saveTotems();
+    updateTotalGeneral();
+    window.addEventListener('beforeunload', saveTotems);
+
+    // V46: cálculo inicial del total general, sin alterar los módulos.
+    updateTotalGeneral();
+</script>
 </body>
 </html>
