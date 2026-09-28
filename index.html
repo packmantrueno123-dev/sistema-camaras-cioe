@@ -328,6 +328,9 @@
                 <th class="p-3 text-center border-r border-slate-800 w-28">CAMARA</th>
                 <th class="p-3 border-r border-slate-800 w-24">SISTEMA</th>
                 <th class="p-3 text-center border-r border-slate-800 w-32">OPERATIVAS</th>
+                <th class="p-3 border-r border-slate-800 min-w-[260px]">UBICACIÓN</th>
+                <th class="p-3 border-r border-slate-800 min-w-[200px]">URBANIZACIÓN</th>
+                <th class="p-3 border-r border-slate-800 min-w-[150px]">ZONA / SECTOR</th>
                 <th class="p-3 border-r border-slate-800">DETALLES / NOVEDADES</th>
                 <th class="p-3 text-center w-24">ACCIONES</th>
               </tr>
@@ -442,41 +445,81 @@
     <header class="bg-[#0a0f1d] border border-slate-800 rounded-2xl p-4 shadow-xl flex flex-col lg:flex-row justify-between items-center gap-4 w-full">
       <div class="flex items-center gap-3">
         <div class="p-3 bg-violet-500 rounded-xl text-white"><i class="fa-solid fa-tower-broadcast text-xl"></i></div>
-        <div><h1 class="text-xl font-black text-white tracking-wide uppercase">ESTACIONES Y PARES</h1><p class="text-xs text-slate-400">Listado ordenado por estación y pares · edición línea por línea</p></div>
+        <div><h1 class="text-xl font-black text-white tracking-wide uppercase">CÁMARAS / PARES</h1><p class="text-xs text-slate-400">Cámaras organizadas dentro de cada Estación y Par · edición línea por línea</p></div>
       </div>
       <div class="flex flex-wrap gap-2">
-        <button onclick="addEstacionParRow()" class="bg-amber-500 hover:bg-amber-400 text-black px-4 py-2 rounded-xl text-xs font-black"><i class="fa-solid fa-plus mr-2"></i>Agregar línea</button>
+        <button onclick="openEpGroupManager()" class="bg-violet-600 hover:bg-violet-500 text-white px-4 py-2 rounded-xl text-xs font-black"><i class="fa-solid fa-layer-group mr-2"></i>Añadir Estación / Par</button><button onclick="openEpAddCameraModal()" class="bg-amber-500 hover:bg-amber-400 text-black px-4 py-2 rounded-xl text-xs font-black"><i class="fa-solid fa-camera mr-2"></i>Añadir Cámara</button>
         <button onclick="showMainDashboardView()" class="bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 px-4 py-2 rounded-xl text-xs font-bold"><i class="fa-solid fa-arrow-left text-amber-500 mr-2"></i>Volver al Centro de Control</button>
       </div>
     </header>
-    <section class="bg-[#0a0f1d] border border-slate-800 rounded-2xl p-3 shadow-xl">
+    <section class="bg-[#0a0f1d] border border-slate-800 rounded-2xl p-3 shadow-xl space-y-3">
       <div class="flex flex-col lg:flex-row gap-2 justify-between">
-        <div class="relative flex-1 max-w-xl"><i class="fa-solid fa-magnifying-glass absolute left-3 top-3 text-slate-500"></i><input id="epSearch" oninput="renderEstacionesPares()" placeholder="Buscar estación, par, sistema, ubicación, zona..." class="w-full bg-[#030712] border border-slate-700 rounded-xl py-2.5 pl-9 pr-3 text-xs text-white outline-none focus:border-violet-500"></div>
-        <select id="epGroupFilter" onchange="renderEstacionesPares()" class="bg-[#030712] border border-slate-700 rounded-xl px-3 py-2.5 text-xs text-white outline-none"><option value="ALL">TODAS LAS ESTACIONES Y PARES</option></select>
+        <div class="relative flex-1 max-w-xl"><i class="fa-solid fa-magnifying-glass absolute left-3 top-3 text-slate-500"></i><input id="epSearch" oninput="renderEstacionesPares()" placeholder="Buscar cámara, estación, par, sistema, ubicación, zona..." class="w-full bg-[#030712] border border-slate-700 rounded-xl py-2.5 pl-9 pr-3 text-xs text-white outline-none focus:border-violet-500"></div>
+        <select id="epGroupFilter" onchange="populateEpDestinoFilter(); renderEstacionesPares()" class="bg-[#030712] border border-slate-700 rounded-xl px-3 py-2.5 text-xs text-white outline-none"><option value="ALL">TODAS LAS ESTACIONES / PARES</option></select>
+        <select id="epDestinoFilter" onchange="renderEstacionesPares()" class="bg-[#030712] border border-slate-700 rounded-xl px-3 py-2.5 text-xs text-white outline-none"><option value="ALL">TODAS LAS CÁMARAS</option></select>
+      </div>
+      <div class="flex justify-center lg:justify-start">
+        <div class="inline-flex flex-wrap gap-1 bg-[#030712] border border-slate-700 rounded-2xl p-1">
+          <button type="button" data-ep-status="ALL" onclick="setEpStatusFilter('ALL',this)" class="ep-status-btn bg-amber-500 text-black px-6 py-2 rounded-xl text-xs font-black">Todas</button>
+          <button type="button" data-ep-status="OPERATIVA" onclick="setEpStatusFilter('OPERATIVA',this)" class="ep-status-btn text-sky-300 px-6 py-2 rounded-xl text-xs font-bold hover:bg-slate-800">Operativas</button>
+          <button type="button" data-ep-status="INOPERATIVA" onclick="setEpStatusFilter('INOPERATIVA',this)" class="ep-status-btn text-sky-300 px-6 py-2 rounded-xl text-xs font-bold hover:bg-slate-800">Inoperativas</button>
+          <button type="button" data-ep-status="MANTENIMIENTO" onclick="setEpStatusFilter('MANTENIMIENTO',this)" class="ep-status-btn text-sky-300 px-6 py-2 rounded-xl text-xs font-bold hover:bg-slate-800">Mantenimiento</button>
+        </div>
       </div>
     </section>
     <section class="bg-[#0a0f1d] border border-slate-800 rounded-2xl shadow-xl overflow-hidden flex-1">
-      <div class="px-4 py-3 border-b border-slate-800 flex justify-between"><span class="text-[10px] font-black text-violet-400 uppercase">Registro de estaciones y pares</span><span id="epCount" class="text-xs font-bold text-slate-300">0 registros</span></div>
-      <div class="overflow-x-auto"><table class="w-full text-left text-[11px] min-w-[1500px]"><thead class="bg-black text-white uppercase"><tr><th class="p-3">N°</th><th class="p-3">Sistema</th><th class="p-3">Estación / Par</th><th class="p-3">Estado</th><th class="p-3">Ubicación</th><th class="p-3">Zona / Sector</th><th class="p-3">Detalle</th><th class="p-3">N° Perifoneo</th><th class="p-3">Estado Perifoneo</th><th class="p-3 text-center">Acciones</th></tr></thead><tbody id="epTableBody" class="divide-y divide-slate-800/60 text-slate-200"></tbody></table></div>
+      <div class="px-4 py-3 border-b border-slate-800 flex justify-between"><span class="text-[10px] font-black text-violet-400 uppercase">Registro de cámaras por Estación / Par</span><span id="epCount" class="text-xs font-bold text-slate-300">0 registros</span></div>
+      <div class="overflow-x-auto"><table class="w-full text-left text-[11px] min-w-[1500px]"><thead class="bg-black text-white uppercase"><tr><th class="p-3">N°</th><th class="p-3">Sistema</th><th class="p-3">Cámara</th><th class="p-3">Estado</th><th class="p-3">Ubicación</th><th class="p-3">Zona / Sector</th><th class="p-3">Detalle</th><th class="p-3">N° Perifoneo</th><th class="p-3">Estado Perifoneo</th><th class="p-3 text-center">Acciones</th></tr></thead><tbody id="epTableBody" class="divide-y divide-slate-800/60 text-slate-200"></tbody></table></div>
     </section>
+  </div>
+
+  <!-- MODAL: AÑADIR ESTACIÓN / PAR -->
+  <div id="epGroupManagerModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm hidden items-center justify-center z-[95] p-4">
+    <div class="bg-[#0a0f1d] border border-violet-500/40 rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden">
+      <div class="p-5 border-b border-slate-800 flex justify-between items-center"><div><h2 class="font-black text-white"><i class="fa-solid fa-layer-group text-violet-400 mr-2"></i><span id="epGroupManagerTitle">Añadir nueva Estación</span></h2><p class="text-[11px] text-slate-500 mt-1">Crea un grupo nuevo para organizar sus cámaras.</p></div><button type="button" onclick="closeEpGroupManager()" class="text-slate-400 hover:text-white p-2"><i class="fa-solid fa-xmark"></i></button></div>
+      <form onsubmit="saveEpNewGroup(event)" class="p-5 space-y-4">
+        <div><label class="text-xs text-slate-400">Tipo</label><select id="epNewGroupType" onchange="updateEpGroupManagerTitle()" class="mt-1 w-full bg-[#030712] border border-violet-500/60 rounded-xl p-3 text-white font-bold"><option value="ESTACION">ESTACIÓN</option><option value="PAR">PAR</option></select></div>
+        <div><label class="text-xs text-slate-400">Nombre o número</label><input id="epNewGroupName" required placeholder="Ej: 12 o OLIVAR" class="mt-1 w-full bg-[#030712] border border-slate-700 rounded-xl p-3 text-white outline-none focus:border-violet-500"><p class="mt-1 text-[10px] text-slate-500">Ejemplo: ESTACIÓN 12 o PAR OLIVAR.</p></div>
+        <div id="epGroupManagerError" class="hidden text-xs text-rose-400 bg-rose-500/10 border border-rose-500/20 rounded-xl p-3"></div>
+        <div class="flex justify-end gap-2 pt-2"><button type="button" onclick="closeEpGroupManager()" class="bg-slate-800 border border-slate-700 px-4 py-2.5 rounded-xl text-xs font-bold text-white">Cancelar</button><button class="bg-violet-600 hover:bg-violet-500 text-white px-5 py-2.5 rounded-xl text-xs font-black"><i class="fa-solid fa-plus mr-2"></i>Crear grupo</button></div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: VER DETALLE -->
+  <div id="epDetailModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm hidden items-center justify-center z-[96] p-4">
+    <div class="bg-[#0a0f1d] border border-amber-500/40 rounded-2xl w-full max-w-3xl shadow-2xl overflow-hidden">
+      <div class="p-6 border-b border-slate-800 flex justify-between items-center"><h2 class="text-lg font-black text-white"><i class="fa-regular fa-eye text-amber-400 mr-2"></i>Detalle de Cámara</h2><button type="button" onclick="closeEpDetailModal()" class="text-slate-400 hover:text-white p-2"><i class="fa-solid fa-xmark"></i></button></div>
+      <div class="p-6">
+        <div id="epDetailCamera" class="text-sm font-black text-amber-400 mb-2"></div>
+        <div class="flex items-center gap-2 text-xs text-slate-400 mb-4"><i class="fa-regular fa-clock text-amber-400"></i><span>Detalle subido:</span><span id="epDetailTime" class="font-bold text-slate-200">—</span></div>
+        <div id="epDetailText" class="bg-[#030712] border border-slate-800 rounded-xl p-5 text-base leading-7 text-slate-200 whitespace-pre-wrap min-h-[180px] max-h-[360px] overflow-y-auto"></div>
+        <div id="epCopyStatus" class="h-5 mt-2 text-xs text-emerald-400"></div>
+        <div class="flex flex-wrap justify-between gap-3 mt-3">
+          <button type="button" onclick="copyEpDetailText()" class="bg-amber-500 hover:bg-amber-400 text-black px-4 py-2.5 rounded-xl text-xs font-black"><i class="fa-regular fa-copy mr-2"></i>Copiar texto</button>
+          <button type="button" onclick="closeEpDetailModal()" class="bg-slate-800 border border-slate-700 px-5 py-2.5 rounded-xl text-xs font-bold text-white">Cerrar</button>
+        </div>
+      </div>
+    </div>
   </div>
 
   <!-- MODAL: EDITAR ESTACIÓN / PAR -->
   <div id="epModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm hidden items-center justify-center z-[90] p-4">
     <div class="bg-[#0a0f1d] border border-slate-700 rounded-2xl w-full max-w-4xl shadow-2xl">
-      <div class="p-5 border-b border-slate-800 flex justify-between items-center"><h2 class="font-black text-white"><i class="fa-solid fa-pen-to-square text-violet-400 mr-2"></i><span id="epModalTitle">Editar línea</span></h2><button onclick="closeEpModal()" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button></div>
+      <div class="p-5 border-b border-slate-800 flex justify-between items-center"><h2 class="font-black text-white"><i class="fa-solid fa-pen-to-square text-violet-400 mr-2"></i><span id="epModalTitle">Añadir Cámara</span></h2><button onclick="closeEpModal()" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button></div>
       <form onsubmit="saveEpRow(event)" class="p-5 grid grid-cols-1 md:grid-cols-2 gap-3">
         <input type="hidden" id="epEditIndex">
-        <label class="text-xs text-slate-400">Grupo<input id="epGrupo" required class="mt-1 w-full bg-[#030712] border border-slate-700 rounded-xl p-2.5 text-white"></label>
-        <label class="text-xs text-slate-400">N°<input id="epN" class="mt-1 w-full bg-[#030712] border border-slate-700 rounded-xl p-2.5 text-white"></label>
+        <input type="hidden" id="epGrupo">
+
+        <label class="text-xs text-slate-400">N° de orden<input id="epN" placeholder="Ej: 12" class="mt-1 w-full bg-[#030712] border border-slate-700 rounded-xl p-2.5 text-white"></label>
         <label class="text-xs text-slate-400">Sistema<input id="epSistema" class="mt-1 w-full bg-[#030712] border border-slate-700 rounded-xl p-2.5 text-white"></label>
-        <label class="text-xs text-slate-400">Estación / Par<input id="epEstacion" class="mt-1 w-full bg-[#030712] border border-slate-700 rounded-xl p-2.5 text-white"></label>
+        <label class="text-xs text-slate-400">N° Cámara<input id="epEstacion" placeholder="Ej: 44" class="mt-1 w-full bg-[#030712] border border-slate-700 rounded-xl p-2.5 text-white"></label>
         <label class="text-xs text-slate-400">Estado<select id="epEstado" class="mt-1 w-full bg-[#030712] border border-slate-700 rounded-xl p-2.5 text-white"><option>OPERATIVA</option><option>INOPERATIVA</option><option>MANTENIMIENTO</option><option value="">SIN ESTADO</option></select></label>
         <label class="text-xs text-slate-400">Zona / Sector<input id="epZona" class="mt-1 w-full bg-[#030712] border border-slate-700 rounded-xl p-2.5 text-white"></label>
         <label class="text-xs text-slate-400 md:col-span-2">Ubicación<input id="epUbicacion" class="mt-1 w-full bg-[#030712] border border-slate-700 rounded-xl p-2.5 text-white"></label>
-        <label class="text-xs text-slate-400">Detalle<input id="epDetalle" class="mt-1 w-full bg-[#030712] border border-slate-700 rounded-xl p-2.5 text-white"></label>
+        <label class="text-xs text-slate-400 md:col-span-2">Detalle / Novedad<textarea id="epDetalle" rows="3" placeholder="Escribe únicamente el detalle o novedad de esta cámara..." class="mt-1 w-full bg-[#030712] border border-slate-700 rounded-xl p-2.5 text-white resize-y"></textarea><span class="block mt-1 text-[10px] text-slate-500">Este texto aparecerá en VER DETALLE.</span></label>
         <label class="text-xs text-slate-400">N° Perifoneo<input id="epPerifoneo" class="mt-1 w-full bg-[#030712] border border-slate-700 rounded-xl p-2.5 text-white"></label><label class="text-xs text-slate-400">Estado Perifoneo<select id="epPerifEstado" class="mt-1 w-full bg-[#030712] border border-slate-700 rounded-xl p-2.5 text-white"><option>OPERATIVO</option><option>INOPERATIVO</option><option>MANTENIMIENTO</option><option value="">SIN ESTADO</option></select></label>
-        <div class="md:col-span-2 flex justify-end gap-2 pt-2"><button type="button" onclick="closeEpModal()" class="bg-slate-800 border border-slate-700 px-4 py-2 rounded-xl text-xs font-bold text-white">Cancelar</button><button class="bg-violet-500 hover:bg-violet-400 text-white px-4 py-2 rounded-xl text-xs font-black"><i class="fa-solid fa-floppy-disk mr-2"></i>Guardar línea</button></div>
+        <div class="md:col-span-2 flex justify-end gap-2 pt-2"><button type="button" onclick="closeEpModal()" class="bg-slate-800 border border-slate-700 px-4 py-2 rounded-xl text-xs font-bold text-white">Cancelar</button><button class="bg-amber-500 hover:bg-amber-400 text-black px-4 py-2 rounded-xl text-xs font-black"><i class="fa-solid fa-floppy-disk mr-2"></i>Guardar Cámara</button></div>
       </form>
     </div>
   </div>
@@ -1388,13 +1431,35 @@
       return "Poner IP";
     }
 
-    let cameras = INITIAL_CAMERAS.map(cam => ({
+    // ===== PERSISTENCIA PRINCIPAL =====
+    // Primero intenta recuperar los datos guardados por el usuario.
+    // INITIAL_CAMERAS / INITIAL_LOGS se usan SOLO la primera vez.
+    let storedCameras = null;
+    let storedDailyLogs = null;
+    try {
+      const rawCameras = localStorage.getItem("cioe_cameras_v100");
+      const rawLogs = localStorage.getItem("cioe_daily_logs_v100");
+      storedCameras = rawCameras ? JSON.parse(rawCameras) : null;
+      storedDailyLogs = rawLogs ? JSON.parse(rawLogs) : null;
+    } catch (e) {
+      console.warn("No se pudieron leer los datos guardados; se usarán los datos iniciales.", e);
+    }
+
+    let cameras = (Array.isArray(storedCameras) ? storedCameras : INITIAL_CAMERAS).map(cam => ({
       ...cam,
-      ip: (cam.ip && cam.ip.trim()) ? cam.ip : getAssignedCameraIP(cam.camara),
-      onuIp: (cam.onuIp && cam.onuIp.trim() && cam.onuIp.trim() !== 'Poner IP') ? cam.onuIp : getAssignedONUIP(cam.camara)
+      ip: (cam.ip && String(cam.ip).trim()) ? cam.ip : getAssignedCameraIP(cam.camara),
+      onuIp: (cam.onuIp && String(cam.onuIp).trim() && String(cam.onuIp).trim() !== 'Poner IP') ? cam.onuIp : getAssignedONUIP(cam.camara)
     }));
-    let vecinalCameras = JSON.parse(localStorage.getItem("cioe_vecinales_v300")) || INITIAL_VECINAL_CAMERAS;
-    let dailyLogs = INITIAL_LOGS;
+
+    let vecinalCameras;
+    try {
+      const rawVecinales = localStorage.getItem("cioe_vecinales_v300");
+      vecinalCameras = rawVecinales ? JSON.parse(rawVecinales) : INITIAL_VECINAL_CAMERAS;
+    } catch (e) {
+      vecinalCameras = INITIAL_VECINAL_CAMERAS;
+    }
+
+    let dailyLogs = (storedDailyLogs && typeof storedDailyLogs === 'object') ? storedDailyLogs : INITIAL_LOGS;
     let currentFilter = 'ALL';
     let reportTimestamps = {};
     try { reportTimestamps = JSON.parse(localStorage.getItem('cioe_report_timestamps_v1') || '{}') || {}; } catch(e) { reportTimestamps = {}; }
@@ -1427,6 +1492,15 @@
       localStorage.setItem("cioe_vecinales_v300", JSON.stringify(vecinalCameras));
       updateStats();
     }
+
+    // Salvaguarda adicional: conserva el último estado antes de recargar o cerrar.
+    window.addEventListener('beforeunload', () => {
+      try {
+        localStorage.setItem("cioe_cameras_v100", JSON.stringify(cameras));
+        localStorage.setItem("cioe_daily_logs_v100", JSON.stringify(dailyLogs));
+        localStorage.setItem("cioe_vecinales_v300", JSON.stringify(vecinalCameras));
+      } catch (e) {}
+    });
 
     const OVERRIDES = {
       2: { estacion: "ESTACIÓN 2", sistema: "DSS", status: "OPERATIVA", details: "NO FUNCIONA LA CÁMARA PRINCIPAL" },
@@ -1883,35 +1957,105 @@
     function populateEpGroupFilter() {
       const sel=document.getElementById('epGroupFilter'); if(!sel) return; const prev=sel.value||'ALL';
       const groups=[...new Set(estacionesPares.map(r=>r.grupo).filter(Boolean))].sort((a,b)=>a.localeCompare(b,undefined,{numeric:true}));
-      sel.innerHTML='<option value="ALL">TODAS LAS ESTACIONES Y PARES</option>'+groups.map(g=>`<option value="${escapeHtml(g)}">${escapeHtml(g)}</option>`).join('');
+      sel.innerHTML='<option value="ALL">TODAS LAS ESTACIONES / PARES</option>'+groups.map(g=>`<option value="${escapeHtml(g)}">${escapeHtml(g)}</option>`).join('');
       if([...sel.options].some(o=>o.value===prev)) sel.value=prev;
+    }
+    function populateEpDestinoFilter() {
+      const sel=document.getElementById('epDestinoFilter'); if(!sel) return;
+      const prev=sel.value||'ALL'; const gf=document.getElementById('epGroupFilter')?.value||'ALL';
+      const vals=[...new Set(estacionesPares.filter(r=>gf==='ALL'||r.grupo===gf).map(r=>r.estacion).filter(Boolean))].sort((a,b)=>a.localeCompare(b,undefined,{numeric:true}));
+      sel.innerHTML='<option value="ALL">TODAS LAS CÁMARAS</option>'+vals.map(v=>`<option value="${escapeHtml(v)}">${escapeHtml(v)}</option>`).join('');
+      if([...sel.options].some(o=>o.value===prev)) sel.value=prev; else sel.value='ALL';
+    }
+    function populateEpGrupoModal(selected='') {
+      const el=document.getElementById('epGrupo'); if(!el)return;
+      const groups=[...new Set(estacionesPares.map(r=>r.grupo).filter(Boolean))].sort((a,b)=>{const ta=/^ESTACION/i.test(a)?0:/^PAR/i.test(a)?1:2,tb=/^ESTACION/i.test(b)?0:/^PAR/i.test(b)?1:2;return ta-tb||a.localeCompare(b,undefined,{numeric:true});});
+      const fallback=(document.getElementById('epGroupFilter')?.value||'ALL');
+      el.value=selected || (fallback!=='ALL'?fallback:(groups[0]||''));
+    }
+    function populateEpCeldaModal(selectedIndex='') {
+      const sel=document.getElementById('epDestinoCelda'); if(!sel) return;
+      const grupo=document.getElementById('epGrupo')?.value||'';
+      const rows=estacionesPares.map((r,i)=>({r,i})).filter(x=>!grupo||x.r.grupo===grupo);
+      sel.innerHTML='<option value="">Nueva cámara / completar manualmente</option>'+rows.map(x=>`<option value="${x.i}">${escapeHtml((x.r.estacion||'SIN ESTACIÓN')+' · '+(x.r.n||'S/N')+' · '+(x.r.ubicacion||'SIN UBICACIÓN'))}</option>`).join('');
+      if(String(selectedIndex)!=='' && [...sel.options].some(o=>o.value===String(selectedIndex))) sel.value=String(selectedIndex);
+    }
+    function applyEpCeldaReference() {
+      const idx=document.getElementById('epDestinoCelda')?.value;
+      if(idx===undefined||idx==='') return;
+      const r=estacionesPares[Number(idx)]; if(!r) return;
+      document.getElementById('epSistema').value=r.sistema||'';
+      document.getElementById('epEstacion').value=r.estacion||'';
+      document.getElementById('epUbicacion').value=r.ubicacion||'';
+      document.getElementById('epZona').value=r.zona||'';
+    }
+    function addCameraToEpGroup(grupo) {
+      addEstacionParRow(null);
+      populateEpGrupoModal(grupo);
+      document.getElementById('epGrupo').value=grupo;
+      document.getElementById('epModalTitle').textContent='Añadir Cámara en '+grupo;
+    }
+    function updateEpGroupManagerTitle() {
+      const tipo=document.getElementById('epNewGroupType')?.value||'ESTACION';
+      const title=document.getElementById('epGroupManagerTitle');
+      if(title) title.textContent=tipo==='PAR'?'Añadir nuevo Par':'Añadir nueva Estación';
+    }
+    function openEpGroupManager(tipo='ESTACION') {
+      const m=document.getElementById('epGroupManagerModal'); document.getElementById('epNewGroupType').value=tipo==='PAR'?'PAR':'ESTACION'; updateEpGroupManagerTitle(); document.getElementById('epNewGroupName').value=''; const err=document.getElementById('epGroupManagerError'); err.classList.add('hidden'); err.textContent=''; m.classList.remove('hidden'); m.classList.add('flex'); setTimeout(()=>document.getElementById('epNewGroupName').focus(),50);
+    }
+    function closeEpGroupManager(){ const m=document.getElementById('epGroupManagerModal'); m.classList.add('hidden'); m.classList.remove('flex'); }
+    function saveEpNewGroup(e){ e.preventDefault(); const tipo=document.getElementById('epNewGroupType').value; const limpio=document.getElementById('epNewGroupName').value.trim(); const err=document.getElementById('epGroupManagerError'); if(!limpio){err.textContent='Escribe el nombre o número.';err.classList.remove('hidden');return;} const grupo=tipo==='PAR'?('PAR '+limpio.toUpperCase().replace(/^PAR\s+/i,'')):('ESTACION '+limpio.toUpperCase().replace(/^ESTACI[ÓO]N\s+/i,'')); if(estacionesPares.some(r=>String(r.grupo||'').toUpperCase()===grupo.toUpperCase())){err.textContent=grupo+' ya existe.';err.classList.remove('hidden');return;} closeEpGroupManager(); addEstacionParRow(null); populateEpGrupoModal(grupo); document.getElementById('epGrupo').value=grupo; document.getElementById('epModalTitle').textContent=tipo==='PAR'?'Añadir nuevo Par':'Añadir nueva Estación'; }
+    function openEpNewGroupModal(tipo){ openEpGroupManager(tipo); }
+    function formatEpDetailTime(iso){ if(!iso) return 'Sin registro de fecha/hora'; try { return new Intl.DateTimeFormat('es-PE',{dateStyle:'long',timeStyle:'medium'}).format(new Date(iso)); } catch(e){ return String(iso); } }
+    function showEpDetail(i){ const r=estacionesPares[i]; if(!r)return; document.getElementById('epDetailCamera').textContent=(r.grupo||'')+' · CÁMARA '+(r.estacion||'S/N'); document.getElementById('epDetailText').textContent=r.detalle||'SIN DETALLE'; document.getElementById('epDetailTime').textContent=formatEpDetailTime(r.detalleFecha); document.getElementById('epCopyStatus').textContent=''; const m=document.getElementById('epDetailModal'); m.classList.remove('hidden'); m.classList.add('flex'); }
+    async function copyEpDetailText(){ const text=document.getElementById('epDetailText')?.textContent||''; const status=document.getElementById('epCopyStatus'); try { await navigator.clipboard.writeText(text); status.textContent='✓ Texto copiado correctamente'; } catch(e) { const ta=document.createElement('textarea'); ta.value=text; ta.style.position='fixed'; ta.style.opacity='0'; document.body.appendChild(ta); ta.select(); try{document.execCommand('copy');status.textContent='✓ Texto copiado correctamente';}catch(err){status.textContent='No se pudo copiar automáticamente.';} ta.remove(); } setTimeout(()=>{if(status)status.textContent='';},2500); }
+    function closeEpDetailModal(){ const m=document.getElementById('epDetailModal'); m.classList.add('hidden'); m.classList.remove('flex'); }
+    function openEpAddCameraModal() {
+      addEstacionParRow(null);
+      document.getElementById('epModalTitle').textContent='Añadir Cámara';
     }
     function showEstacionesParesView(e) {
       if(e)e.stopPropagation(); document.getElementById('ocurrenciasMenu').classList.add('hidden');
       ['mainDashboardView','searchReportView','vecinalesView','camarasFijasView'].forEach(id=>{const el=document.getElementById(id); if(el){el.classList.add('hidden');el.classList.remove('flex');}});
-      const v=document.getElementById('estacionesParesView'); v.classList.remove('hidden'); v.classList.add('flex'); populateEpGroupFilter(); renderEstacionesPares();
+      const v=document.getElementById('estacionesParesView'); v.classList.remove('hidden'); v.classList.add('flex'); populateEpGroupFilter(); populateEpDestinoFilter(); renderEstacionesPares();
+    }
+    let epStatusFilter = 'ALL';
+    function setEpStatusFilter(status, btn) {
+      epStatusFilter=status;
+      document.querySelectorAll('.ep-status-btn').forEach(b=>{b.classList.remove('bg-amber-500','text-black','font-black');b.classList.add('text-sky-300','font-bold');});
+      if(btn){btn.classList.add('bg-amber-500','text-black','font-black');btn.classList.remove('text-sky-300','font-bold');}
+      renderEstacionesPares();
     }
     function renderEstacionesPares() {
       const body=document.getElementById('epTableBody'); if(!body)return;
       const q=(document.getElementById('epSearch')?.value||'').trim().toLowerCase();
       const gf=document.getElementById('epGroupFilter')?.value||'ALL';
-      const indexed=estacionesPares.map((r,i)=>({r,i})).filter(x=>(gf==='ALL'||x.r.grupo===gf)&&(!q||Object.values(x.r).join(' ').toLowerCase().includes(q)));
-      indexed.sort((a,b)=>String(a.r.grupo).localeCompare(String(b.r.grupo),undefined,{numeric:true})||Number(a.r.n||999)-Number(b.r.n||999));
+      const df=document.getElementById('epDestinoFilter')?.value||'ALL';
+      const indexed=estacionesPares.map((r,i)=>({r,i})).filter(x=>(gf==='ALL'||x.r.grupo===gf)&&(df==='ALL'||x.r.estacion===df)&&(epStatusFilter==='ALL'||String(x.r.estado||'').toUpperCase()===epStatusFilter)&&(!q||Object.values(x.r).join(' ').toLowerCase().includes(q)));
+      indexed.sort((a,b)=>{ const ga=String(a.r.grupo||''), gb=String(b.r.grupo||''); const ta=/^ESTACION/i.test(ga)?0:/^PAR/i.test(ga)?1:2, tb=/^ESTACION/i.test(gb)?0:/^PAR/i.test(gb)?1:2; return ta-tb || ga.localeCompare(gb,undefined,{numeric:true}) || Number(a.r.n||999)-Number(b.r.n||999); });
       document.getElementById('epCount').textContent=`${indexed.length} registros`;
       let lastGroup=''; let html='';
       indexed.forEach(x=>{ const r=x.r;
-        if(r.grupo!==lastGroup){ lastGroup=r.grupo; html+=`<tr class="bg-violet-950/50 border-y border-violet-500/30"><td colspan="10" class="px-3 py-2 font-black text-violet-300 uppercase"><i class="fa-solid fa-tower-broadcast mr-2"></i>${escapeHtml(r.grupo||'SIN GRUPO')}</td></tr>`; }
+        if(r.grupo!==lastGroup){ lastGroup=r.grupo; html+=`<tr class="bg-violet-950/50 border-y border-violet-500/30"><td colspan="10" class="px-3 py-2"><div class="flex items-center justify-between gap-3"><span class="font-black text-violet-300 uppercase"><i class="fa-solid fa-tower-broadcast mr-2"></i>${escapeHtml(r.grupo||'SIN GRUPO')}</span><button type="button" onclick='addCameraToEpGroup(${JSON.stringify(r.grupo||"")})' class="bg-amber-500 hover:bg-amber-400 text-black px-3 py-1.5 rounded-lg text-[10px] font-black whitespace-nowrap"><i class="fa-solid fa-plus mr-1"></i>AÑADIR</button></div></td></tr>`; }
         const st=String(r.estado||'').toUpperCase(); const cls=st.includes('INOPER')?'text-rose-400':st.includes('MANT')?'text-blue-400':'text-emerald-400';
         const ps=String(r.perifEstado||'').toUpperCase(); const pcl=ps.includes('INOPER')?'text-rose-400':ps.includes('MANT')?'text-blue-400':'text-emerald-400';
-        html+=`<tr class="hover:bg-slate-900/50"><td class="p-3">${escapeHtml(r.n||'')}</td><td class="p-3 font-bold">${escapeHtml(r.sistema||'')}</td><td class="p-3 font-black text-white">${escapeHtml(r.estacion||'')}</td><td class="p-3 font-black ${cls}">${escapeHtml(r.estado||'')}</td><td class="p-3">${escapeHtml(r.ubicacion||'')}</td><td class="p-3">${escapeHtml(r.zona||'')}</td><td class="p-3 max-w-[300px]">${escapeHtml(r.detalle||'')}</td><td class="p-3 font-bold text-amber-300">${escapeHtml(r.perifoneo||'')}</td><td class="p-3 font-black ${pcl}">${escapeHtml(r.perifEstado||'')}</td><td class="p-3 text-center whitespace-nowrap"><button onclick="editEstacionParRow(${x.i})" class="p-2 text-blue-400 hover:bg-slate-800 rounded-lg" title="Editar línea"><i class="fa-solid fa-pen-to-square"></i></button><button onclick="deleteEstacionParRow(${x.i})" class="p-2 text-rose-400 hover:bg-slate-800 rounded-lg" title="Eliminar línea"><i class="fa-solid fa-trash"></i></button></td></tr>`;
+        html+=`<tr class="hover:bg-slate-900/50"><td class="p-3">${escapeHtml(r.n||'')}</td><td class="p-3 font-bold">${escapeHtml(r.sistema||'')}</td><td class="p-3 font-black text-white">${escapeHtml(r.estacion||'')}</td><td class="p-3 font-black ${cls}">${escapeHtml(r.estado||'')}</td><td class="p-3">${escapeHtml(r.ubicacion||'')}</td><td class="p-3">${escapeHtml(r.zona||'')}</td><td class="p-3 max-w-[300px]">${r.detalle?`<button onclick="showEpDetail(${x.i})" class="bg-slate-800 hover:bg-slate-700 border border-slate-700 px-3 py-1.5 rounded-lg text-[10px] font-black text-amber-300"><i class="fa-regular fa-eye mr-1"></i>VER DETALLE</button>`:'<span class="text-slate-600">SIN DETALLE</span>'}</td><td class="p-3 font-bold text-amber-300">${escapeHtml(r.perifoneo||'')}</td><td class="p-3 font-black ${pcl}">${escapeHtml(r.perifEstado||'')}</td><td class="p-3 text-center whitespace-nowrap"><button onclick="editEstacionParRow(${x.i})" class="p-2 text-blue-400 hover:bg-slate-800 rounded-lg" title="Editar línea"><i class="fa-solid fa-pen-to-square"></i></button><button onclick="deleteEstacionParRow(${x.i})" class="p-2 text-rose-400 hover:bg-slate-800 rounded-lg" title="Eliminar línea"><i class="fa-solid fa-trash"></i></button></td></tr>`;
       });
       body.innerHTML=html;
     }
-    function addEstacionParRow() { document.getElementById('epEditIndex').value=''; document.getElementById('epModalTitle').textContent='Agregar línea'; ['epGrupo','epN','epSistema','epEstacion','epUbicacion','epZona','epDetalle','epPerifoneo'].forEach(id=>document.getElementById(id).value=''); document.getElementById('epEstado').value='OPERATIVA'; document.getElementById('epPerifEstado').value='INOPERATIVO'; const m=document.getElementById('epModal');m.classList.remove('hidden');m.classList.add('flex'); }
-    function editEstacionParRow(i) { const r=estacionesPares[i]; if(!r)return; document.getElementById('epEditIndex').value=i; document.getElementById('epModalTitle').textContent='Editar línea'; const map={epGrupo:'grupo',epN:'n',epSistema:'sistema',epEstacion:'estacion',epEstado:'estado',epUbicacion:'ubicacion',epZona:'zona',epDetalle:'detalle',epPerifoneo:'perifoneo',epPerifEstado:'perifEstado'}; Object.entries(map).forEach(([id,k])=>document.getElementById(id).value=r[k]||''); const m=document.getElementById('epModal');m.classList.remove('hidden');m.classList.add('flex'); }
+    function addEstacionParRow(refIndex=null) {
+      document.getElementById('epEditIndex').value=''; document.getElementById('epModalTitle').textContent=refIndex===null?'Añadir Cámara':'Añadir Cámara en esta Estación / Par';
+      ['epN','epSistema','epEstacion','epUbicacion','epZona','epDetalle','epPerifoneo'].forEach(id=>document.getElementById(id).value='');
+      document.getElementById('epEstado').value='OPERATIVA'; document.getElementById('epPerifEstado').value='INOPERATIVO';
+      const ref=(refIndex!==null&&estacionesPares[refIndex])?estacionesPares[refIndex]:null;
+      populateEpGrupoModal(ref?.grupo||'');
+      if(ref){ document.getElementById('epSistema').value=ref.sistema||''; document.getElementById('epEstacion').value=ref.estacion||''; document.getElementById('epUbicacion').value=ref.ubicacion||''; document.getElementById('epZona').value=ref.zona||''; }
+      const m=document.getElementById('epModal');m.classList.remove('hidden');m.classList.add('flex');
+    }
+    function editEstacionParRow(i) { const r=estacionesPares[i]; if(!r)return; document.getElementById('epEditIndex').value=i; document.getElementById('epModalTitle').textContent='Editar línea'; populateEpGrupoModal(r.grupo||''); const map={epN:'n',epSistema:'sistema',epEstacion:'estacion',epEstado:'estado',epUbicacion:'ubicacion',epZona:'zona',epDetalle:'detalle',epPerifoneo:'perifoneo',epPerifEstado:'perifEstado'}; Object.entries(map).forEach(([id,k])=>document.getElementById(id).value=r[k]||''); const m=document.getElementById('epModal');m.classList.remove('hidden');m.classList.add('flex'); }
     function closeEpModal() { const m=document.getElementById('epModal');m.classList.add('hidden');m.classList.remove('flex'); }
-    function saveEpRow(e) { e.preventDefault(); const r={grupo:epGrupo.value.trim(),n:epN.value.trim(),sistema:epSistema.value.trim(),estacion:epEstacion.value.trim(),estado:epEstado.value.trim(),ubicacion:epUbicacion.value.trim(),zona:epZona.value.trim(),detalle:epDetalle.value.trim(),perifoneo:epPerifoneo.value.trim(),perifEstado:epPerifEstado.value.trim()}; const idx=epEditIndex.value; if(idx==='') estacionesPares.push(r); else estacionesPares[Number(idx)]=r; saveEstacionesPares(); closeEpModal(); populateEpGroupFilter(); renderEstacionesPares(); }
-    function deleteEstacionParRow(i) { if(!confirm('¿Eliminar esta línea de Estaciones y Pares?'))return; estacionesPares.splice(i,1); saveEstacionesPares(); populateEpGroupFilter(); renderEstacionesPares(); }
+    function saveEpRow(e) { e.preventDefault(); const idx=epEditIndex.value; const detalleNuevo=epDetalle.value.trim(); const anterior=idx===''?null:estacionesPares[Number(idx)]; const detalleCambio=!anterior || String(anterior.detalle||'')!==detalleNuevo; const r={grupo:epGrupo.value.trim(),n:epN.value.trim(),sistema:epSistema.value.trim(),estacion:epEstacion.value.trim(),estado:epEstado.value.trim(),ubicacion:epUbicacion.value.trim(),zona:epZona.value.trim(),detalle:detalleNuevo,perifoneo:epPerifoneo.value.trim(),perifEstado:epPerifEstado.value.trim(),detalleFecha:detalleNuevo?(detalleCambio?new Date().toISOString():(anterior?.detalleFecha||new Date().toISOString())):''}; if(idx==='') estacionesPares.push(r); else estacionesPares[Number(idx)]={...anterior,...r}; saveEstacionesPares(); closeEpModal(); populateEpGroupFilter(); populateEpDestinoFilter(); renderEstacionesPares(); }
+    function deleteEstacionParRow(i) { if(!confirm('¿Eliminar esta línea de Estaciones y Pares?'))return; estacionesPares.splice(i,1); saveEstacionesPares(); populateEpGroupFilter(); populateEpDestinoFilter(); renderEstacionesPares(); }
 
     function toggleOcurrenciasMenu(e) {
       if (e) e.stopPropagation();
@@ -2596,6 +2740,310 @@
       saveLatestReportRecord(camaraNum, timestampStr);
     }
 
+    // V29: coordenadas exactas extraídas del KMZ oficial LOS OLIVOS 2026 - CIOE.
+    // Índice 1 = cámara 01, ... índice 285 = cámara 285.
+    const CAMERA_MYMAPS_COORDS = [
+      null,
+      [-12.0123991, -77.0798146],
+      [-12.0120692, -77.0772188],
+      [-12.0114977, -77.0738483],
+      [-12.0107178, -77.0703612],
+      [-12.0101889, -77.0686178],
+      [-12.0091633, -77.0657627],
+      [-12.0070006, -77.0618767],
+      [-12.0042965, -77.0625237],
+      [-12.0049395, -77.0659928],
+      [-12.0054571, -77.0695575],
+      [-12.0061049, -77.0715907],
+      [-12.0065560, -77.0758671],
+      [-12.0062660, -77.0787370],
+      [-12.0067187, -77.0821779],
+      [-12.0025865, -77.0830661],
+      [-11.9961357, -77.0843992],
+      [-11.9913850, -77.0816606],
+      [-11.9877098, -77.0802155],
+      [-11.9831780, -77.0785660],
+      [-11.9827752, -77.0825783],
+      [-11.9824685, -77.0857426],
+      [-11.9792944, -77.0843311],
+      [-11.9764551, -77.0831359],
+      [-11.9772167, -77.0801371],
+      [-11.9780359, -77.0777916],
+      [-11.9780721, -77.0767321],
+      [-11.9833524, -77.0752662],
+      [-11.9838964, -77.0722508],
+      [-11.9818797, -77.0722326],
+      [-11.9786900, -77.0724251],
+      [-11.9780038, -77.0690438],
+      [-11.9778998, -77.0667845],
+      [-11.9810170, -77.0659506],
+      [-11.9842997, -77.0654205],
+      [-11.9900757, -77.0645253],
+      [-11.9957369, -77.0636557],
+      [-11.9991591, -77.0628523],
+      [-11.9913227, -77.0715293],
+      [-11.9950367, -77.0762439],
+      [-11.9807779, -77.0775522],
+      [-11.9839778, -77.0687179],
+      [-11.9868190, -77.0722431],
+      [-11.9906169, -77.0687156],
+      [-11.9915299, -77.0751515],
+      [-12.0097481, -77.0811124],
+      [-12.0081629, -77.0640546],
+      [-12.0041731, -77.0760850],
+      [-12.0037163, -77.0684615],
+      [-12.0025560, -77.0663724],
+      [-11.9927456, -77.0641019],
+      [-11.9940030, -77.0671481],
+      [-11.9926689, -77.0700192],
+      [-11.9946055, -77.0733203],
+      [-11.9964607, -77.0791279],
+      [-11.9948757, -77.0800268],
+      [-11.9931071, -77.0727239],
+      [-11.9893323, -77.0749236],
+      [-11.9859185, -77.0709358],
+      [-11.9800740, -77.0722672],
+      [-11.9746624, -77.0660086],
+      [-11.9768494, -77.0627517],
+      [-11.9663624, -77.0730792],
+      [-11.9702435, -77.0666802],
+      [-11.9714698, -77.0674513],
+      [-11.9664199, -77.0682425],
+      [-11.9618827, -77.0655331],
+      [-11.9649071, -77.0629342],
+      [-11.9687764, -77.0719878],
+      [-11.9722065, -77.0724332],
+      [-11.9719191, -77.0755452],
+      [-11.9726876, -77.0813549],
+      [-11.9698961, -77.0800935],
+      [-11.9667209, -77.0786525],
+      [-11.9636906, -77.0774819],
+      [-11.9597081, -77.0766587],
+      [-11.9636158, -77.0718186],
+      [-11.9609118, -77.0695424],
+      [-11.9595676, -77.0692822],
+      [-11.9592528, -77.0760414],
+      [-11.9578231, -77.0791786],
+      [-11.9548957, -77.0797435],
+      [-11.9489114, -77.0805438],
+      [-11.9477431, -77.0768749],
+      [-11.9592334, -77.0730713],
+      [-11.9586824, -77.0694969],
+      [-12.0081614, -77.0745766],
+      [-12.0091280, -77.0725156],
+      [-12.0099830, -77.0743980],
+      [-12.0093597, -77.0762573],
+      [-12.0068020, -77.0729598],
+      [-12.0085329, -77.0733978],
+      [-12.0041395, -77.0741472],
+      [-12.0070670, -77.0715271],
+      [-12.0091359, -77.0711875],
+      [-12.0085803, -77.0706100],
+      [-12.0073844, -77.0698638],
+      [-12.0065391, -77.0683442],
+      [-12.0069684, -77.0662488],
+      [-11.9737191, -77.0741276],
+      [-11.9753574, -77.0764770],
+      [-11.9762069, -77.0752898],
+      [-11.9743300, -77.0746301],
+      [-11.9736602, -77.0754885],
+      [-11.9755971, -77.0793612],
+      [-11.9739979, -77.0774080],
+      [-11.9955662, -77.0731749],
+      [-11.9726806, -77.0736475],
+      [-11.9752244, -77.0730454],
+      [-11.9744863, -77.0775069],
+      [-11.9775074, -77.0828485],
+      [-11.9792508, -77.0817083],
+      [-11.9722757, -77.0835196],
+      [-11.9739183, -77.0842772],
+      [-11.9619981, -77.0705721],
+      [-11.9618383, -77.0715061],
+      [-11.9603401, -77.0712849],
+      [-11.9600142, -77.0723184],
+      [-11.9609695, -77.0700853],
+      [-11.9611252, -77.0748798],
+      [-11.9630545, -77.0751488],
+      [-11.9635982, -77.0758507],
+      [-11.9643387, -77.0737701],
+      [-11.9529850, -77.0828962],
+      [-11.9410842, -77.0768363],
+      [-11.9388222, -77.0758376],
+      [-11.9364614, -77.0772319],
+      [-11.9917325, -77.0703626],
+      [-12.0056208, -77.0775569],
+      [-12.0109382, -77.0768187],
+      [-12.0111758, -77.0784118],
+      [-11.9997405, -77.0752011],
+      [-11.9942301, -77.0704303],
+      [-11.9974439, -77.0805955],
+      [-12.0004598, -77.0640914],
+      [-12.0025964, -77.0637450],
+      [-11.9845086, -77.0750442],
+      [-11.9745925, -77.0861333],
+      [-11.9823044, -77.0731219],
+      [-11.9743063, -77.0833981],
+      [-11.9725757, -77.0714018],
+      [-11.9536174, -77.0830111],
+      [-11.9656586, -77.0770802],
+      [-11.9524932, -77.0778523],
+      [-11.9373238, -77.0753174],
+      [-11.9550738, -77.0810622],
+      [-11.9271306, -77.0742608],
+      [-11.9209720, -77.0751932],
+      [-11.9232827, -77.0734819],
+      [-11.9311893, -77.0762363],
+      [-11.9329742, -77.0801995],
+      [-11.9358451, -77.0754631],
+      [-11.9377657, -77.0721901],
+      [-11.9390663, -77.0772716],
+      [-11.9361409, -77.0822581],
+      [-11.9429160, -77.0745602],
+      [-11.9456284, -77.0747044],
+      [-11.9462483, -77.0723781],
+      [-11.9511688, -77.0703431],
+      [-11.9559087, -77.0716689],
+      [-11.9461040, -77.0824073],
+      [-11.9473087, -77.0851459],
+      [-11.9499738, -77.0785117],
+      [-11.9616205, -77.0740849],
+      [-11.9621526, -77.0811298],
+      [-11.9685557, -77.0828090],
+      [-11.9681850, -77.0746658],
+      [-11.9702753, -77.0708298],
+      [-11.9822216, -77.0832283],
+      [-11.9855347, -77.0661249],
+      [-11.9812600, -77.0712054],
+      [-11.9917614, -77.0793767],
+      [-11.9923537, -77.0763184],
+      [-11.9956901, -77.0807548],
+      [-11.9985217, -77.0839906],
+      [-11.9975572, -77.0647530],
+      [-12.0021156, -77.0633495],
+      [-12.0066687, -77.0641237],
+      [-12.0115052, -77.0801612],
+      [-12.0011793, -77.0625341],
+      [-11.9609936, -77.0743840],
+      [-11.9462041, -77.0781514],
+      [-11.9475623, -77.0791268],
+      [-11.9435539, -77.0775504],
+      [-11.9889543, -77.0753432],
+      [-11.9694675, -77.0772860],
+      [-11.9993233, -77.0637919],
+      [-11.9568741, -77.0817901],
+      [-12.0059253, -77.0800279],
+      [-11.9438480, -77.0836897],
+      [-11.9669633, -77.0754493],
+      [-11.9337737, -77.0787752],
+      [-12.0042568, -77.0688726],
+      [-11.9790712, -77.0716728],
+      [-11.9788881, -77.0763218],
+      [-11.9799225, -77.0806879],
+      [-11.9857557, -77.0686180],
+      [-11.9437742, -77.0755055],
+      [-11.9390224, -77.0784913],
+      [-12.0093128, -77.0787324],
+      [-12.0038935, -77.0656386],
+      [-11.9649793, -77.0696398],
+      [-11.9503478, -77.0854055],
+      [-12.0103316, -77.0771629],
+      [-11.9994851, -77.0739027],
+      [-11.9769705, -77.0724265],
+      [-12.0057346, -77.0750188],
+      [-11.9988569, -77.0652398],
+      [-11.9730510, -77.0684089],
+      [-11.9817328, -77.0741088],
+      [-11.9707569, -77.0763494],
+      [-11.9787079, -77.0679172],
+      [-11.9810469, -77.0737888],
+      [-12.0043158, -77.0788195],
+      [-11.9980309, -77.0830823],
+      [-11.9815398, -77.0763027],
+      [-12.0085255, -77.0792930],
+      [-12.0031807, -77.0704473],
+      [-12.0106672, -77.0722127],
+      [-11.9858760, -77.0747526],
+      [-11.9727919, -77.0856648],
+      [-11.9595792, -77.0793526],
+      [-11.9739486, -77.0872530],
+      [-11.9630370, -77.0730020],
+      [-11.9497878, -77.0708416],
+      [-12.0051908, -77.0806947],
+      [-11.9710224, -77.0794212],
+      [-11.9534904, -77.0738955],
+      [-12.0055964, -77.0813924],
+      [-11.9813137, -77.0729233],
+      [-12.0030262, -77.0631976],
+      [-11.9611525, -77.0762092],
+      [-11.9726532, -77.0862542],
+      [-11.9347396, -77.0816378],
+      [-11.9492643, -77.0755568],
+      [-11.9675823, -77.0779817],
+      [-11.9515978, -77.0842657],
+      [-11.9566535, -77.0834284],
+      [-11.9620499, -77.0800615],
+      [-11.9341427, -77.0798858],
+      [-11.9450557, -77.0807303],
+      [-11.9829586, -77.0805980],
+      [-11.9575893, -77.0807283],
+      [-11.9635902, -77.0762633],
+      [-12.0106430, -77.0791888],
+      [-12.0116576, -77.0794059],
+      [-12.0097497, -77.0711472],
+      [-12.0032149, -77.0777484],
+      [-11.9946220, -77.0699391],
+      [-11.9769104, -77.0792564],
+      [-11.9762699, -77.0786791],
+      [-11.9530058, -77.0756120],
+      [-11.9568837, -77.0750612],
+      [-11.9317022, -77.0781539],
+      [-11.9771015, -77.0785265],
+      [-12.0086430, -77.0630700],
+      [-12.0059725, -77.0628496],
+      [-12.0075026, -77.0778420],
+      [-11.9928552, -77.0648386],
+      [-11.9898461, -77.0736378],
+      [-11.9893893, -77.0739827],
+      [-11.9636164, -77.0743431],
+      [-11.9567225, -77.0799184],
+      [-11.9719671, -77.0829717],
+      [-11.9330255, -77.0731191],
+      [-11.9328975, -77.0771154],
+      [-11.9364312, -77.0790038],
+      [-11.9380173, -77.0769198],
+      [-11.9467093, -77.0765250],
+      [-11.9585058, -77.0818051],
+      [-11.9559575, -77.0839866],
+      [-11.9846200, -77.0732120],
+      [-11.9960007, -77.0643874],
+      [-11.9846871, -77.0710142],
+      [-12.0045296, -77.0634601],
+      [-12.0030758, -77.0636875],
+      [-11.9189044, -77.0741955],
+      [-11.9912950, -77.0673282],
+      [-11.9408458, -77.0738641],
+      [-11.9394612, -77.0740819],
+      [-11.9412823, -77.0735418],
+      [-11.9495188, -77.0794786],
+      [-11.9490940, -77.0769490],
+      [-11.9517165, -77.0791422],
+      [-11.9513281, -77.0766236],
+      [-11.9422760, -77.0734240]
+    ];
+
+    function openCameraMap(cameraId) {
+      const id = Number(cameraId);
+      const point = CAMERA_MYMAPS_COORDS[id];
+      const base = 'https://www.google.com/maps/d/u/0/viewer?mid=1h9cYoq4S3YqbqDyx_9tgsSK3yzGGJro';
+      if (point) {
+        const [lat, lng] = point;
+        // Mantiene el My Maps original y centra el mapa exactamente sobre la cámara elegida.
+        window.open(`${base}&ll=${lat}%2C${lng}&z=20`, '_blank', 'noopener,noreferrer');
+      } else {
+        window.open(`${base}&ll=-11.96671272680058%2C-77.07011510102595&z=15`, '_blank', 'noopener,noreferrer');
+      }
+    }
+
     function renderSearchReportTable() {
       const tbody = document.getElementById('searchTableBody');
       tbody.innerHTML = '';
@@ -2616,14 +3064,17 @@
               ${log.status}
             </span>
           </td>
+          <td class="p-3 border-r border-slate-800 font-medium">${cam.ubicacion || '—'}</td>
+          <td class="p-3 border-r border-slate-800 font-medium">${cam.urbanizacion || '—'}</td>
+          <td class="p-3 border-r border-slate-800 font-medium">${cam.zona || '—'}</td>
           <td class="p-3 text-center border-r border-slate-800"><button onclick="showReportDetail(${cam.id})" class="px-3 py-1.5 rounded-lg bg-slate-800 text-amber-400 hover:bg-slate-700 text-[10px] font-bold"><i class="fa-regular fa-eye mr-1"></i> VER REPORTE</button></td>
           <td class="p-3 text-center space-x-2">
             <button onclick="openUnifiedReportEditor('general', ${cam.id})" class="p-1.5 text-sky-400 hover:text-sky-300 hover:bg-slate-800 rounded-lg transition" title="Ver / Editar Novedad">
               <i class="fa-solid fa-pen-to-square text-sm"></i>
             </button>
 
-            <button onclick="clearDetailReport(${cam.id})" class="p-1.5 text-rose-500 hover:text-rose-400 hover:bg-slate-800 rounded-lg transition" title="Borrar Reporte">
-              <i class="fa-solid fa-trash text-sm"></i>
+            <button onclick="openCameraMap(${cam.id})" class="p-1.5 text-emerald-400 hover:text-emerald-300 hover:bg-slate-800 rounded-lg transition" title="Abrir mapa de cámaras">
+              <i class="fa-solid fa-map-location-dot text-sm"></i>
             </button>
           </td>
         `;
