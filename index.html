@@ -3560,28 +3560,37 @@
       document.body.removeChild(link);
     }
 
-    // ===== USUARIOS Y ROLES =====
-    // Nota: mientras el proyecto siga siendo un Static Site, estas cuentas se guardan
-    // en el navegador. Cuando se añada el backend, esta validación debe moverse al servidor.
-    const SYSTEM_USERS_KEY = "cioe_system_users_v1";
+    // ===== BACKEND CIOE: USUARIOS, ROLES Y SINCRONIZACIÓN =====
+    const CIOE_API = "https://sistema-camaras-cioe-api.onrender.com";
+    const CIOE_TOKEN_KEY = "cioe_api_token";
+    const CIOE_USER_KEY = "cioe_api_user";
+    const SYSTEM_USERS_KEY = "cioe_system_users_v1"; // solo para limpiar la versión local antigua
     let currentSystemUser = null;
+    let cachedSystemUsers = [];
+    let lastServerUpdatedAt = null;
+    let syncTimer = null;
+    let applyingServerState = false;
 
-    function getSystemUsers() {
-      let users = [];
-      try { users = JSON.parse(localStorage.getItem(SYSTEM_USERS_KEY) || "[]"); } catch(e) {}
-      if (!Array.isArray(users) || !users.length) {
-        users = [
-          { username: "admin", password: "1234", role: "admin", active: true },
-          { username: "user1", password: "1234", role: "user", active: true },
-          { username: "user2", password: "1234", role: "user", active: true }
-        ];
-        localStorage.setItem(SYSTEM_USERS_KEY, JSON.stringify(users));
-      }
-      return users;
+    function getApiToken() {
+      return sessionStorage.getItem(CIOE_TOKEN_KEY) || "";
     }
 
-    function saveSystemUsers(users) {
-      localStorage.setItem(SYSTEM_USERS_KEY, JSON.stringify(users));
+    async function apiRequest(path, options = {}) {
+      const headers = { ...(options.headers || {}) };
+      if (options.body && !headers["Content-Type"]) headers["Content-Type"] = "application/json";
+      const token = getApiToken();
+      if (token) headers["Authorization"] = `Bearer ${token}`;
+
+      const response = await fetch(CIOE_API + path, { ...options, headers });
+      let data = {};
+      try { data = await response.json(); } catch (_) {}
+
+      if (!response.ok) {
+        const err = new Error(data.error || `Error HTTP ${response.status}`);
+        err.status = response.status;
+        throw err;
+      }
+      return data;
     }
 
     function isAdminUser() {
@@ -3596,33 +3605,181 @@
       document.body.dataset.userRole = currentSystemUser ? currentSystemUser.role : "";
     }
 
-    function handleLogin(event) {
+    // Guarda únicamente los datos de la aplicación. Las contraseñas ya NO se guardan en el navegador.
+    function collectCioeStorage() {
+      const storage = {};
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (!key) continue;
+        if (key === SYSTEM_USERS_KEY) continue;
+        if (key === "sys_ver" || key.startsWith("cioe_")) {
+          storage[key] = localStorage.getItem(key);
+        }
+      }
+      return storage;
+    }
+
+    function applyCioeStorage(storage) {
+      if (!storage || typeof storage !== "object") return;
+      applyingServerState = true;
+      try {
+        Object.entries(storage).forEach(([key, value]) => {
+          if (key === SYSTEM_USERS_KEY) return;
+          if (key === "sys_ver" || key.startsWith("cioe_")) {
+            if (value === null || value === undefined) localStorage.removeItem(key);
+            else localStorage.setItem(key, String(value));
+          }
+        });
+        // Elimina las cuentas antiguas con contraseña en texto plano.
+        localStorage.removeItem(SYSTEM_USERS_KEY);
+      } finally {
+        applyingServerState = false;
+      }
+    }
+
+    async function pushStateToServer() {
+      if (!isAdminUser() || applyingServerState || !getApiToken()) return;
+      try {
+        const result = await apiRequest("/api/state", {
+          method: "PUT",
+          body: JSON.stringify({ data: { storage: collectCioeStorage() } })
+        });
+        lastServerUpdatedAt = result.updatedAt || lastServerUpdatedAt;
+      } catch (e) {
+        console.error("No se pudo sincronizar con el servidor:", e);
+      }
+    }
+
+    function scheduleServerSync() {
+      if (!isAdminUser() || applyingServerState) return;
+      clearTimeout(syncTimer);
+      syncTimer = setTimeout(pushStateToServer, 700);
+    }
+
+    // Intercepta los guardados existentes del sistema para enviarlos también a PostgreSQL.
+    const _cioeOriginalSetItem = localStorage.setItem.bind(localStorage);
+    const _cioeOriginalRemoveItem = localStorage.removeItem.bind(localStorage);
+    localStorage.setItem = function(key, value) {
+      _cioeOriginalSetItem(key, value);
+      if ((key === "sys_ver" || String(key).startsWith("cioe_")) && key !== SYSTEM_USERS_KEY) {
+        scheduleServerSync();
+      }
+    };
+    localStorage.removeItem = function(key) {
+      _cioeOriginalRemoveItem(key);
+      if ((key === "sys_ver" || String(key).startsWith("cioe_")) && key !== SYSTEM_USERS_KEY) {
+        scheduleServerSync();
+      }
+    };
+
+    async function initialServerSync() {
+      const result = await apiRequest("/api/state");
+      const serverData = result.data || {};
+      const serverStorage = serverData.storage;
+      lastServerUpdatedAt = result.updatedAt || null;
+
+      // Primera instalación: el ADMIN sube al servidor los datos que ya tenía en este navegador.
+      if ((!serverStorage || Object.keys(serverStorage).length === 0) && isAdminUser()) {
+        await pushStateToServer();
+        return false;
+      }
+
+      // Si ya existen datos compartidos, se descargan antes de continuar.
+      if (serverStorage && Object.keys(serverStorage).length) {
+        const before = JSON.stringify(collectCioeStorage());
+        applyCioeStorage(serverStorage);
+        const after = JSON.stringify(collectCioeStorage());
+        return before !== after;
+      }
+      return false;
+    }
+
+    async function handleLogin(event) {
       event.preventDefault();
       const usuario = document.getElementById("loginUser").value.trim();
       const contrasena = document.getElementById("loginPass").value;
       const error = document.getElementById("loginError");
-      const account = getSystemUsers().find(u => u.username === usuario && u.password === contrasena && u.active !== false);
 
-      if (account) {
-        currentSystemUser = { username: account.username, role: account.role };
+      try {
+        const result = await apiRequest("/api/login", {
+          method: "POST",
+          body: JSON.stringify({ username: usuario, password: contrasena })
+        });
+
+        sessionStorage.setItem(CIOE_TOKEN_KEY, result.token);
+        sessionStorage.setItem(CIOE_USER_KEY, JSON.stringify(result.user));
+        currentSystemUser = result.user;
         error.classList.add("hidden");
+
+        const changed = await initialServerSync();
+        if (changed) {
+          location.reload();
+          return;
+        }
+
         document.getElementById("loginView").classList.add("hidden");
         document.getElementById("mainDashboardView").classList.remove("hidden");
         applyUserPermissions();
         renderTable();
-      } else {
+        startServerPolling();
+      } catch (e) {
+        console.error(e);
         error.classList.remove("hidden");
         document.getElementById("loginPass").value = "";
         document.getElementById("loginPass").focus();
       }
     }
 
+    async function restoreApiSession() {
+      const token = getApiToken();
+      const rawUser = sessionStorage.getItem(CIOE_USER_KEY);
+      if (!token || !rawUser) return;
+      try {
+        currentSystemUser = JSON.parse(rawUser);
+        const changed = await initialServerSync();
+        if (changed) {
+          location.reload();
+          return;
+        }
+        document.getElementById("loginView").classList.add("hidden");
+        document.getElementById("mainDashboardView").classList.remove("hidden");
+        applyUserPermissions();
+        renderTable();
+        startServerPolling();
+      } catch (e) {
+        sessionStorage.removeItem(CIOE_TOKEN_KEY);
+        sessionStorage.removeItem(CIOE_USER_KEY);
+        currentSystemUser = null;
+        applyUserPermissions();
+      }
+    }
+
+    function startServerPolling() {
+      if (window.__cioePolling) return;
+      window.__cioePolling = setInterval(async () => {
+        if (!getApiToken()) return;
+        try {
+          const result = await apiRequest("/api/state");
+          const updated = result.updatedAt || null;
+          if (updated && lastServerUpdatedAt && updated !== lastServerUpdatedAt) {
+            lastServerUpdatedAt = updated;
+            applyCioeStorage(result.data?.storage || {});
+            location.reload();
+          } else if (!lastServerUpdatedAt) {
+            lastServerUpdatedAt = updated;
+          }
+        } catch (e) {
+          if (e.status === 401) cerrarSesion();
+        }
+      }, 10000);
+    }
+
     function openUserManager() {
       if (!isAdminUser()) return;
-      renderSystemUsers();
       const modal = document.getElementById("userManagerModal");
       modal.classList.remove("hidden");
       modal.classList.add("flex");
+      renderSystemUsers();
     }
 
     function closeUserManager() {
@@ -3631,94 +3788,100 @@
       modal.classList.remove("flex");
     }
 
-    function renderSystemUsers() {
+    async function renderSystemUsers() {
       if (!isAdminUser()) return;
-      const users = getSystemUsers();
       const body = document.getElementById("usersTableBody");
-      body.innerHTML = users.map((u, i) => `
-        <tr class="bg-[#0a0f1d]">
-          <td class="p-3 font-bold text-white">${escapeHtml(String(u.username))}</td>
-          <td class="p-3 text-center ${u.role === "admin" ? "text-violet-400" : "text-cyan-400"} font-bold">${u.role === "admin" ? "ADMINISTRADOR" : "USUARIO"}</td>
-          <td class="p-3 text-center font-bold ${u.active !== false ? "text-emerald-400" : "text-rose-400"}">${u.active !== false ? "ACTIVO" : "INACTIVO"}</td>
-          <td class="p-3 text-center">
-            <button type="button" onclick="changeSystemUserPassword(${i})" class="text-cyan-400 hover:text-cyan-300 mr-3"><i class="fa-solid fa-key mr-1"></i>Cambiar contraseña</button>
-            ${u.username === "admin" ? '<span class="text-slate-500">Principal</span>' :
-              `<button type="button" onclick="toggleSystemUser(${i})" class="text-amber-400 hover:text-amber-300 mr-3">${u.active !== false ? "Desactivar" : "Activar"}</button>
-               <button type="button" onclick="deleteSystemUser(${i})" class="text-rose-400 hover:text-rose-300">Eliminar</button>`}
-          </td>
-        </tr>`).join("");
+      try {
+        const result = await apiRequest("/api/users");
+        cachedSystemUsers = result.users || [];
+        body.innerHTML = cachedSystemUsers.map((u, i) => `
+          <tr class="bg-[#0a0f1d]">
+            <td class="p-3 font-bold text-white">${escapeHtml(String(u.username))}</td>
+            <td class="p-3 text-center ${u.role === "admin" ? "text-violet-400" : "text-cyan-400"} font-bold">${u.role === "admin" ? "ADMINISTRADOR" : "USUARIO"}</td>
+            <td class="p-3 text-center font-bold ${u.active !== false ? "text-emerald-400" : "text-rose-400"}">${u.active !== false ? "ACTIVO" : "INACTIVO"}</td>
+            <td class="p-3 text-center">
+              <button type="button" onclick="changeSystemUserPassword(${i})" class="text-cyan-400 hover:text-cyan-300 mr-3"><i class="fa-solid fa-key mr-1"></i>Cambiar contraseña</button>
+              ${u.username === "admin" ? '<span class="text-slate-500">Principal</span>' :
+                `<button type="button" onclick="toggleSystemUser(${i})" class="text-amber-400 hover:text-amber-300 mr-3">${u.active !== false ? "Desactivar" : "Activar"}</button>
+                 <button type="button" onclick="deleteSystemUser(${i})" class="text-rose-400 hover:text-rose-300">Eliminar</button>`}
+            </td>
+          </tr>`).join("");
+      } catch (e) {
+        body.innerHTML = `<tr><td colspan="4" class="p-4 text-center text-rose-400">No se pudieron cargar los usuarios.</td></tr>`;
+      }
     }
 
-    function createSystemUser(event) {
+    async function createSystemUser(event) {
       event.preventDefault();
       if (!isAdminUser()) return;
       const username = document.getElementById("newUsername").value.trim();
       const password = document.getElementById("newUserPassword").value;
       const role = document.getElementById("newUserRole").value;
       const msg = document.getElementById("userManagerMessage");
-      const users = getSystemUsers();
 
-      if (!/^[A-Za-z0-9._-]{3,30}$/.test(username)) {
+      try {
+        await apiRequest("/api/users", {
+          method: "POST",
+          body: JSON.stringify({ username, password, role })
+        });
+        event.target.reset();
+        msg.className = "md:col-span-4 text-[11px] text-emerald-400";
+        msg.textContent = "Usuario creado correctamente.";
+        await renderSystemUsers();
+      } catch (e) {
         msg.className = "md:col-span-4 text-[11px] text-rose-400";
-        msg.textContent = "El usuario debe tener entre 3 y 30 caracteres y usar letras, números, punto, guion o guion bajo.";
-        return;
+        msg.textContent = e.message || "No se pudo crear el usuario.";
       }
-      if (users.some(u => u.username.toLowerCase() === username.toLowerCase())) {
-        msg.className = "md:col-span-4 text-[11px] text-rose-400";
-        msg.textContent = "Ese usuario ya existe.";
-        return;
-      }
-      users.push({ username, password, role, active: true });
-      saveSystemUsers(users);
-      event.target.reset();
-      msg.className = "md:col-span-4 text-[11px] text-emerald-400";
-      msg.textContent = "Usuario creado correctamente.";
-      renderSystemUsers();
     }
 
-    function changeSystemUserPassword(index) {
+    async function changeSystemUserPassword(index) {
       if (!isAdminUser()) return;
-      const users = getSystemUsers();
-      const user = users[index];
+      const user = cachedSystemUsers[index];
       if (!user) return;
-
       const nueva = prompt(`Nueva contraseña para ${user.username}:`);
       if (nueva === null) return;
-      if (nueva.length < 4) {
-        alert("La contraseña debe tener al menos 4 caracteres.");
-        return;
-      }
-
+      if (nueva.length < 4) return alert("La contraseña debe tener al menos 4 caracteres.");
       const confirmar = prompt(`Confirma la nueva contraseña para ${user.username}:`);
       if (confirmar === null) return;
-      if (nueva !== confirmar) {
-        alert("Las contraseñas no coinciden.");
-        return;
+      if (nueva !== confirmar) return alert("Las contraseñas no coinciden.");
+
+      try {
+        await apiRequest(`/api/users/${user.id}/password`, {
+          method: "PATCH",
+          body: JSON.stringify({ password: nueva })
+        });
+        alert(`Contraseña de ${user.username} actualizada correctamente.`);
+      } catch (e) {
+        alert(e.message || "No se pudo cambiar la contraseña.");
       }
-
-      user.password = nueva;
-      saveSystemUsers(users);
-      alert(`Contraseña de ${user.username} actualizada correctamente.`);
-      renderSystemUsers();
     }
 
-    function toggleSystemUser(index) {
+    async function toggleSystemUser(index) {
       if (!isAdminUser()) return;
-      const users = getSystemUsers();
-      if (!users[index] || users[index].username === "admin") return;
-      users[index].active = users[index].active === false ? true : false;
-      saveSystemUsers(users);
-      renderSystemUsers();
+      const user = cachedSystemUsers[index];
+      if (!user || user.username === "admin") return;
+      try {
+        await apiRequest(`/api/users/${user.id}/active`, {
+          method: "PATCH",
+          body: JSON.stringify({ active: user.active === false })
+        });
+        await renderSystemUsers();
+      } catch (e) {
+        alert(e.message || "No se pudo modificar el usuario.");
+      }
     }
 
-    function deleteSystemUser(index) {
+    async function deleteSystemUser(index) {
       if (!isAdminUser()) return;
-      const users = getSystemUsers();
-      if (!users[index] || users[index].username === "admin") return;
-      if (!confirm(`¿Eliminar al usuario ${users[index].username}?`)) return;
-      users.splice(index, 1);
-      saveSystemUsers(users);
-      renderSystemUsers();
+      const user = cachedSystemUsers[index];
+      if (!user || user.username === "admin") return;
+      if (!confirm(`¿Eliminar al usuario ${user.username}?`)) return;
+      try {
+        await apiRequest(`/api/users/${user.id}`, { method: "DELETE" });
+        await renderSystemUsers();
+      } catch (e) {
+        alert(e.message || "No se pudo eliminar el usuario.");
+      }
     }
 
     // Bloquea acciones de modificación para cuentas con rol USUARIO.
@@ -3738,24 +3901,22 @@
     }, true);
 
     function cerrarSesion() {
+      sessionStorage.removeItem(CIOE_TOKEN_KEY);
+      sessionStorage.removeItem(CIOE_USER_KEY);
       currentSystemUser = null;
       applyUserPermissions();
       closeUserManager();
-      document.getElementById("mainDashboardView").classList.add("hidden");
-      document.getElementById("searchReportView").classList.add("hidden");
-      document.getElementById("searchReportView").classList.remove("flex");
-      document.getElementById("vecinalesView").classList.add("hidden");
-      document.getElementById("vecinalesView").classList.remove("flex");
-      document.getElementById("camarasFijasView").classList.add("hidden");
-      document.getElementById("camarasFijasView").classList.remove("flex");
-      document.getElementById("estacionesParesView").classList.add("hidden");
-      document.getElementById("estacionesParesView").classList.remove("flex");
+      ["mainDashboardView","searchReportView","vecinalesView","camarasFijasView","estacionesParesView","totemsView"].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) { el.classList.add("hidden"); el.classList.remove("flex"); }
+      });
       document.getElementById("loginView").classList.remove("hidden");
       document.getElementById("loginUser").value = "";
       document.getElementById("loginPass").value = "";
-      document.getElementById("loginError").classList.add("hidden");
-      document.getElementById("loginUser").focus();
     }
+
+    // Si la pestaña se recarga, conserva la sesión mientras la pestaña siga abierta.
+    setTimeout(restoreApiSession, 0);
 
     document.addEventListener('click', (e) => {
       const menu = document.getElementById('ocurrenciasMenu');
