@@ -4358,8 +4358,8 @@
     }
     function setRegistrosTurno(v){ localStorage.setItem(TURNO_CREACION_KEY, JSON.stringify(v)); }
     function showCreacionTurnoView(event){
-      if(event) event.stopPropagation();
-      hideAllViews();
+      if(event) { event.preventDefault(); event.stopPropagation(); }
+      hideAllViewsV36();
       const v=document.getElementById('creacionTurnoView'); v.classList.remove('hidden'); v.classList.add('flex');
       const menu=document.getElementById('ocurrenciasMenu'); if(menu) menu.classList.add('hidden');
       if(turnoCreadorActual){ document.getElementById('turnoSelectorPanel').classList.add('hidden');document.getElementById('turnoTrabajoPanel').classList.remove('hidden');renderRegistrosTurno(); }
