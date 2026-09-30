@@ -513,7 +513,7 @@
 
   <!-- MODAL: VER DETALLE -->
   <div id="epDetailModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm hidden items-center justify-center z-[96] p-4">
-    <div class="bg-[#0a0f1d] border border-amber-500/40 rounded-2xl w-full max-w-3xl shadow-2xl overflow-hidden">
+    <div class="bg-[#0a0f1d] border border-amber-500/40 rounded-2xl w-full max-w-6xl shadow-2xl overflow-hidden">
       <div class="p-6 border-b border-slate-800 flex justify-between items-center"><h2 class="text-lg font-black text-white"><i class="fa-regular fa-eye text-amber-400 mr-2"></i>Detalle de Cámara</h2><button type="button" onclick="closeEpDetailModal()" class="text-slate-400 hover:text-white p-2"><i class="fa-solid fa-xmark"></i></button></div>
       <div class="p-6">
         <div id="epDetailCamera" class="text-sm font-black text-amber-400 mb-2"></div>
@@ -987,7 +987,7 @@
       <div class="p-5 border-b border-slate-800 flex justify-between items-center">
         <div>
           <h2 class="text-lg font-black text-white"><i class="fa-solid fa-users-gear text-violet-400 mr-2"></i>ADMINISTRAR USUARIOS</h2>
-          <p class="text-[11px] text-slate-400 mt-1">Crea y administra cuentas de acceso al sistema.</p>
+          <p class="text-[11px] text-slate-400 mt-1">Crea usuarios y decide exactamente qué funciones puede usar cada cuenta.</p>
         </div>
         <button type="button" onclick="closeUserManager()" class="text-slate-400 hover:text-white p-2"><i class="fa-solid fa-xmark"></i></button>
       </div>
@@ -1011,9 +1011,32 @@
 
         <div class="overflow-x-auto border border-slate-800 rounded-xl">
           <table class="w-full text-xs">
-            <thead class="bg-black text-white uppercase"><tr><th class="p-3 text-left">Usuario</th><th class="p-3">Rol</th><th class="p-3">Estado</th><th class="p-3">Acciones</th></tr></thead>
+            <thead class="bg-black text-white uppercase"><tr><th class="p-3 text-left">Usuario</th><th class="p-3">Rol</th><th class="p-3">Estado</th><th class="p-3">Permisos</th><th class="p-3">Acciones</th></tr></thead>
             <tbody id="usersTableBody" class="divide-y divide-slate-800"></tbody>
           </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ==================== PERMISOS POR USUARIO ==================== -->
+  <div id="permissionsModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm hidden items-center justify-center z-[130] p-4">
+    <div class="bg-[#0a0f1d] border border-violet-500/40 rounded-2xl w-full max-w-3xl shadow-2xl overflow-hidden">
+      <div class="p-5 border-b border-slate-800 flex justify-between items-center">
+        <div>
+          <h2 class="text-lg font-black text-white"><i class="fa-solid fa-user-shield text-violet-400 mr-2"></i>PERMISOS DE <span id="permissionsUserName" class="text-amber-400">USUARIO</span></h2>
+          <p class="text-[11px] text-slate-400 mt-1">Activa o desactiva las funciones que esta cuenta puede utilizar.</p>
+        </div>
+        <button type="button" onclick="closePermissionsModal()" class="text-slate-400 hover:text-white p-2"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="p-5">
+        <input type="hidden" id="permissionsUserId">
+        <div id="permissionsGrid" class="grid grid-cols-1 md:grid-cols-2 gap-3"></div>
+        <p id="permissionsMessage" class="text-xs min-h-5 mt-4"></p>
+        <div class="flex justify-end gap-2 mt-3">
+          <button type="button" onclick="closePermissionsModal()" class="bg-slate-800 border border-slate-700 px-4 py-2.5 rounded-xl text-xs font-bold text-white">Cancelar</button>
+          <button type="button" onclick="saveUserPermissions()" class="bg-violet-600 hover:bg-violet-500 text-white px-5 py-2.5 rounded-xl text-xs font-black"><i class="fa-solid fa-floppy-disk mr-2"></i>Guardar permisos</button>
         </div>
       </div>
     </div>
@@ -3603,13 +3626,101 @@
       return currentSystemUser && currentSystemUser.role === "admin";
     }
 
+    const PERMISSION_DEFS = [
+      ["cambiar_estado", "Cambiar estado", "OPERATIVA / INOPERATIVA / MANTENIMIENTO", "fa-arrows-rotate"],
+      ["agregar_camara", "Añadir / crear cámaras", "Crear cámaras y nuevos registros", "fa-circle-plus"],
+      ["editar_camara", "Editar cámaras", "Modificar datos, detalles y registros", "fa-pen-to-square"],
+      ["eliminar_camara", "Eliminar cámaras", "Borrar cámaras o registros", "fa-trash"],
+      ["telefono_perifoneo", "Teléfono / perifoneo", "Usar y modificar funciones de teléfono o perifoneo", "fa-phone"],
+      ["ver_reportes", "Reportes / detalles", "Abrir reportes y detalles de cámaras", "fa-clipboard-list"],
+      ["barrio_seguro", "Barrio Seguro", "Acceso a Cámaras vecinales / Barrio Seguro", "fa-users-viewfinder"],
+      ["camaras_fijas", "Cámaras Fijas", "Acceso al listado de cámaras fijas", "fa-video"],
+      ["estaciones_pares", "Estaciones y Pares", "Acceso al módulo Estaciones / Pares", "fa-tower-broadcast"],
+      ["totems", "Tótems", "Acceso al módulo de Tótems municipales", "fa-tower-observation"]
+    ];
+
+    function hasPermission(key) {
+      if (!currentSystemUser) return false;
+      if (isAdminUser()) return true;
+      return currentSystemUser.permissions?.[key] !== false;
+    }
+
+    function permissionDenied(label) {
+      alert(`Tu cuenta no tiene permiso para ${label}. El administrador puede habilitarlo desde Administrar usuarios.`);
+    }
+
+    function setPermissionElements(selector, allowed) {
+      document.querySelectorAll(selector).forEach(el => {
+        el.classList.toggle("hidden", !allowed);
+        el.dataset.permissionHidden = allowed ? "0" : "1";
+      });
+    }
+
     function applyUserPermissions() {
       const name = document.getElementById("currentUserName");
       const manage = document.getElementById("manageUsersBtn");
       if (name) name.textContent = currentSystemUser ? currentSystemUser.username : "—";
       if (manage) manage.classList.toggle("hidden", !isAdminUser());
       document.body.dataset.userRole = currentSystemUser ? currentSystemUser.role : "";
+      if (!currentSystemUser) return;
+
+      // Oculta accesos completos a módulos cuando el administrador los desactiva.
+      setPermissionElements('[onclick*="showVecinalesView"]', hasPermission("barrio_seguro"));
+      setPermissionElements('[onclick*="showCamarasFijasView"]', hasPermission("camaras_fijas"));
+      setPermissionElements('[onclick*="showEstacionesParesView"]', hasPermission("estaciones_pares"));
+      setPermissionElements('[onclick*="showTotemsView"]', hasPermission("totems"));
+      setPermissionElements('[onclick*="showSearchReportView"]', hasPermission("ver_reportes"));
     }
+
+    function classifyPermissionForElement(el) {
+      if (!el) return null;
+      const action = (el.getAttribute("onclick") || "").toLowerCase();
+      const text = (el.textContent || el.title || "").toLowerCase();
+      const id = (el.id || "").toLowerCase();
+
+      if (action.includes("showvecinalesview")) return ["barrio_seguro", "abrir Barrio Seguro"];
+      if (action.includes("showcamarasfijasview")) return ["camaras_fijas", "abrir Cámaras Fijas"];
+      if (action.includes("showestacionesparesview")) return ["estaciones_pares", "abrir Estaciones y Pares"];
+      if (action.includes("showtotemsview")) return ["totems", "abrir Tótems"];
+      if (action.includes("showsearchreportview") || /reporte|detalle/.test(text) && /ver|buscar|abrir/.test(text)) return ["ver_reportes", "ver reportes o detalles"];
+      if (/phone|telefono|teléfono|perif|megaf/.test(action + " " + text + " " + id)) return ["telefono_perifoneo", "usar teléfono o perifoneo"];
+      if (/delete|remove|eliminar|borrar/.test(action + " " + text)) return ["eliminar_camara", "eliminar cámaras"];
+      if (/open.*add|addcamera|add.*camera|newgroup|añadir|agregar|crear grupo|nuevo/.test(action + " " + text)) return ["agregar_camara", "añadir cámaras"];
+      if (/edit|editar|openmodal/.test(action + " " + text)) return ["editar_camara", "editar cámaras"];
+      return null;
+    }
+
+    // Control central de botones/enlaces según permisos.
+    document.addEventListener("click", function(event) {
+      if (!currentSystemUser || isAdminUser()) return;
+      const el = event.target.closest("button, a");
+      if (!el) return;
+      const info = classifyPermissionForElement(el);
+      if (info && !hasPermission(info[0])) {
+        event.preventDefault();
+        event.stopImmediatePropagation();
+        permissionDenied(info[1]);
+      }
+    }, true);
+
+    // Controla especialmente los selectores de OPERATIVA / INOPERATIVA / MANTENIMIENTO.
+    document.addEventListener("change", function(event) {
+      if (!currentSystemUser || isAdminUser() || hasPermission("cambiar_estado")) return;
+      const el = event.target;
+      if (!(el instanceof HTMLSelectElement)) return;
+      const action = (el.getAttribute("onchange") || "").toLowerCase();
+      const id = (el.id || "").toLowerCase();
+      const cls = (el.className || "").toLowerCase();
+      const values = Array.from(el.options || []).map(o => String(o.value || o.textContent).toUpperCase());
+      const isStatus = cls.includes("status-select") || /estado|status/.test(id + " " + action) ||
+        (values.includes("OPERATIVA") && values.includes("INOPERATIVA"));
+      if (isStatus) {
+        event.preventDefault();
+        event.stopImmediatePropagation();
+        permissionDenied("cambiar el estado de las cámaras");
+        setTimeout(() => location.reload(), 50);
+      }
+    }, true);
 
     // Guarda únicamente los datos de la aplicación. Las contraseñas ya NO se guardan en el navegador.
     function collectCioeStorage() {
@@ -3743,6 +3854,12 @@
       if (!token || !rawUser) return;
       try {
         currentSystemUser = JSON.parse(rawUser);
+        // En cada F5 consulta permisos frescos desde PostgreSQL.
+        const me = await apiRequest("/api/me");
+        if (me?.user) {
+          currentSystemUser = me.user;
+          sessionStorage.setItem(CIOE_USER_KEY, JSON.stringify(me.user));
+        }
         const changed = await initialServerSync();
         if (changed) {
           window.__cioeApplyingRemoteReload = true;
@@ -3793,6 +3910,10 @@
             <td class="p-3 text-center ${u.role === "admin" ? "text-violet-400" : "text-cyan-400"} font-bold">${u.role === "admin" ? "ADMINISTRADOR" : "USUARIO"}</td>
             <td class="p-3 text-center font-bold ${u.active !== false ? "text-emerald-400" : "text-rose-400"}">${u.active !== false ? "ACTIVO" : "INACTIVO"}</td>
             <td class="p-3 text-center">
+              ${u.role === "admin" ? '<span class="text-emerald-400 font-bold"><i class="fa-solid fa-shield-halved mr-1"></i>Todos</span>' :
+                `<button type="button" onclick="openPermissionsModal(${i})" class="bg-violet-600/20 border border-violet-500/40 text-violet-300 hover:bg-violet-600 hover:text-white px-3 py-1.5 rounded-lg font-bold"><i class="fa-solid fa-sliders mr-1"></i>Configurar</button>`}
+            </td>
+            <td class="p-3 text-center whitespace-nowrap">
               <button type="button" onclick="changeSystemUserPassword(${i})" class="text-cyan-400 hover:text-cyan-300 mr-3"><i class="fa-solid fa-key mr-1"></i>Cambiar contraseña</button>
               ${u.username === "admin" ? '<span class="text-slate-500">Principal</span>' :
                 `<button type="button" onclick="toggleSystemUser(${i})" class="text-amber-400 hover:text-amber-300 mr-3">${u.active !== false ? "Desactivar" : "Activar"}</button>
@@ -3800,7 +3921,67 @@
             </td>
           </tr>`).join("");
       } catch (e) {
-        body.innerHTML = `<tr><td colspan="4" class="p-4 text-center text-rose-400">No se pudieron cargar los usuarios.</td></tr>`;
+        body.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-rose-400">No se pudieron cargar los usuarios.</td></tr>`;
+      }
+    }
+
+    function openPermissionsModal(index) {
+      if (!isAdminUser()) return;
+      const user = cachedSystemUsers[index];
+      if (!user || user.role === "admin") return;
+      document.getElementById("permissionsUserId").value = user.id;
+      document.getElementById("permissionsUserName").textContent = String(user.username).toUpperCase();
+      document.getElementById("permissionsMessage").textContent = "";
+      const perms = user.permissions || {};
+      document.getElementById("permissionsGrid").innerHTML = PERMISSION_DEFS.map(([key, title, desc, icon]) => `
+        <label class="flex items-center justify-between gap-4 bg-[#030712] border border-slate-800 rounded-xl p-3 cursor-pointer hover:border-violet-500/50">
+          <span class="flex items-center gap-3 min-w-0">
+            <span class="w-9 h-9 shrink-0 rounded-lg bg-violet-500/10 text-violet-400 flex items-center justify-center"><i class="fa-solid ${icon}"></i></span>
+            <span><span class="block text-xs font-black text-white">${title}</span><span class="block text-[10px] text-slate-500 mt-0.5">${desc}</span></span>
+          </span>
+          <span class="flex items-center gap-2 shrink-0">
+            <span id="permLabel_${key}" class="text-[10px] font-black ${perms[key] !== false ? 'text-emerald-400' : 'text-rose-400'}">${perms[key] !== false ? 'SÍ' : 'NO'}</span>
+            <input type="checkbox" data-permission-key="${key}" ${perms[key] !== false ? 'checked' : ''} onchange="updatePermissionSwitchLabel(this)" class="w-5 h-5 accent-violet-600">
+          </span>
+        </label>`).join("");
+      const modal = document.getElementById("permissionsModal");
+      modal.classList.remove("hidden"); modal.classList.add("flex");
+    }
+
+    function updatePermissionSwitchLabel(input) {
+      const key = input.dataset.permissionKey;
+      const label = document.getElementById(`permLabel_${key}`);
+      if (!label) return;
+      label.textContent = input.checked ? "SÍ" : "NO";
+      label.className = `text-[10px] font-black ${input.checked ? 'text-emerald-400' : 'text-rose-400'}`;
+    }
+
+    function closePermissionsModal() {
+      const modal = document.getElementById("permissionsModal");
+      if (!modal) return;
+      modal.classList.add("hidden"); modal.classList.remove("flex");
+    }
+
+    async function saveUserPermissions() {
+      if (!isAdminUser()) return;
+      const id = document.getElementById("permissionsUserId").value;
+      const msg = document.getElementById("permissionsMessage");
+      const permissions = {};
+      document.querySelectorAll('#permissionsGrid [data-permission-key]').forEach(input => {
+        permissions[input.dataset.permissionKey] = !!input.checked;
+      });
+      try {
+        await apiRequest(`/api/users/${id}/permissions`, {
+          method: "PATCH",
+          body: JSON.stringify({ permissions })
+        });
+        msg.className = "text-xs min-h-5 mt-4 text-emerald-400 font-bold";
+        msg.textContent = "Permisos guardados correctamente. El usuario verá el cambio al actualizar con F5.";
+        await renderSystemUsers();
+        setTimeout(closePermissionsModal, 900);
+      } catch (e) {
+        msg.className = "text-xs min-h-5 mt-4 text-rose-400 font-bold";
+        msg.textContent = e.message || "No se pudieron guardar los permisos.";
       }
     }
 
@@ -3982,6 +4163,7 @@
       currentSystemUser = null;
       applyUserPermissions();
       closeUserManager();
+      closePermissionsModal();
       ["mainDashboardView","searchReportView","vecinalesView","camarasFijasView","estacionesParesView","totemsView"].forEach(id => {
         const el = document.getElementById(id);
         if (el) { el.classList.add("hidden"); el.classList.remove("flex"); }
