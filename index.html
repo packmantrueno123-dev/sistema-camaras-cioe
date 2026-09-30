@@ -460,13 +460,9 @@
   <!-- ==================== VISTA: CREACIÓN DE ESTACIONES/PARES POR TURNO ==================== -->
   <div id="creacionTurnoView" class="hidden space-y-4 flex-col flex-1">
     <header class="bg-[#0a0f1d] border border-fuchsia-500/30 rounded-2xl p-4 shadow-xl flex flex-col lg:flex-row justify-between items-center gap-4 w-full">
-      <div class="flex items-center gap-3">
-        <div class="p-3 bg-fuchsia-600 rounded-xl text-white"><i class="fa-solid fa-calendar-day text-xl"></i></div>
-        <div><h1 class="text-xl font-black text-white uppercase">CREACIÓN DE ESTACIONES / PARES POR TURNO</h1><p class="text-xs text-slate-400">Selecciona tu turno y registra las Estaciones o Pares creados durante el servicio.</p></div>
-      </div>
+      <div class="flex items-center gap-3"><div class="p-3 bg-fuchsia-600 rounded-xl text-white"><i class="fa-solid fa-calendar-day text-xl"></i></div><div><h1 class="text-xl font-black text-white uppercase">CREACIÓN DE ESTACIONES / PARES POR TURNO</h1><p class="text-xs text-slate-400">Selecciona tu turno y crea Estaciones/Pares con sus cámaras y operador.</p></div></div>
       <button onclick="showMainDashboardView()" class="bg-slate-800 hover:bg-slate-700 border border-slate-700 px-4 py-2 rounded-xl text-xs font-bold"><i class="fa-solid fa-arrow-left text-amber-500 mr-2"></i>Volver al Centro de Control</button>
     </header>
-
     <section id="turnoSelectorPanel" class="bg-[#0a0f1d] border border-slate-800 rounded-2xl p-6 shadow-xl">
       <div class="text-center mb-6"><h2 class="text-lg font-black text-white">¿QUÉ TURNO ERES?</h2><p class="text-xs text-slate-400 mt-1">Escoge el turno para continuar.</p></div>
       <div class="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-4xl mx-auto">
@@ -475,28 +471,42 @@
         <button onclick="seleccionarTurnoCreador('NOCHE')" class="bg-indigo-500/10 hover:bg-indigo-500/20 border border-indigo-500/40 rounded-2xl p-7 text-center transition"><i class="fa-solid fa-moon text-4xl text-indigo-400 mb-3"></i><span class="block font-black text-indigo-300">TURNO NOCHE</span></button>
       </div>
     </section>
-
     <section id="turnoTrabajoPanel" class="hidden space-y-4">
-      <div class="bg-[#0a0f1d] border border-fuchsia-500/30 rounded-2xl p-4 flex flex-col md:flex-row justify-between items-center gap-3">
-        <div><span class="text-[10px] text-slate-500 font-bold uppercase">Turno seleccionado</span><div id="turnoActualLabel" class="text-lg font-black text-fuchsia-400">—</div></div>
-        <button onclick="cambiarTurnoCreador()" class="bg-slate-800 hover:bg-slate-700 border border-slate-700 px-4 py-2 rounded-xl text-xs font-bold"><i class="fa-solid fa-right-left mr-2 text-fuchsia-400"></i>Cambiar turno</button>
-      </div>
-      <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        <form onsubmit="guardarCreacionTurno(event)" class="bg-[#0a0f1d] border border-slate-800 rounded-2xl p-5 space-y-4">
-          <h3 class="font-black text-white"><i class="fa-solid fa-circle-plus text-fuchsia-400 mr-2"></i>NUEVA ESTACIÓN / PAR</h3>
-          <input type="hidden" id="turnoEditId">
-          <label class="block text-xs text-slate-400">Tipo<select id="turnoTipo" class="mt-1 w-full bg-[#030712] border border-slate-700 rounded-xl p-3 text-white font-bold"><option value="ESTACIÓN">ESTACIÓN</option><option value="PAR">PAR</option></select></label>
-          <label class="block text-xs text-slate-400">Nombre o número<input id="turnoNombre" required placeholder="Ej: 12 o OLIVAR" class="mt-1 w-full bg-[#030712] border border-slate-700 rounded-xl p-3 text-white"></label>
-          <label class="block text-xs text-slate-400">Responsable / operador<input id="turnoResponsable" placeholder="Opcional" class="mt-1 w-full bg-[#030712] border border-slate-700 rounded-xl p-3 text-white"></label>
-          <label class="block text-xs text-slate-400">Observación<textarea id="turnoObservacion" rows="3" placeholder="Detalle opcional..." class="mt-1 w-full bg-[#030712] border border-slate-700 rounded-xl p-3 text-white"></textarea></label>
-          <div class="flex gap-2"><button type="submit" class="flex-1 bg-fuchsia-600 hover:bg-fuchsia-500 text-white px-4 py-2.5 rounded-xl text-xs font-black"><i class="fa-solid fa-floppy-disk mr-2"></i>Guardar</button><button type="button" onclick="limpiarFormularioTurno()" class="bg-slate-800 px-4 py-2.5 rounded-xl text-xs font-bold">Limpiar</button></div>
+      <div class="bg-[#0a0f1d] border border-fuchsia-500/30 rounded-2xl p-4 flex flex-col md:flex-row justify-between items-center gap-3"><div><span class="text-[10px] text-slate-500 font-bold uppercase">Turno seleccionado</span><div id="turnoActualLabel" class="text-lg font-black text-fuchsia-400">—</div></div><button onclick="cambiarTurnoCreador()" class="bg-slate-800 hover:bg-slate-700 border border-slate-700 px-4 py-2 rounded-xl text-xs font-bold"><i class="fa-solid fa-right-left mr-2 text-fuchsia-400"></i>Cambiar turno</button></div>
+      <div class="bg-[#0a0f1d] border border-slate-800 rounded-2xl p-4">
+        <form onsubmit="guardarCreacionTurno(event)" class="grid grid-cols-1 md:grid-cols-4 gap-3 items-end">
+          <input type="hidden" id="turnoEditId"><label class="text-xs text-slate-400">Tipo<select id="turnoTipo" class="mt-1 w-full bg-[#030712] border border-slate-700 rounded-xl p-3 text-white font-bold"><option value="ESTACIÓN">ESTACIÓN</option><option value="PAR">PAR</option></select></label>
+          <label class="text-xs text-slate-400">Nombre / número<input id="turnoNombre" required placeholder="Ej: ESTACIÓN 3" class="mt-1 w-full bg-[#030712] border border-slate-700 rounded-xl p-3 text-white"></label>
+          <label class="text-xs text-slate-400">Nombre del operador<input id="turnoResponsable" placeholder="Ej: JUAN PÉREZ" class="mt-1 w-full bg-[#030712] border border-slate-700 rounded-xl p-3 text-white"></label>
+          <div class="flex gap-2"><button type="submit" class="flex-1 bg-fuchsia-600 hover:bg-fuchsia-500 text-white px-4 py-3 rounded-xl text-xs font-black"><i class="fa-solid fa-plus mr-2"></i>Crear Estación / Par</button><button type="button" onclick="limpiarFormularioTurno()" class="bg-slate-800 px-4 py-3 rounded-xl text-xs font-bold">Limpiar</button></div>
+          <textarea id="turnoObservacion" class="hidden"></textarea>
         </form>
-        <div class="lg:col-span-2 bg-[#0a0f1d] border border-slate-800 rounded-2xl overflow-hidden">
-          <div class="p-4 border-b border-slate-800 flex justify-between items-center"><h3 class="font-black text-white">REGISTROS DEL TURNO</h3><span id="turnoCount" class="text-xs font-bold text-fuchsia-400">0 registros</span></div>
-          <div class="overflow-x-auto"><table class="w-full text-xs min-w-[750px]"><thead class="bg-black text-white uppercase"><tr><th class="p-3">#</th><th class="p-3">Tipo</th><th class="p-3">Nombre</th><th class="p-3">Responsable</th><th class="p-3">Observación</th><th class="p-3">Fecha/Hora</th><th class="p-3 text-center">Acciones</th></tr></thead><tbody id="turnoRegistrosBody" class="divide-y divide-slate-800"></tbody></table></div>
-        </div>
+      </div>
+      <div class="bg-[#0a0f1d] border border-slate-800 rounded-2xl overflow-hidden">
+        <div class="p-4 border-b border-slate-800 flex justify-between items-center"><h3 class="font-black text-white">REGISTROS DEL TURNO</h3><span id="turnoCount" class="text-xs font-bold text-fuchsia-400">0 cámaras</span></div>
+        <div class="overflow-x-auto"><table class="w-full text-[11px] min-w-[1500px]"><thead class="bg-black text-white uppercase"><tr><th class="p-3">N°</th><th class="p-3">Sistema</th><th class="p-3">Cámara</th><th class="p-3">Estado</th><th class="p-3">Ubicación</th><th class="p-3">Zona / Sector</th><th class="p-3">Detalle</th><th class="p-3">N° Perifoneo</th><th class="p-3">Estado Perifoneo</th><th class="p-3">Operador</th><th class="p-3 text-center">Acciones</th></tr></thead><tbody id="turnoRegistrosBody"></tbody></table></div>
       </div>
     </section>
+  </div>
+
+  <!-- MODAL CÁMARA DE ESTACIÓN/PAR POR TURNO -->
+  <div id="turnoCamaraModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm hidden items-center justify-center p-4 z-[90]">
+    <div class="bg-[#0a0f1d] border border-fuchsia-500/40 rounded-2xl max-w-2xl w-full p-6 shadow-2xl">
+      <div class="flex justify-between items-center mb-4"><div><h2 class="font-black text-white">AÑADIR CÁMARA</h2><p id="turnoCamaraGrupoLabel" class="text-xs text-fuchsia-400 font-bold"></p></div><button onclick="cerrarTurnoCamaraModal()" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-xl"></i></button></div>
+      <form onsubmit="guardarCamaraTurno(event)" class="grid grid-cols-1 md:grid-cols-2 gap-3">
+        <input type="hidden" id="turnoCamGrupoId"><input type="hidden" id="turnoCamEditId">
+        <label class="text-xs text-slate-400">Sistema<input id="turnoCamSistema" required placeholder="Ej: HIK" class="mt-1 w-full bg-[#030712] border border-slate-700 rounded-xl p-3 text-white uppercase"></label>
+        <label class="text-xs text-slate-400">Cámara<input id="turnoCamNumero" required placeholder="Ej: 3" class="mt-1 w-full bg-[#030712] border border-slate-700 rounded-xl p-3 text-white"></label>
+        <label class="text-xs text-slate-400">Estado<select id="turnoCamEstado" class="mt-1 w-full bg-[#030712] border border-slate-700 rounded-xl p-3 text-white font-bold"><option>OPERATIVA</option><option>INOPERATIVA</option><option>MANTENIMIENTO</option></select></label>
+        <label class="text-xs text-slate-400">Zona / Sector<input id="turnoCamZona" placeholder="Ej: SUR 5 B" class="mt-1 w-full bg-[#030712] border border-slate-700 rounded-xl p-3 text-white uppercase"></label>
+        <label class="text-xs text-slate-400 md:col-span-2">Ubicación<input id="turnoCamUbicacion" placeholder="Dirección / referencia" class="mt-1 w-full bg-[#030712] border border-slate-700 rounded-xl p-3 text-white uppercase"></label>
+        <label class="text-xs text-slate-400 md:col-span-2">Detalle<textarea id="turnoCamDetalle" rows="2" placeholder="Detalle de la cámara..." class="mt-1 w-full bg-[#030712] border border-slate-700 rounded-xl p-3 text-white"></textarea></label>
+        <label class="text-xs text-slate-400">N° Perifoneo<input id="turnoCamPerifoneo" placeholder="Ej: 5202" class="mt-1 w-full bg-[#030712] border border-slate-700 rounded-xl p-3 text-white"></label>
+        <label class="text-xs text-slate-400">Estado Perifoneo<select id="turnoCamEstadoPerifoneo" class="mt-1 w-full bg-[#030712] border border-slate-700 rounded-xl p-3 text-white font-bold"><option>OPERATIVO</option><option>INOPERATIVO</option><option>MANTENIMIENTO</option></select></label>
+        <label class="text-xs text-slate-400 md:col-span-2">Nombre del operador<input id="turnoCamOperador" placeholder="Nombre del operador" class="mt-1 w-full bg-[#030712] border border-slate-700 rounded-xl p-3 text-white uppercase"></label>
+        <div class="md:col-span-2 flex justify-end gap-2 mt-2"><button type="button" onclick="cerrarTurnoCamaraModal()" class="bg-slate-800 px-4 py-2.5 rounded-xl text-xs font-bold">Cancelar</button><button type="submit" class="bg-fuchsia-600 hover:bg-fuchsia-500 px-5 py-2.5 rounded-xl text-xs font-black text-white"><i class="fa-solid fa-floppy-disk mr-2"></i>Guardar cámara</button></div>
+      </form>
+    </div>
   </div>
 
   <!-- ==================== VISTA: TÓTEMS DE CÁMARAS ==================== -->
@@ -4341,34 +4351,68 @@
     updateTotalGeneral();
 
     // ===== CREACIÓN DE ESTACIONES / PARES POR TURNO =====
-    const TURNO_CREACION_KEY = 'cioe_creacion_estaciones_pares_turno_v1';
+    const TURNO_CREACION_KEY = 'cioe_creacion_estaciones_pares_turno_v2';
     let turnoCreadorActual = '';
-    function getRegistrosTurno(){ try { const x=JSON.parse(localStorage.getItem(TURNO_CREACION_KEY)||'[]'); return Array.isArray(x)?x:[]; } catch(e){ return []; } }
-    function setRegistrosTurno(x){ localStorage.setItem(TURNO_CREACION_KEY, JSON.stringify(x)); }
-    function showCreacionTurnoView(e){
-      if(e)e.stopPropagation();
-      if(!hasPermission('estaciones_pares')){ permissionDenied('abrir Creación de Estaciones/Pares por Turno'); return; }
-      const m=document.getElementById('ocurrenciasMenu'); if(m)m.classList.add('hidden');
-      ['mainDashboardView','searchReportView','camarasFijasView','vecinalesView','estacionesParesView','totemsView'].forEach(id=>{const x=document.getElementById(id);if(x){x.classList.add('hidden');x.classList.remove('flex')}});
-      const v=document.getElementById('creacionTurnoView'); v.classList.remove('hidden');v.classList.add('flex');
-      cambiarTurnoCreador();
+    function getRegistrosTurno(){
+      try { return JSON.parse(localStorage.getItem(TURNO_CREACION_KEY) || '[]'); } catch(e){ return []; }
+    }
+    function setRegistrosTurno(v){ localStorage.setItem(TURNO_CREACION_KEY, JSON.stringify(v)); }
+    function showCreacionTurnoView(event){
+      if(event) event.stopPropagation();
+      hideAllViews();
+      const v=document.getElementById('creacionTurnoView'); v.classList.remove('hidden'); v.classList.add('flex');
+      const menu=document.getElementById('ocurrenciasMenu'); if(menu) menu.classList.add('hidden');
+      if(turnoCreadorActual){ document.getElementById('turnoSelectorPanel').classList.add('hidden');document.getElementById('turnoTrabajoPanel').classList.remove('hidden');renderRegistrosTurno(); }
     }
     function seleccionarTurnoCreador(turno){ turnoCreadorActual=turno; document.getElementById('turnoActualLabel').textContent='TURNO '+turno; document.getElementById('turnoSelectorPanel').classList.add('hidden'); document.getElementById('turnoTrabajoPanel').classList.remove('hidden'); limpiarFormularioTurno(); renderRegistrosTurno(); }
     function cambiarTurnoCreador(){ turnoCreadorActual=''; document.getElementById('turnoSelectorPanel').classList.remove('hidden'); document.getElementById('turnoTrabajoPanel').classList.add('hidden'); }
-    function limpiarFormularioTurno(){ document.getElementById('turnoEditId').value=''; document.getElementById('turnoTipo').value='ESTACIÓN'; document.getElementById('turnoNombre').value=''; document.getElementById('turnoResponsable').value=''; document.getElementById('turnoObservacion').value=''; }
+    function limpiarFormularioTurno(){ document.getElementById('turnoEditId').value=''; document.getElementById('turnoTipo').value='ESTACIÓN'; document.getElementById('turnoNombre').value=''; document.getElementById('turnoResponsable').value=''; }
     function guardarCreacionTurno(e){
       e.preventDefault(); if(!turnoCreadorActual)return;
-      let regs=getRegistrosTurno(); const editId=document.getElementById('turnoEditId').value;
-      const now=new Date(); const item={id:editId?Number(editId):Date.now(),turno:turnoCreadorActual,tipo:document.getElementById('turnoTipo').value,nombre:document.getElementById('turnoNombre').value.trim().toUpperCase(),responsable:document.getElementById('turnoResponsable').value.trim().toUpperCase(),observacion:document.getElementById('turnoObservacion').value.trim(),fecha:now.toLocaleString('es-PE')};
-      if(editId){ const i=regs.findIndex(x=>String(x.id)===String(editId)); if(i>=0)item.fecha=regs[i].fecha,regs[i]=item; } else regs.push(item);
+      let regs=getRegistrosTurno(); const editId=Number(document.getElementById('turnoEditId').value||0);
+      const nombre=document.getElementById('turnoNombre').value.trim().toUpperCase();
+      const tipo=document.getElementById('turnoTipo').value;
+      const responsable=document.getElementById('turnoResponsable').value.trim().toUpperCase();
+      if(editId){ const x=regs.find(r=>r.id===editId); if(x){x.tipo=tipo;x.nombre=nombre;x.responsable=responsable;} }
+      else regs.push({id:Date.now(),turno:turnoCreadorActual,tipo,nombre,responsable,camaras:[]});
       setRegistrosTurno(regs); limpiarFormularioTurno(); renderRegistrosTurno();
     }
     function renderRegistrosTurno(){
-      const body=document.getElementById('turnoRegistrosBody'); if(!body)return; const regs=getRegistrosTurno().filter(x=>x.turno===turnoCreadorActual); document.getElementById('turnoCount').textContent=regs.length+' registros';
-      body.innerHTML=regs.map((x,i)=>`<tr class="hover:bg-slate-900/60"><td class="p-3 text-center">${i+1}</td><td class="p-3 font-black text-fuchsia-400">${escapeHtml(x.tipo)}</td><td class="p-3 font-bold">${escapeHtml(x.nombre)}</td><td class="p-3">${escapeHtml(x.responsable||'—')}</td><td class="p-3">${escapeHtml(x.observacion||'—')}</td><td class="p-3 text-slate-400">${escapeHtml(x.fecha||'—')}</td><td class="p-3 text-center whitespace-nowrap"><button onclick="editarRegistroTurno(${x.id})" class="text-sky-400 p-2" title="Editar"><i class="fa-solid fa-pen-to-square"></i></button><button onclick="eliminarRegistroTurno(${x.id})" class="text-rose-400 p-2" title="Eliminar"><i class="fa-solid fa-trash"></i></button></td></tr>`).join('') || '<tr><td colspan="7" class="p-8 text-center text-slate-500">Todavía no hay registros en este turno.</td></tr>';
+      const body=document.getElementById('turnoRegistrosBody'); if(!body)return;
+      const grupos=getRegistrosTurno().filter(x=>x.turno===turnoCreadorActual);
+      let total=0, html='';
+      grupos.forEach(g=>{
+        const cams=Array.isArray(g.camaras)?g.camaras:[]; total+=cams.length;
+        html += `<tr class="bg-violet-950/70 border-y border-violet-700/50"><td colspan="11" class="p-3"><div class="flex items-center justify-between gap-3"><div class="flex items-center gap-3"><span class="font-black text-violet-300"><i class="fa-solid fa-tower-broadcast mr-2"></i>${escapeHtml(g.tipo)} ${escapeHtml(g.nombre)}</span><span class="text-slate-400">OPERADOR: <b class="text-white">${escapeHtml(g.responsable||'—')}</b></span></div><div class="flex gap-2"><button onclick="abrirTurnoCamaraModal(${g.id})" class="bg-amber-500 hover:bg-amber-400 text-black px-3 py-2 rounded-xl font-black"><i class="fa-solid fa-plus mr-1"></i>AÑADIR</button><button onclick="editarRegistroTurno(${g.id})" class="text-sky-400 p-2" title="Editar estación/par"><i class="fa-solid fa-pen-to-square"></i></button><button onclick="eliminarRegistroTurno(${g.id})" class="text-rose-400 p-2" title="Eliminar estación/par"><i class="fa-solid fa-trash"></i></button></div></div></td></tr>`;
+        if(!cams.length){ html += `<tr><td colspan="11" class="p-5 text-center text-slate-500">Sin cámaras. Usa + AÑADIR.</td></tr>`; }
+        cams.forEach((c,i)=>{
+          const estadoClass=c.estado==='OPERATIVA'?'text-emerald-400':c.estado==='MANTENIMIENTO'?'text-blue-400':'text-rose-400';
+          const perClass=c.estadoPerifoneo==='OPERATIVO'?'text-emerald-400':c.estadoPerifoneo==='MANTENIMIENTO'?'text-blue-400':'text-rose-400';
+          html += `<tr class="border-b border-slate-800 hover:bg-slate-900/60"><td class="p-3">${i+1}</td><td class="p-3 font-bold">${escapeHtml(c.sistema||'—')}</td><td class="p-3 font-black">${escapeHtml(c.camara||'—')}</td><td class="p-3 font-black ${estadoClass}">${escapeHtml(c.estado||'—')}</td><td class="p-3">${escapeHtml(c.ubicacion||'—')}</td><td class="p-3">${escapeHtml(c.zona||'—')}</td><td class="p-3"><button onclick="verDetalleCamaraTurno(${g.id},${c.id})" class="bg-slate-800 border border-slate-700 px-3 py-2 rounded-lg text-amber-300 font-black"><i class="fa-solid fa-eye mr-1"></i>VER DETALLE</button></td><td class="p-3 font-black text-amber-300">${escapeHtml(c.perifoneo||'—')}</td><td class="p-3 font-black ${perClass}">${escapeHtml(c.estadoPerifoneo||'—')}</td><td class="p-3 font-bold">${escapeHtml(c.operador||g.responsable||'—')}</td><td class="p-3 text-center whitespace-nowrap"><button onclick="editarCamaraTurno(${g.id},${c.id})" class="text-sky-400 p-2"><i class="fa-solid fa-pen-to-square"></i></button><button onclick="eliminarCamaraTurno(${g.id},${c.id})" class="text-rose-400 p-2"><i class="fa-solid fa-trash"></i></button></td></tr>`;
+        });
+      });
+      body.innerHTML=html || '<tr><td colspan="11" class="p-8 text-center text-slate-500">Todavía no hay Estaciones/Pares en este turno.</td></tr>';
+      document.getElementById('turnoCount').textContent=total+' cámaras';
     }
-    function editarRegistroTurno(id){ const x=getRegistrosTurno().find(r=>r.id===id); if(!x)return; document.getElementById('turnoEditId').value=x.id;document.getElementById('turnoTipo').value=x.tipo;document.getElementById('turnoNombre').value=x.nombre;document.getElementById('turnoResponsable').value=x.responsable||'';document.getElementById('turnoObservacion').value=x.observacion||'';window.scrollTo({top:0,behavior:'smooth'}); }
-    function eliminarRegistroTurno(id){ if(!confirm('¿Eliminar este registro del turno?'))return; setRegistrosTurno(getRegistrosTurno().filter(x=>x.id!==id)); renderRegistrosTurno(); }
+    function editarRegistroTurno(id){ const x=getRegistrosTurno().find(r=>r.id===id); if(!x)return; document.getElementById('turnoEditId').value=x.id;document.getElementById('turnoTipo').value=x.tipo;document.getElementById('turnoNombre').value=x.nombre;document.getElementById('turnoResponsable').value=x.responsable||'';window.scrollTo({top:0,behavior:'smooth'}); }
+    function eliminarRegistroTurno(id){ if(!confirm('¿Eliminar esta Estación/Par y todas sus cámaras?'))return; setRegistrosTurno(getRegistrosTurno().filter(x=>x.id!==id)); renderRegistrosTurno(); }
+    function abrirTurnoCamaraModal(grupoId,camId){
+      const regs=getRegistrosTurno(), g=regs.find(x=>x.id===grupoId); if(!g)return;
+      document.getElementById('turnoCamGrupoId').value=grupoId;document.getElementById('turnoCamEditId').value=camId||'';document.getElementById('turnoCamaraGrupoLabel').textContent=g.tipo+' '+g.nombre;
+      const c=camId?(g.camaras||[]).find(x=>x.id===camId):null;
+      document.getElementById('turnoCamSistema').value=c?.sistema||'';document.getElementById('turnoCamNumero').value=c?.camara||'';document.getElementById('turnoCamEstado').value=c?.estado||'OPERATIVA';document.getElementById('turnoCamUbicacion').value=c?.ubicacion||'';document.getElementById('turnoCamZona').value=c?.zona||'';document.getElementById('turnoCamDetalle').value=c?.detalle||'';document.getElementById('turnoCamPerifoneo').value=c?.perifoneo||'';document.getElementById('turnoCamEstadoPerifoneo').value=c?.estadoPerifoneo||'OPERATIVO';document.getElementById('turnoCamOperador').value=c?.operador||g.responsable||'';
+      const m=document.getElementById('turnoCamaraModal');m.classList.remove('hidden');m.classList.add('flex');
+    }
+    function cerrarTurnoCamaraModal(){ const m=document.getElementById('turnoCamaraModal');m.classList.add('hidden');m.classList.remove('flex'); }
+    function guardarCamaraTurno(e){
+      e.preventDefault(); let regs=getRegistrosTurno(); const gid=Number(document.getElementById('turnoCamGrupoId').value), cid=Number(document.getElementById('turnoCamEditId').value||0); const g=regs.find(x=>x.id===gid);if(!g)return;if(!Array.isArray(g.camaras))g.camaras=[];
+      const data={id:cid||Date.now(),sistema:document.getElementById('turnoCamSistema').value.trim().toUpperCase(),camara:document.getElementById('turnoCamNumero').value.trim().toUpperCase(),estado:document.getElementById('turnoCamEstado').value,ubicacion:document.getElementById('turnoCamUbicacion').value.trim().toUpperCase(),zona:document.getElementById('turnoCamZona').value.trim().toUpperCase(),detalle:document.getElementById('turnoCamDetalle').value.trim(),perifoneo:document.getElementById('turnoCamPerifoneo').value.trim(),estadoPerifoneo:document.getElementById('turnoCamEstadoPerifoneo').value,operador:document.getElementById('turnoCamOperador').value.trim().toUpperCase()};
+      if(cid){const i=g.camaras.findIndex(x=>x.id===cid);if(i>=0)g.camaras[i]=data;}else g.camaras.push(data);setRegistrosTurno(regs);cerrarTurnoCamaraModal();renderRegistrosTurno();
+    }
+    function editarCamaraTurno(gid,cid){abrirTurnoCamaraModal(gid,cid);}
+    function eliminarCamaraTurno(gid,cid){if(!confirm('¿Eliminar esta cámara?'))return;let regs=getRegistrosTurno();const g=regs.find(x=>x.id===gid);if(!g)return;g.camaras=(g.camaras||[]).filter(x=>x.id!==cid);setRegistrosTurno(regs);renderRegistrosTurno();}
+    function verDetalleCamaraTurno(gid,cid){const g=getRegistrosTurno().find(x=>x.id===gid);const c=(g?.camaras||[]).find(x=>x.id===cid);if(!c)return;openTextDetailModal('DETALLE DE CÁMARA '+(c.camara||''),c.detalle||'SIN DETALLE','');}
+
 
 </script>
 </body>
