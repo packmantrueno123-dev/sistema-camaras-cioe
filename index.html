@@ -101,7 +101,7 @@
           <div class="flex items-center gap-2">
             <h1 class="text-xl font-black text-white tracking-wide">CENTRO DE CONTROL</h1>
             <span class="bg-amber-500/20 text-amber-400 border border-amber-500/30 text-[10px] font-black px-2 py-0.5 rounded-md uppercase">SISTEMA DIARIO</span>
-            <span class="bg-cyan-500/10 text-cyan-300 border border-cyan-500/40 text-[10px] font-black px-2.5 py-1 rounded-md uppercase whitespace-nowrap">TOTAL DE CÁMARAS - GENERAL&nbsp;&nbsp; <span id="stat-total-general">532</span></span>
+
           </div>
           <p class="text-xs text-slate-400">Gestión de Cámaras, Estado de Operatividad e Incidencias</p>
         </div>
@@ -149,6 +149,14 @@
 
         <button onclick="exportCSV()" class="bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 px-3.5 py-2 rounded-xl text-xs font-medium transition flex items-center gap-1.5">
           <i class="fa-solid fa-database text-blue-400"></i> Exportar CSV
+        </button>
+
+        <span id="currentUserBadge" class="bg-[#030712] border border-slate-700 px-3.5 py-2 rounded-xl text-xs font-bold text-emerald-400">
+          <i class="fa-solid fa-user-shield mr-1"></i> Usuario: <span id="currentUserName">—</span>
+        </span>
+
+        <button id="manageUsersBtn" onclick="openUserManager()" class="hidden bg-violet-600 hover:bg-violet-500 text-white px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2">
+          <i class="fa-solid fa-users-gear"></i> Administrar usuarios
         </button>
 
         <button onclick="cerrarSesion()" class="bg-rose-600 hover:bg-rose-500 text-white px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2">
@@ -972,7 +980,41 @@
     </div>
   </div>
 
-  <script>
+  
+  <!-- ==================== ADMINISTRACIÓN DE USUARIOS ==================== -->
+  <div id="userManagerModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm hidden items-center justify-center z-[120] p-4">
+    <div class="bg-[#0a0f1d] border border-violet-500/40 rounded-2xl w-full max-w-3xl shadow-2xl overflow-hidden">
+      <div class="p-5 border-b border-slate-800 flex justify-between items-center">
+        <div>
+          <h2 class="text-lg font-black text-white"><i class="fa-solid fa-users-gear text-violet-400 mr-2"></i>ADMINISTRAR USUARIOS</h2>
+          <p class="text-[11px] text-slate-400 mt-1">Crea y administra cuentas de acceso al sistema.</p>
+        </div>
+        <button type="button" onclick="closeUserManager()" class="text-slate-400 hover:text-white p-2"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+
+      <div class="p-5 space-y-5">
+        <form id="newUserForm" onsubmit="createSystemUser(event)" class="grid grid-cols-1 md:grid-cols-4 gap-3 bg-[#030712] border border-slate-800 rounded-xl p-4">
+          <input id="newUsername" required placeholder="Usuario (ej. user1)" class="bg-[#0a0f1d] border border-slate-700 rounded-xl px-3 py-2.5 text-xs text-white outline-none focus:border-violet-500">
+          <input id="newUserPassword" type="password" required minlength="4" placeholder="Contraseña" class="bg-[#0a0f1d] border border-slate-700 rounded-xl px-3 py-2.5 text-xs text-white outline-none focus:border-violet-500">
+          <select id="newUserRole" class="bg-[#0a0f1d] border border-slate-700 rounded-xl px-3 py-2.5 text-xs text-white outline-none">
+            <option value="user">USUARIO</option>
+            <option value="admin">ADMINISTRADOR</option>
+          </select>
+          <button class="bg-violet-600 hover:bg-violet-500 text-white rounded-xl px-4 py-2.5 text-xs font-black"><i class="fa-solid fa-user-plus mr-2"></i>Crear usuario</button>
+          <p id="userManagerMessage" class="md:col-span-4 text-[11px] min-h-4"></p>
+        </form>
+
+        <div class="overflow-x-auto border border-slate-800 rounded-xl">
+          <table class="w-full text-xs">
+            <thead class="bg-black text-white uppercase"><tr><th class="p-3 text-left">Usuario</th><th class="p-3">Rol</th><th class="p-3">Estado</th><th class="p-3">Acciones</th></tr></thead>
+            <tbody id="usersTableBody" class="divide-y divide-slate-800"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<script>
     const CURRENT_SYS_VERSION = "cioe_v303_fijas_fila";
     if (localStorage.getItem("sys_ver") !== CURRENT_SYS_VERSION) {
       localStorage.setItem("sys_ver", CURRENT_SYS_VERSION);
@@ -3518,20 +3560,55 @@
       document.body.removeChild(link);
     }
 
-    const USUARIO_CORRECTO = "admin";
-    const CONTRASENA_CORRECTA = "1234";
+    // ===== USUARIOS Y ROLES =====
+    // Nota: mientras el proyecto siga siendo un Static Site, estas cuentas se guardan
+    // en el navegador. Cuando se añada el backend, esta validación debe moverse al servidor.
+    const SYSTEM_USERS_KEY = "cioe_system_users_v1";
+    let currentSystemUser = null;
+
+    function getSystemUsers() {
+      let users = [];
+      try { users = JSON.parse(localStorage.getItem(SYSTEM_USERS_KEY) || "[]"); } catch(e) {}
+      if (!Array.isArray(users) || !users.length) {
+        users = [
+          { username: "admin", password: "1234", role: "admin", active: true },
+          { username: "user1", password: "1234", role: "user", active: true },
+          { username: "user2", password: "1234", role: "user", active: true }
+        ];
+        localStorage.setItem(SYSTEM_USERS_KEY, JSON.stringify(users));
+      }
+      return users;
+    }
+
+    function saveSystemUsers(users) {
+      localStorage.setItem(SYSTEM_USERS_KEY, JSON.stringify(users));
+    }
+
+    function isAdminUser() {
+      return currentSystemUser && currentSystemUser.role === "admin";
+    }
+
+    function applyUserPermissions() {
+      const name = document.getElementById("currentUserName");
+      const manage = document.getElementById("manageUsersBtn");
+      if (name) name.textContent = currentSystemUser ? currentSystemUser.username : "—";
+      if (manage) manage.classList.toggle("hidden", !isAdminUser());
+      document.body.dataset.userRole = currentSystemUser ? currentSystemUser.role : "";
+    }
 
     function handleLogin(event) {
       event.preventDefault();
-
       const usuario = document.getElementById("loginUser").value.trim();
       const contrasena = document.getElementById("loginPass").value;
       const error = document.getElementById("loginError");
+      const account = getSystemUsers().find(u => u.username === usuario && u.password === contrasena && u.active !== false);
 
-      if (usuario === USUARIO_CORRECTO && contrasena === CONTRASENA_CORRECTA) {
+      if (account) {
+        currentSystemUser = { username: account.username, role: account.role };
         error.classList.add("hidden");
         document.getElementById("loginView").classList.add("hidden");
         document.getElementById("mainDashboardView").classList.remove("hidden");
+        applyUserPermissions();
         renderTable();
       } else {
         error.classList.remove("hidden");
@@ -3540,7 +3617,130 @@
       }
     }
 
+    function openUserManager() {
+      if (!isAdminUser()) return;
+      renderSystemUsers();
+      const modal = document.getElementById("userManagerModal");
+      modal.classList.remove("hidden");
+      modal.classList.add("flex");
+    }
+
+    function closeUserManager() {
+      const modal = document.getElementById("userManagerModal");
+      modal.classList.add("hidden");
+      modal.classList.remove("flex");
+    }
+
+    function renderSystemUsers() {
+      if (!isAdminUser()) return;
+      const users = getSystemUsers();
+      const body = document.getElementById("usersTableBody");
+      body.innerHTML = users.map((u, i) => `
+        <tr class="bg-[#0a0f1d]">
+          <td class="p-3 font-bold text-white">${escapeHtml(String(u.username))}</td>
+          <td class="p-3 text-center ${u.role === "admin" ? "text-violet-400" : "text-cyan-400"} font-bold">${u.role === "admin" ? "ADMINISTRADOR" : "USUARIO"}</td>
+          <td class="p-3 text-center font-bold ${u.active !== false ? "text-emerald-400" : "text-rose-400"}">${u.active !== false ? "ACTIVO" : "INACTIVO"}</td>
+          <td class="p-3 text-center">
+            <button type="button" onclick="changeSystemUserPassword(${i})" class="text-cyan-400 hover:text-cyan-300 mr-3"><i class="fa-solid fa-key mr-1"></i>Cambiar contraseña</button>
+            ${u.username === "admin" ? '<span class="text-slate-500">Principal</span>' :
+              `<button type="button" onclick="toggleSystemUser(${i})" class="text-amber-400 hover:text-amber-300 mr-3">${u.active !== false ? "Desactivar" : "Activar"}</button>
+               <button type="button" onclick="deleteSystemUser(${i})" class="text-rose-400 hover:text-rose-300">Eliminar</button>`}
+          </td>
+        </tr>`).join("");
+    }
+
+    function createSystemUser(event) {
+      event.preventDefault();
+      if (!isAdminUser()) return;
+      const username = document.getElementById("newUsername").value.trim();
+      const password = document.getElementById("newUserPassword").value;
+      const role = document.getElementById("newUserRole").value;
+      const msg = document.getElementById("userManagerMessage");
+      const users = getSystemUsers();
+
+      if (!/^[A-Za-z0-9._-]{3,30}$/.test(username)) {
+        msg.className = "md:col-span-4 text-[11px] text-rose-400";
+        msg.textContent = "El usuario debe tener entre 3 y 30 caracteres y usar letras, números, punto, guion o guion bajo.";
+        return;
+      }
+      if (users.some(u => u.username.toLowerCase() === username.toLowerCase())) {
+        msg.className = "md:col-span-4 text-[11px] text-rose-400";
+        msg.textContent = "Ese usuario ya existe.";
+        return;
+      }
+      users.push({ username, password, role, active: true });
+      saveSystemUsers(users);
+      event.target.reset();
+      msg.className = "md:col-span-4 text-[11px] text-emerald-400";
+      msg.textContent = "Usuario creado correctamente.";
+      renderSystemUsers();
+    }
+
+    function changeSystemUserPassword(index) {
+      if (!isAdminUser()) return;
+      const users = getSystemUsers();
+      const user = users[index];
+      if (!user) return;
+
+      const nueva = prompt(`Nueva contraseña para ${user.username}:`);
+      if (nueva === null) return;
+      if (nueva.length < 4) {
+        alert("La contraseña debe tener al menos 4 caracteres.");
+        return;
+      }
+
+      const confirmar = prompt(`Confirma la nueva contraseña para ${user.username}:`);
+      if (confirmar === null) return;
+      if (nueva !== confirmar) {
+        alert("Las contraseñas no coinciden.");
+        return;
+      }
+
+      user.password = nueva;
+      saveSystemUsers(users);
+      alert(`Contraseña de ${user.username} actualizada correctamente.`);
+      renderSystemUsers();
+    }
+
+    function toggleSystemUser(index) {
+      if (!isAdminUser()) return;
+      const users = getSystemUsers();
+      if (!users[index] || users[index].username === "admin") return;
+      users[index].active = users[index].active === false ? true : false;
+      saveSystemUsers(users);
+      renderSystemUsers();
+    }
+
+    function deleteSystemUser(index) {
+      if (!isAdminUser()) return;
+      const users = getSystemUsers();
+      if (!users[index] || users[index].username === "admin") return;
+      if (!confirm(`¿Eliminar al usuario ${users[index].username}?`)) return;
+      users.splice(index, 1);
+      saveSystemUsers(users);
+      renderSystemUsers();
+    }
+
+    // Bloquea acciones de modificación para cuentas con rol USUARIO.
+    document.addEventListener("click", function(event) {
+      if (!currentSystemUser || isAdminUser()) return;
+      const el = event.target.closest("button, a");
+      if (!el) return;
+      const action = (el.getAttribute("onclick") || "").toLowerCase();
+      const text = (el.textContent || "").toLowerCase();
+      const blocked = /(openmodal|edit|delete|remove|save|add|añadir|agregar|nuevo|new|manager)/.test(action) ||
+                      /(añadir|agregar|editar|eliminar|borrar|crear grupo)/.test(text);
+      if (blocked) {
+        event.preventDefault();
+        event.stopImmediatePropagation();
+        alert("Tu cuenta es de consulta. Solo el administrador puede añadir, editar o eliminar información.");
+      }
+    }, true);
+
     function cerrarSesion() {
+      currentSystemUser = null;
+      applyUserPermissions();
+      closeUserManager();
       document.getElementById("mainDashboardView").classList.add("hidden");
       document.getElementById("searchReportView").classList.add("hidden");
       document.getElementById("searchReportView").classList.remove("flex");
