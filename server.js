@@ -26,7 +26,7 @@ if (!JWT_SECRET) {
 }
 
 // ======================================================
-// CONEXIÓN POSTGRESQL
+// POSTGRESQL
 // ======================================================
 
 const pool = new Pool({
@@ -35,7 +35,7 @@ const pool = new Pool({
 });
 
 // ======================================================
-// CONFIGURACIÓN EXPRESS
+// EXPRESS / CORS
 // ======================================================
 
 app.use(
@@ -54,6 +54,7 @@ app.use(express.json({ limit: "10mb" }));
 
 function auth(req, res, next) {
   const header = req.headers.authorization || "";
+
   const token = header.startsWith("Bearer ")
     ? header.slice(7)
     : "";
@@ -118,7 +119,7 @@ async function initDb() {
   `);
 
   // ====================================================
-  // CREAR ADMIN SI TODAVÍA NO EXISTE
+  // CREAR ADMIN SI NO EXISTE
   // ====================================================
 
   const exists = await pool.query(
@@ -154,20 +155,6 @@ async function initDb() {
   // ====================================================
   // RECUPERACIÓN DE CONTRASEÑA ADMIN
   // ====================================================
-  //
-  // Solamente se ejecuta cuando:
-  //
-  // RESET_ADMIN_PASSWORD=true
-  //
-  // La nueva contraseña será la almacenada en:
-  //
-  // ADMIN_RESET_PASSWORD
-  //
-  // IMPORTANTE:
-  // Después de recuperar la cuenta hay que volver
-  // RESET_ADMIN_PASSWORD=false
-  //
-  // ====================================================
 
   if (process.env.RESET_ADMIN_PASSWORD === "true") {
     const resetPassword =
@@ -195,7 +182,7 @@ async function initDb() {
 
     if (!result.rowCount) {
       throw new Error(
-        "No se encontró el usuario admin para restablecerlo"
+        "No se encontró el usuario admin"
       );
     }
 
@@ -295,7 +282,8 @@ app.post("/api/login", async (req, res) => {
 });
 
 // ======================================================
-// OBTENER ESTADO DE LAS CÁMARAS
+// OBTENER ESTADO COMPARTIDO
+// TODOS LOS USUARIOS AUTENTICADOS
 // ======================================================
 
 app.get("/api/state", auth, async (_req, res) => {
@@ -322,52 +310,47 @@ app.get("/api/state", auth, async (_req, res) => {
 });
 
 // ======================================================
-// GUARDAR ESTADO DE LAS CÁMARAS
-// SOLO ADMIN
+// GUARDAR ESTADO COMPARTIDO
+// TODOS LOS USUARIOS AUTENTICADOS PUEDEN EDITAR
 // ======================================================
 
-app.put(
-  "/api/state",
-  auth,
-  adminOnly,
-  async (req, res) => {
-    try {
-      const data = req.body?.data;
+app.put("/api/state", auth, async (req, res) => {
+  try {
+    const data = req.body?.data;
 
-      if (
-        !data ||
-        typeof data !== "object" ||
-        Array.isArray(data)
-      ) {
-        return res.status(400).json({
-          ok: false,
-          error: "data inválida"
-        });
-      }
-
-      const q = await pool.query(
-        `UPDATE app_state
-         SET data=$1::jsonb,
-             updated_at=NOW()
-         WHERE id=1
-         RETURNING updated_at`,
-        [JSON.stringify(data)]
-      );
-
-      res.json({
-        ok: true,
-        updatedAt: q.rows[0].updated_at
-      });
-    } catch (err) {
-      console.error(err);
-
-      res.status(500).json({
+    if (
+      !data ||
+      typeof data !== "object" ||
+      Array.isArray(data)
+    ) {
+      return res.status(400).json({
         ok: false,
-        error: "Error interno"
+        error: "data inválida"
       });
     }
+
+    const q = await pool.query(
+      `UPDATE app_state
+       SET data=$1::jsonb,
+           updated_at=NOW()
+       WHERE id=1
+       RETURNING updated_at`,
+      [JSON.stringify(data)]
+    );
+
+    res.json({
+      ok: true,
+      updatedAt: q.rows[0].updated_at
+    });
+  } catch (err) {
+    console.error(err);
+
+    res.status(500).json({
+      ok: false,
+      error: "Error interno"
+    });
   }
-);
+});
 
 // ======================================================
 // LISTAR USUARIOS
@@ -478,7 +461,7 @@ app.post(
 );
 
 // ======================================================
-// CAMBIAR CONTRASEÑA DE USUARIO
+// CAMBIAR CONTRASEÑA
 // SOLO ADMIN
 // ======================================================
 
@@ -559,8 +542,7 @@ app.patch(
       if (!q.rowCount) {
         return res.status(400).json({
           ok: false,
-          error:
-            "No se puede modificar ese usuario"
+          error: "No se puede modificar ese usuario"
         });
       }
 
@@ -600,8 +582,7 @@ app.delete(
       if (!q.rowCount) {
         return res.status(400).json({
           ok: false,
-          error:
-            "No se puede eliminar ese usuario"
+          error: "No se puede eliminar ese usuario"
         });
       }
 
