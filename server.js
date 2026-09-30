@@ -14,6 +14,47 @@ const FRONTEND_ORIGIN =
 const JWT_SECRET = process.env.JWT_SECRET;
 
 // ======================================================
+// PERMISOS DEL SISTEMA
+// ======================================================
+
+const DEFAULT_PERMISSIONS = {
+  cambiar_estado: true,
+  agregar_camara: true,
+  editar_camara: true,
+  eliminar_camara: true,
+  telefono_perifoneo: true,
+  ver_reportes: true,
+  barrio_seguro: true,
+  camaras_fijas: true,
+  estaciones_pares: true,
+  totems: true
+};
+
+function normalizePermissions(value) {
+  const source =
+    value && typeof value === "object" && !Array.isArray(value)
+      ? value
+      : {};
+
+  const result = {};
+
+  for (const key of Object.keys(DEFAULT_PERMISSIONS)) {
+    result[key] =
+      typeof source[key] === "boolean"
+        ? source[key]
+        : DEFAULT_PERMISSIONS[key];
+  }
+
+  return result;
+}
+
+function allPermissions() {
+  return Object.fromEntries(
+    Object.keys(DEFAULT_PERMISSIONS).map((key) => [key, true])
+  );
+}
+
+// ======================================================
 // COMPROBACIÓN DE VARIABLES
 // ======================================================
 
@@ -93,6 +134,26 @@ function adminOnly(req, res, next) {
 }
 
 // ======================================================
+// OBTENER USUARIO ACTUAL DESDE LA BD
+// ======================================================
+
+async function getCurrentUser(userId) {
+  const q = await pool.query(
+    `SELECT
+      id,
+      username,
+      role,
+      active,
+      permissions
+     FROM users
+     WHERE id=$1`,
+    [userId]
+  );
+
+  return q.rows[0] || null;
+}
+
+// ======================================================
 // INICIALIZAR BASE DE DATOS
 // ======================================================
 
@@ -116,6 +177,13 @@ async function initDb() {
       active BOOLEAN NOT NULL DEFAULT TRUE,
       created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     );
+  `);
+
+  // Agrega la columna sin borrar usuarios existentes
+  await pool.query(`
+    ALTER TABLE users
+    ADD COLUMN IF NOT EXISTS permissions JSONB
+    NOT NULL DEFAULT '{}'::jsonb;
   `);
 
   // ====================================================
@@ -143,14 +211,27 @@ async function initDb() {
         username,
         password_hash,
         role,
-        active
+        active,
+        permissions
       )
-      VALUES($1,$2,'admin',TRUE)`,
-      ["admin", hash]
+      VALUES($1,$2,'admin',TRUE,$3::jsonb)`,
+      [
+        "admin",
+        hash,
+        JSON.stringify(allPermissions())
+      ]
     );
 
     console.log("Usuario admin creado correctamente.");
   }
+
+  // Admin siempre tiene todos los permisos
+  await pool.query(
+    `UPDATE users
+     SET permissions=$1::jsonb
+     WHERE username='admin'`,
+    [JSON.stringify(allPermissions())]
+  );
 
   // ====================================================
   // RECUPERACIÓN DE CONTRASEÑA ADMIN
@@ -223,7 +304,8 @@ app.post("/api/login", async (req, res) => {
         username,
         password_hash,
         role,
-        active
+        active,
+        permissions
        FROM users
        WHERE username=$1`,
       [username]
@@ -250,6 +332,11 @@ app.post("/api/login", async (req, res) => {
       });
     }
 
+    const permissions =
+      u.role === "admin"
+        ? allPermissions()
+        : normalizePermissions(u.permissions);
+
     const token = jwt.sign(
       {
         id: u.id,
@@ -268,7 +355,46 @@ app.post("/api/login", async (req, res) => {
       user: {
         id: u.id,
         username: u.username,
-        role: u.role
+        role: u.role,
+        permissions
+      }
+    });
+  } catch (err) {
+    console.error(err);
+
+    res.status(500).json({
+      ok: false,
+      error: "Error interno"
+    });
+  }
+});
+
+// ======================================================
+// DATOS DEL USUARIO ACTUAL
+// ======================================================
+
+app.get("/api/me", auth, async (req, res) => {
+  try {
+    const u = await getCurrentUser(req.user.id);
+
+    if (!u || !u.active) {
+      return res.status(401).json({
+        ok: false,
+        error: "Usuario no disponible"
+      });
+    }
+
+    res.json({
+      ok: true,
+      user: {
+        id: u.id,
+        username: u.username,
+        role: u.role,
+        active: u.active,
+        permissions:
+          u.role === "admin"
+            ? allPermissions()
+            : normalizePermissions(u.permissions)
       }
     });
   } catch (err) {
@@ -283,7 +409,6 @@ app.post("/api/login", async (req, res) => {
 
 // ======================================================
 // OBTENER ESTADO COMPARTIDO
-// TODOS LOS USUARIOS AUTENTICADOS
 // ======================================================
 
 app.get("/api/state", auth, async (_req, res) => {
@@ -311,11 +436,20 @@ app.get("/api/state", auth, async (_req, res) => {
 
 // ======================================================
 // GUARDAR ESTADO COMPARTIDO
-// TODOS LOS USUARIOS AUTENTICADOS PUEDEN EDITAR
 // ======================================================
 
 app.put("/api/state", auth, async (req, res) => {
   try {
+    const currentUser =
+      await getCurrentUser(req.user.id);
+
+    if (!currentUser || !currentUser.active) {
+      return res.status(401).json({
+        ok: false,
+        error: "Usuario no disponible"
+      });
+    }
+
     const data = req.body?.data;
 
     if (
@@ -328,6 +462,14 @@ app.put("/api/state", auth, async (req, res) => {
         error: "data inválida"
       });
     }
+
+    /*
+      El frontend será el encargado de impedir
+      las acciones que el usuario no tenga permitidas.
+
+      El backend mantiene la autenticación y guarda
+      el estado compartido.
+    */
 
     const q = await pool.query(
       `UPDATE app_state
@@ -369,14 +511,23 @@ app.get(
           username,
           role,
           active,
+          permissions,
           created_at
          FROM users
          ORDER BY id`
       );
 
+      const users = q.rows.map((u) => ({
+        ...u,
+        permissions:
+          u.role === "admin"
+            ? allPermissions()
+            : normalizePermissions(u.permissions)
+      }));
+
       res.json({
         ok: true,
-        users: q.rows
+        users
       });
     } catch (err) {
       console.error(err);
@@ -428,15 +579,28 @@ app.post(
         12
       );
 
+      const permissions =
+        role === "admin"
+          ? allPermissions()
+          : normalizePermissions(
+              req.body?.permissions
+            );
+
       await pool.query(
         `INSERT INTO users(
           username,
           password_hash,
           role,
-          active
+          active,
+          permissions
         )
-        VALUES($1,$2,$3,TRUE)`,
-        [username, hash, role]
+        VALUES($1,$2,$3,TRUE,$4::jsonb)`,
+        [
+          username,
+          hash,
+          role,
+          JSON.stringify(permissions)
+        ]
       );
 
       res.json({
@@ -450,6 +614,83 @@ app.post(
         });
       }
 
+      console.error(err);
+
+      res.status(500).json({
+        ok: false,
+        error: "Error interno"
+      });
+    }
+  }
+);
+
+// ======================================================
+// CAMBIAR PERMISOS
+// SOLO ADMIN
+// ======================================================
+
+app.patch(
+  "/api/users/:id/permissions",
+  auth,
+  adminOnly,
+  async (req, res) => {
+    try {
+      const userId = Number(req.params.id);
+
+      if (!Number.isInteger(userId)) {
+        return res.status(400).json({
+          ok: false,
+          error: "Usuario inválido"
+        });
+      }
+
+      const findUser = await pool.query(
+        `SELECT id,username,role
+         FROM users
+         WHERE id=$1`,
+        [userId]
+      );
+
+      if (!findUser.rowCount) {
+        return res.status(404).json({
+          ok: false,
+          error: "Usuario no encontrado"
+        });
+      }
+
+      const target = findUser.rows[0];
+
+      if (
+        target.username === "admin" ||
+        target.role === "admin"
+      ) {
+        return res.status(400).json({
+          ok: false,
+          error:
+            "Los permisos del administrador no pueden limitarse"
+        });
+      }
+
+      const permissions =
+        normalizePermissions(
+          req.body?.permissions
+        );
+
+      await pool.query(
+        `UPDATE users
+         SET permissions=$1::jsonb
+         WHERE id=$2`,
+        [
+          JSON.stringify(permissions),
+          userId
+        ]
+      );
+
+      res.json({
+        ok: true,
+        permissions
+      });
+    } catch (err) {
       console.error(err);
 
       res.status(500).json({
@@ -542,7 +783,8 @@ app.patch(
       if (!q.rowCount) {
         return res.status(400).json({
           ok: false,
-          error: "No se puede modificar ese usuario"
+          error:
+            "No se puede modificar ese usuario"
         });
       }
 
@@ -582,7 +824,8 @@ app.delete(
       if (!q.rowCount) {
         return res.status(400).json({
           ok: false,
-          error: "No se puede eliminar ese usuario"
+          error:
+            "No se puede eliminar ese usuario"
         });
       }
 
