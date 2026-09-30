@@ -132,6 +132,10 @@
               <i class="fa-solid fa-tower-broadcast text-violet-400"></i>
               <span>Estaciones y Pares</span>
             </button>
+            <button type="button" onclick="showCreacionTurnoView(event)" class="w-full text-left px-3.5 py-2.5 rounded-xl hover:bg-amber-500 hover:text-black font-bold text-slate-200 transition flex items-center gap-2">
+              <i class="fa-solid fa-calendar-day text-fuchsia-400"></i>
+              <span>Creación de Estaciones/Pares - Turno</span>
+            </button>
             <button type="button" onclick="showTotemsView(event)" class="w-full text-left px-3.5 py-2.5 rounded-xl hover:bg-amber-500 hover:text-black font-bold text-slate-200 transition flex items-center gap-2">
               <i class="fa-solid fa-tower-observation text-orange-400"></i>
               <span>Tótems de cámaras - Municipalidad de Los Olivos</span>
@@ -452,6 +456,48 @@
     </main>
   </div>
 
+
+  <!-- ==================== VISTA: CREACIÓN DE ESTACIONES/PARES POR TURNO ==================== -->
+  <div id="creacionTurnoView" class="hidden space-y-4 flex-col flex-1">
+    <header class="bg-[#0a0f1d] border border-fuchsia-500/30 rounded-2xl p-4 shadow-xl flex flex-col lg:flex-row justify-between items-center gap-4 w-full">
+      <div class="flex items-center gap-3">
+        <div class="p-3 bg-fuchsia-600 rounded-xl text-white"><i class="fa-solid fa-calendar-day text-xl"></i></div>
+        <div><h1 class="text-xl font-black text-white uppercase">CREACIÓN DE ESTACIONES / PARES POR TURNO</h1><p class="text-xs text-slate-400">Selecciona tu turno y registra las Estaciones o Pares creados durante el servicio.</p></div>
+      </div>
+      <button onclick="showMainDashboardView()" class="bg-slate-800 hover:bg-slate-700 border border-slate-700 px-4 py-2 rounded-xl text-xs font-bold"><i class="fa-solid fa-arrow-left text-amber-500 mr-2"></i>Volver al Centro de Control</button>
+    </header>
+
+    <section id="turnoSelectorPanel" class="bg-[#0a0f1d] border border-slate-800 rounded-2xl p-6 shadow-xl">
+      <div class="text-center mb-6"><h2 class="text-lg font-black text-white">¿QUÉ TURNO ERES?</h2><p class="text-xs text-slate-400 mt-1">Escoge el turno para continuar.</p></div>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-4xl mx-auto">
+        <button onclick="seleccionarTurnoCreador('MAÑANA')" class="bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/40 rounded-2xl p-7 text-center transition"><i class="fa-solid fa-sun text-4xl text-amber-400 mb-3"></i><span class="block font-black text-amber-300">TURNO MAÑANA</span></button>
+        <button onclick="seleccionarTurnoCreador('TARDE')" class="bg-orange-500/10 hover:bg-orange-500/20 border border-orange-500/40 rounded-2xl p-7 text-center transition"><i class="fa-solid fa-cloud-sun text-4xl text-orange-400 mb-3"></i><span class="block font-black text-orange-300">TURNO TARDE</span></button>
+        <button onclick="seleccionarTurnoCreador('NOCHE')" class="bg-indigo-500/10 hover:bg-indigo-500/20 border border-indigo-500/40 rounded-2xl p-7 text-center transition"><i class="fa-solid fa-moon text-4xl text-indigo-400 mb-3"></i><span class="block font-black text-indigo-300">TURNO NOCHE</span></button>
+      </div>
+    </section>
+
+    <section id="turnoTrabajoPanel" class="hidden space-y-4">
+      <div class="bg-[#0a0f1d] border border-fuchsia-500/30 rounded-2xl p-4 flex flex-col md:flex-row justify-between items-center gap-3">
+        <div><span class="text-[10px] text-slate-500 font-bold uppercase">Turno seleccionado</span><div id="turnoActualLabel" class="text-lg font-black text-fuchsia-400">—</div></div>
+        <button onclick="cambiarTurnoCreador()" class="bg-slate-800 hover:bg-slate-700 border border-slate-700 px-4 py-2 rounded-xl text-xs font-bold"><i class="fa-solid fa-right-left mr-2 text-fuchsia-400"></i>Cambiar turno</button>
+      </div>
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        <form onsubmit="guardarCreacionTurno(event)" class="bg-[#0a0f1d] border border-slate-800 rounded-2xl p-5 space-y-4">
+          <h3 class="font-black text-white"><i class="fa-solid fa-circle-plus text-fuchsia-400 mr-2"></i>NUEVA ESTACIÓN / PAR</h3>
+          <input type="hidden" id="turnoEditId">
+          <label class="block text-xs text-slate-400">Tipo<select id="turnoTipo" class="mt-1 w-full bg-[#030712] border border-slate-700 rounded-xl p-3 text-white font-bold"><option value="ESTACIÓN">ESTACIÓN</option><option value="PAR">PAR</option></select></label>
+          <label class="block text-xs text-slate-400">Nombre o número<input id="turnoNombre" required placeholder="Ej: 12 o OLIVAR" class="mt-1 w-full bg-[#030712] border border-slate-700 rounded-xl p-3 text-white"></label>
+          <label class="block text-xs text-slate-400">Responsable / operador<input id="turnoResponsable" placeholder="Opcional" class="mt-1 w-full bg-[#030712] border border-slate-700 rounded-xl p-3 text-white"></label>
+          <label class="block text-xs text-slate-400">Observación<textarea id="turnoObservacion" rows="3" placeholder="Detalle opcional..." class="mt-1 w-full bg-[#030712] border border-slate-700 rounded-xl p-3 text-white"></textarea></label>
+          <div class="flex gap-2"><button type="submit" class="flex-1 bg-fuchsia-600 hover:bg-fuchsia-500 text-white px-4 py-2.5 rounded-xl text-xs font-black"><i class="fa-solid fa-floppy-disk mr-2"></i>Guardar</button><button type="button" onclick="limpiarFormularioTurno()" class="bg-slate-800 px-4 py-2.5 rounded-xl text-xs font-bold">Limpiar</button></div>
+        </form>
+        <div class="lg:col-span-2 bg-[#0a0f1d] border border-slate-800 rounded-2xl overflow-hidden">
+          <div class="p-4 border-b border-slate-800 flex justify-between items-center"><h3 class="font-black text-white">REGISTROS DEL TURNO</h3><span id="turnoCount" class="text-xs font-bold text-fuchsia-400">0 registros</span></div>
+          <div class="overflow-x-auto"><table class="w-full text-xs min-w-[750px]"><thead class="bg-black text-white uppercase"><tr><th class="p-3">#</th><th class="p-3">Tipo</th><th class="p-3">Nombre</th><th class="p-3">Responsable</th><th class="p-3">Observación</th><th class="p-3">Fecha/Hora</th><th class="p-3 text-center">Acciones</th></tr></thead><tbody id="turnoRegistrosBody" class="divide-y divide-slate-800"></tbody></table></div>
+        </div>
+      </div>
+    </section>
+  </div>
 
   <!-- ==================== VISTA: TÓTEMS DE CÁMARAS ==================== -->
   <div id="totemsView" class="hidden space-y-4 flex-col flex-1">
@@ -2407,6 +2453,8 @@
       document.getElementById('camarasFijasView').classList.remove('flex');
       document.getElementById('estacionesParesView').classList.add('hidden');
       document.getElementById('estacionesParesView').classList.remove('flex');
+      const turnoView = document.getElementById('creacionTurnoView');
+      if (turnoView) { turnoView.classList.add('hidden'); turnoView.classList.remove('flex'); }
       const totemsView = document.getElementById('totemsView');
       if (totemsView) {
         totemsView.classList.add('hidden');
@@ -3668,6 +3716,7 @@
       setPermissionElements('[onclick*="showVecinalesView"]', hasPermission("barrio_seguro"));
       setPermissionElements('[onclick*="showCamarasFijasView"]', hasPermission("camaras_fijas"));
       setPermissionElements('[onclick*="showEstacionesParesView"]', hasPermission("estaciones_pares"));
+      setPermissionElements('[onclick*="showCreacionTurnoView"]', hasPermission("estaciones_pares"));
       setPermissionElements('[onclick*="showTotemsView"]', hasPermission("totems"));
       setPermissionElements('[onclick*="showSearchReportView"]', hasPermission("ver_reportes"));
     }
@@ -3681,6 +3730,7 @@
       if (action.includes("showvecinalesview")) return ["barrio_seguro", "abrir Barrio Seguro"];
       if (action.includes("showcamarasfijasview")) return ["camaras_fijas", "abrir Cámaras Fijas"];
       if (action.includes("showestacionesparesview")) return ["estaciones_pares", "abrir Estaciones y Pares"];
+      if (action.includes("showcreacionturnoview")) return ["estaciones_pares", "abrir Creación de Estaciones/Pares por Turno"];
       if (action.includes("showtotemsview")) return ["totems", "abrir Tótems"];
       if (action.includes("showsearchreportview") || /reporte|detalle/.test(text) && /ver|buscar|abrir/.test(text)) return ["ver_reportes", "ver reportes o detalles"];
       if (/phone|telefono|teléfono|perif|megaf/.test(action + " " + text + " " + id)) return ["telefono_perifoneo", "usar teléfono o perifoneo"];
@@ -4164,7 +4214,7 @@
       applyUserPermissions();
       closeUserManager();
       closePermissionsModal();
-      ["mainDashboardView","searchReportView","vecinalesView","camarasFijasView","estacionesParesView","totemsView"].forEach(id => {
+      ["mainDashboardView","searchReportView","vecinalesView","camarasFijasView","estacionesParesView","creacionTurnoView","totemsView"].forEach(id => {
         const el = document.getElementById(id);
         if (el) { el.classList.add("hidden"); el.classList.remove("flex"); }
       });
@@ -4252,7 +4302,7 @@
     }
     function saveTotems(){ localStorage.setItem('cioe_totems_v36', JSON.stringify(totems)); updateTotalGeneral(); }
     function updateTotalGeneral(){ const el=document.getElementById('stat-total-general'); if(el) el.textContent='532'; }
-    function hideAllViewsV36(){ ['mainDashboardView','searchReportView','camarasFijasView','vecinalesView','estacionesParesView','totemsView'].forEach(id=>{const x=document.getElementById(id); if(x){x.classList.add('hidden');x.classList.remove('flex')}}); }
+    function hideAllViewsV36(){ ['mainDashboardView','searchReportView','camarasFijasView','vecinalesView','estacionesParesView','creacionTurnoView','totemsView'].forEach(id=>{const x=document.getElementById(id); if(x){x.classList.add('hidden');x.classList.remove('flex')}}); }
     function showTotemsView(e){ if(e)e.stopPropagation(); const m=document.getElementById('ocurrenciasMenu'); if(m)m.classList.add('hidden'); hideAllViewsV36(); const v=document.getElementById('totemsView'); v.classList.remove('hidden');v.classList.add('flex'); renderTotems(); }
     function escTot(v){ return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
     function renderTotems(){
@@ -4289,6 +4339,37 @@
 
     // V46: cálculo inicial del total general, sin alterar los módulos.
     updateTotalGeneral();
+
+    // ===== CREACIÓN DE ESTACIONES / PARES POR TURNO =====
+    const TURNO_CREACION_KEY = 'cioe_creacion_estaciones_pares_turno_v1';
+    let turnoCreadorActual = '';
+    function getRegistrosTurno(){ try { const x=JSON.parse(localStorage.getItem(TURNO_CREACION_KEY)||'[]'); return Array.isArray(x)?x:[]; } catch(e){ return []; } }
+    function setRegistrosTurno(x){ localStorage.setItem(TURNO_CREACION_KEY, JSON.stringify(x)); }
+    function showCreacionTurnoView(e){
+      if(e)e.stopPropagation();
+      if(!hasPermission('estaciones_pares')){ permissionDenied('abrir Creación de Estaciones/Pares por Turno'); return; }
+      const m=document.getElementById('ocurrenciasMenu'); if(m)m.classList.add('hidden');
+      ['mainDashboardView','searchReportView','camarasFijasView','vecinalesView','estacionesParesView','totemsView'].forEach(id=>{const x=document.getElementById(id);if(x){x.classList.add('hidden');x.classList.remove('flex')}});
+      const v=document.getElementById('creacionTurnoView'); v.classList.remove('hidden');v.classList.add('flex');
+      cambiarTurnoCreador();
+    }
+    function seleccionarTurnoCreador(turno){ turnoCreadorActual=turno; document.getElementById('turnoActualLabel').textContent='TURNO '+turno; document.getElementById('turnoSelectorPanel').classList.add('hidden'); document.getElementById('turnoTrabajoPanel').classList.remove('hidden'); limpiarFormularioTurno(); renderRegistrosTurno(); }
+    function cambiarTurnoCreador(){ turnoCreadorActual=''; document.getElementById('turnoSelectorPanel').classList.remove('hidden'); document.getElementById('turnoTrabajoPanel').classList.add('hidden'); }
+    function limpiarFormularioTurno(){ document.getElementById('turnoEditId').value=''; document.getElementById('turnoTipo').value='ESTACIÓN'; document.getElementById('turnoNombre').value=''; document.getElementById('turnoResponsable').value=''; document.getElementById('turnoObservacion').value=''; }
+    function guardarCreacionTurno(e){
+      e.preventDefault(); if(!turnoCreadorActual)return;
+      let regs=getRegistrosTurno(); const editId=document.getElementById('turnoEditId').value;
+      const now=new Date(); const item={id:editId?Number(editId):Date.now(),turno:turnoCreadorActual,tipo:document.getElementById('turnoTipo').value,nombre:document.getElementById('turnoNombre').value.trim().toUpperCase(),responsable:document.getElementById('turnoResponsable').value.trim().toUpperCase(),observacion:document.getElementById('turnoObservacion').value.trim(),fecha:now.toLocaleString('es-PE')};
+      if(editId){ const i=regs.findIndex(x=>String(x.id)===String(editId)); if(i>=0)item.fecha=regs[i].fecha,regs[i]=item; } else regs.push(item);
+      setRegistrosTurno(regs); limpiarFormularioTurno(); renderRegistrosTurno();
+    }
+    function renderRegistrosTurno(){
+      const body=document.getElementById('turnoRegistrosBody'); if(!body)return; const regs=getRegistrosTurno().filter(x=>x.turno===turnoCreadorActual); document.getElementById('turnoCount').textContent=regs.length+' registros';
+      body.innerHTML=regs.map((x,i)=>`<tr class="hover:bg-slate-900/60"><td class="p-3 text-center">${i+1}</td><td class="p-3 font-black text-fuchsia-400">${escapeHtml(x.tipo)}</td><td class="p-3 font-bold">${escapeHtml(x.nombre)}</td><td class="p-3">${escapeHtml(x.responsable||'—')}</td><td class="p-3">${escapeHtml(x.observacion||'—')}</td><td class="p-3 text-slate-400">${escapeHtml(x.fecha||'—')}</td><td class="p-3 text-center whitespace-nowrap"><button onclick="editarRegistroTurno(${x.id})" class="text-sky-400 p-2" title="Editar"><i class="fa-solid fa-pen-to-square"></i></button><button onclick="eliminarRegistroTurno(${x.id})" class="text-rose-400 p-2" title="Eliminar"><i class="fa-solid fa-trash"></i></button></td></tr>`).join('') || '<tr><td colspan="7" class="p-8 text-center text-slate-500">Todavía no hay registros en este turno.</td></tr>';
+    }
+    function editarRegistroTurno(id){ const x=getRegistrosTurno().find(r=>r.id===id); if(!x)return; document.getElementById('turnoEditId').value=x.id;document.getElementById('turnoTipo').value=x.tipo;document.getElementById('turnoNombre').value=x.nombre;document.getElementById('turnoResponsable').value=x.responsable||'';document.getElementById('turnoObservacion').value=x.observacion||'';window.scrollTo({top:0,behavior:'smooth'}); }
+    function eliminarRegistroTurno(id){ if(!confirm('¿Eliminar este registro del turno?'))return; setRegistrosTurno(getRegistrosTurno().filter(x=>x.id!==id)); renderRegistrosTurno(); }
+
 </script>
 </body>
 </html>
