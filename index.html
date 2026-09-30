@@ -132,7 +132,7 @@
               <i class="fa-solid fa-tower-broadcast text-violet-400"></i>
               <span>Estaciones y Pares</span>
             </button>
-            <button type="button" onclick="showCreacionTurnoView(event)" class="w-full text-left px-3.5 py-2.5 rounded-xl hover:bg-amber-500 hover:text-black font-bold text-slate-200 transition flex items-center gap-2">
+            <button type="button" id="btnCreacionTurno" onclick="window.abrirModuloTurnos(event); return false;" class="w-full text-left px-3.5 py-2.5 rounded-xl hover:bg-amber-500 hover:text-black font-bold text-slate-200 transition flex items-center gap-2">
               <i class="fa-solid fa-calendar-day text-fuchsia-400"></i>
               <span>Creación de Estaciones/Pares - Turno</span>
             </button>
@@ -4425,5 +4425,42 @@
 
 
 </script>
+
+<script>
+// ===== APERTURA ROBUSTA DEL MODULO TURNOS =====
+(function(){
+  function ocultarVistasTurnos(){
+    ['mainDashboardView','searchReportView','camarasFijasView','vecinalesView','estacionesParesView','totemsView','creacionTurnoView'].forEach(function(id){
+      var el=document.getElementById(id);
+      if(el){ el.classList.add('hidden'); el.classList.remove('flex'); }
+    });
+  }
+  window.abrirModuloTurnos=function(e){
+    if(e){ e.preventDefault(); e.stopPropagation(); }
+    var menu=document.getElementById('ocurrenciasMenu');
+    if(menu) menu.classList.add('hidden');
+    ocultarVistasTurnos();
+    var vista=document.getElementById('creacionTurnoView');
+    if(!vista){ alert('No se encontró la interfaz de Creación por Turno.'); return false; }
+    vista.classList.remove('hidden');
+    vista.classList.add('flex');
+    var selector=document.getElementById('turnoSelectorPanel');
+    var trabajo=document.getElementById('turnoTrabajoPanel');
+    if(selector) selector.classList.remove('hidden');
+    if(trabajo) trabajo.classList.add('hidden');
+    window.scrollTo({top:0,behavior:'instant'});
+    return false;
+  };
+  // Mantener compatibilidad con cualquier llamada anterior.
+  window.showCreacionTurnoView=window.abrirModuloTurnos;
+  document.addEventListener('DOMContentLoaded',function(){
+    var b=document.getElementById('btnCreacionTurno');
+    if(b){
+      b.addEventListener('click',function(e){ window.abrirModuloTurnos(e); });
+    }
+  });
+})();
+</script>
+
 </body>
 </html>
