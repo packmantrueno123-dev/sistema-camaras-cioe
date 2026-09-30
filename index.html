@@ -4383,7 +4383,7 @@
       let total=0, html='';
       grupos.forEach(g=>{
         const cams=Array.isArray(g.camaras)?g.camaras:[]; total+=cams.length;
-        html += `<tr class="bg-violet-950/70 border-y border-violet-700/50"><td colspan="11" class="p-3"><div class="flex items-center justify-between gap-3"><div class="flex items-center gap-3"><span class="font-black text-violet-300"><i class="fa-solid fa-tower-broadcast mr-2"></i>${escapeHtml(g.tipo)} ${escapeHtml(g.nombre)}</span><span class="text-slate-400">OPERADOR: <b class="text-white">${escapeHtml(g.responsable||'—')}</b></span></div><div class="flex gap-2"><button onclick="abrirTurnoCamaraModal(${g.id})" class="bg-amber-500 hover:bg-amber-400 text-black px-3 py-2 rounded-xl font-black"><i class="fa-solid fa-plus mr-1"></i>AÑADIR</button><button onclick="editarRegistroTurno(${g.id})" class="text-sky-400 p-2" title="Editar estación/par"><i class="fa-solid fa-pen-to-square"></i></button><button onclick="eliminarRegistroTurno(${g.id})" class="text-rose-400 p-2" title="Eliminar estación/par"><i class="fa-solid fa-trash"></i></button></div></div></td></tr>`;
+        html += `<tr class="bg-violet-950/70 border-y border-violet-700/50"><td colspan="11" class="p-3"><div class="flex items-center justify-between gap-3"><div class="flex items-center gap-3"><span class="font-black text-violet-300"><i class="fa-solid fa-tower-broadcast mr-2"></i>${escapeHtml(g.tipo)} ${escapeHtml(g.nombre)}</span><span class="text-slate-400">OPERADOR: <b class="text-white">${escapeHtml(g.responsable||'—')}</b></span></div><div class="flex gap-2"><button type="button" data-turno-add="${g.id}" onclick="abrirTurnoCamaraModal(${g.id}); return false;" class="bg-amber-500 hover:bg-amber-400 text-black px-3 py-2 rounded-xl font-black cursor-pointer"><i class="fa-solid fa-plus mr-1"></i>AÑADIR</button><button onclick="editarRegistroTurno(${g.id})" class="text-sky-400 p-2" title="Editar estación/par"><i class="fa-solid fa-pen-to-square"></i></button><button onclick="eliminarRegistroTurno(${g.id})" class="text-rose-400 p-2" title="Eliminar estación/par"><i class="fa-solid fa-trash"></i></button></div></div></td></tr>`;
         if(!cams.length){ html += `<tr><td colspan="11" class="p-5 text-center text-slate-500">Sin cámaras. Usa + AÑADIR.</td></tr>`; }
         cams.forEach((c,i)=>{
           const estadoClass=c.estado==='OPERATIVA'?'text-emerald-400':c.estado==='MANTENIMIENTO'?'text-blue-400':'text-rose-400';
@@ -4412,6 +4412,16 @@
     function editarCamaraTurno(gid,cid){abrirTurnoCamaraModal(gid,cid);}
     function eliminarCamaraTurno(gid,cid){if(!confirm('¿Eliminar esta cámara?'))return;let regs=getRegistrosTurno();const g=regs.find(x=>x.id===gid);if(!g)return;g.camaras=(g.camaras||[]).filter(x=>x.id!==cid);setRegistrosTurno(regs);renderRegistrosTurno();}
     function verDetalleCamaraTurno(gid,cid){const g=getRegistrosTurno().find(x=>x.id===gid);const c=(g?.camaras||[]).find(x=>x.id===cid);if(!c)return;openTextDetailModal('DETALLE DE CÁMARA '+(c.camara||''),c.detalle||'SIN DETALLE','');}
+
+    // Refuerzo del botón + AÑADIR del módulo por turno.
+    // Si el onclick inline fuera interceptado por el navegador, este listener abre el modal igualmente.
+    document.addEventListener('click', function(e){
+      const btn = e.target.closest('[data-turno-add]');
+      if (!btn) return;
+      e.preventDefault();
+      const gid = Number(btn.dataset.turnoAdd);
+      if (gid) abrirTurnoCamaraModal(gid);
+    });
 
 
 </script>
