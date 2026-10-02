@@ -18,16 +18,43 @@ const JWT_SECRET = process.env.JWT_SECRET;
 // ======================================================
 
 const DEFAULT_PERMISSIONS = {
+  ver_centro_control: true,
   cambiar_estado: true,
   agregar_camara: true,
   editar_camara: true,
   eliminar_camara: true,
-  telefono_perifoneo: true,
+  buscar_filtrar: true,
   ver_reportes: true,
+  editar_reportes: true,
+  reporte_whatsapp: true,
+  exportar_csv: true,
+  telefono_perifoneo: true,
+  editar_perifoneo: true,
+  estado_perifoneo: true,
   barrio_seguro: true,
+  barrio_agregar: true,
+  barrio_editar: true,
+  barrio_eliminar: true,
   camaras_fijas: true,
+  fijas_agregar: true,
+  fijas_editar: true,
+  fijas_eliminar: true,
   estaciones_pares: true,
-  totems: true
+  ep_crear_grupo: true,
+  ep_agregar_camara: true,
+  ep_editar: true,
+  ep_eliminar: true,
+  turnos: true,
+  turno_manana: true,
+  turno_tarde: true,
+  turno_noche: true,
+  turnos_crear: true,
+  turnos_editar: true,
+  turnos_eliminar: true,
+  totems: true,
+  totems_agregar: true,
+  totems_editar: true,
+  totems_eliminar: true
 };
 
 function normalizePermissions(value) {
