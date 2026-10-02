@@ -4837,7 +4837,7 @@ body.cioe-custom-theme #themeCustomizerBtn{background-color:var(--cioe-accent)!i
         </div>
         <button type="button" onclick="closeGlobalReportHistory()" class="text-slate-400 hover:text-white p-2"><i class="fa-solid fa-xmark"></i></button>
       </div>
-      <div class="p-4 border-b border-slate-800 grid sm:grid-cols-3 gap-3">
+      <div class="p-4 border-b border-slate-800 grid sm:grid-cols-2 lg:grid-cols-4 gap-3">
         <div>
           <label class="block text-[10px] font-black text-slate-400 uppercase mb-1">Cámara</label>
           <select id="globalHistoryCamera" onchange="renderGlobalReportHistory()" class="w-full bg-[#030712] border border-slate-700 rounded-xl px-3 py-2.5 text-xs text-white">
@@ -4846,7 +4846,22 @@ body.cioe-custom-theme #themeCustomizerBtn{background-color:var(--cioe-accent)!i
         </div>
         <div>
           <label class="block text-[10px] font-black text-slate-400 uppercase mb-1">Fecha</label>
-          <input id="globalHistoryDate" type="date" onchange="renderGlobalReportHistory()" class="w-full bg-[#030712] border border-slate-700 rounded-xl px-3 py-2.5 text-xs text-white">
+          <div class="flex gap-2">
+            <input id="globalHistoryDate" type="date" onchange="renderGlobalReportHistory()" class="min-w-0 flex-1 bg-[#030712] border border-slate-700 rounded-xl px-3 py-2.5 text-xs text-white">
+            <button type="button" onclick="openGlobalHistoryCalendar()" title="Abrir calendario" class="shrink-0 w-11 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white border border-cyan-400/30">
+              <i class="fa-regular fa-calendar-days"></i>
+            </button>
+          </div>
+        </div>
+        <div>
+          <label class="block text-[10px] font-black text-slate-400 uppercase mb-1">Hora exacta</label>
+          <div class="flex gap-1 items-center">
+            <input id="globalHistoryHour" type="number" min="0" max="23" placeholder="HH" oninput="renderGlobalReportHistory()" class="w-full bg-[#030712] border border-slate-700 rounded-xl px-2 py-2.5 text-xs text-white text-center">
+            <span class="font-black text-slate-500">:</span>
+            <input id="globalHistoryMinute" type="number" min="0" max="59" placeholder="MM" oninput="renderGlobalReportHistory()" class="w-full bg-[#030712] border border-slate-700 rounded-xl px-2 py-2.5 text-xs text-white text-center">
+            <span class="font-black text-slate-500">:</span>
+            <input id="globalHistorySecond" type="number" min="0" max="59" placeholder="SS" oninput="renderGlobalReportHistory()" class="w-full bg-[#030712] border border-slate-700 rounded-xl px-2 py-2.5 text-xs text-white text-center">
+          </div>
         </div>
         <div class="flex items-end">
           <button type="button" onclick="clearGlobalReportFilters()" class="w-full bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-xl px-3 py-2.5 text-xs font-bold text-slate-200"><i class="fa-solid fa-filter-circle-xmark mr-1"></i> Limpiar filtros</button>
@@ -4892,11 +4907,47 @@ body.cioe-custom-theme #themeCustomizerBtn{background-color:var(--cioe-accent)!i
     renderGlobalReportHistory();
   };
   window.closeGlobalReportHistory=function(){const m=document.getElementById('globalReportHistoryModal');m.classList.add('hidden');m.classList.remove('flex')};
-  window.clearGlobalReportFilters=function(){document.getElementById('globalHistoryCamera').value='';document.getElementById('globalHistoryDate').value='';renderGlobalReportHistory()};
+
+  window.openGlobalHistoryCalendar=function(){
+    const input=document.getElementById('globalHistoryDate');
+    if(!input)return;
+    if(typeof input.showPicker==='function') input.showPicker();
+    else { input.focus(); input.click(); }
+  };
+
+  function historyTimeParts(entry){
+    if(entry && entry.iso){
+      const d=new Date(entry.iso);
+      if(!Number.isNaN(d.getTime())) return {h:d.getHours(),m:d.getMinutes(),s:d.getSeconds()};
+    }
+    const raw=String(entry?.timestamp||'').toLowerCase();
+    const match=raw.match(/(\d{1,2}):(\d{2}):(\d{2})\s*(a\.?\s*m\.?|p\.?\s*m\.?)?/i);
+    if(!match)return null;
+    let h=Number(match[1]),m=Number(match[2]),s=Number(match[3]);
+    const ap=String(match[4]||'').replace(/[.\s]/g,'');
+    if(ap==='pm' && h<12)h+=12;
+    if(ap==='am' && h===12)h=0;
+    return {h,m,s};
+  }
+
+  window.clearGlobalReportFilters=function(){
+    document.getElementById('globalHistoryCamera').value='';
+    document.getElementById('globalHistoryDate').value='';
+    document.getElementById('globalHistoryHour').value='';
+    document.getElementById('globalHistoryMinute').value='';
+    document.getElementById('globalHistorySecond').value='';
+    renderGlobalReportHistory();
+  };
   window.renderGlobalReportHistory=function(){
     const list=document.getElementById('globalReportHistoryList');
     const camFilter=document.getElementById('globalHistoryCamera').value;
     const dateFilter=document.getElementById('globalHistoryDate').value;
+    const hourRaw=document.getElementById('globalHistoryHour').value;
+    const minuteRaw=document.getElementById('globalHistoryMinute').value;
+    const secondRaw=document.getElementById('globalHistorySecond').value;
+    const hourFilter=hourRaw===''?null:Math.max(0,Math.min(23,Number(hourRaw)));
+    const minuteFilter=minuteRaw===''?null:Math.max(0,Math.min(59,Number(minuteRaw)));
+    const secondFilter=secondRaw===''?null:Math.max(0,Math.min(59,Number(secondRaw)));
     let store={};try{store=JSON.parse(localStorage.getItem('cioe_report_history_v1')||'{}')||{}}catch(e){}
     let rows=[];
     Object.entries(store).forEach(([camId,entries])=>{
@@ -4904,6 +4955,10 @@ body.cioe-custom-theme #themeCustomizerBtn{background-color:var(--cioe-accent)!i
       const cam=(window.cameras||cameras||[]).find(c=>String(c.id)===String(camId));
       (Array.isArray(entries)?entries:[]).forEach(entry=>{
         if(dateFilter && historyDateKey(entry)!==dateFilter)return;
+        const tp=historyTimeParts(entry);
+        if(hourFilter!==null && (!tp || tp.h!==hourFilter))return;
+        if(minuteFilter!==null && (!tp || tp.m!==minuteFilter))return;
+        if(secondFilter!==null && (!tp || tp.s!==secondFilter))return;
         rows.push({camId,camName:cam?formatCamName(cam.camara):('CÁMARA '+camId),...entry});
       });
     });
