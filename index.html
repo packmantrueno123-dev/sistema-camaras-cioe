@@ -948,7 +948,28 @@ body.cioe-custom-theme #themeCustomizerBtn{background-color:var(--cioe-accent)!i
         <h2 id="viewTextDetailTitle" class="text-sm font-black text-white uppercase tracking-wide"><i class="fa-regular fa-eye text-amber-400 mr-2"></i>Detalle</h2>
         <button type="button" onclick="closeTextDetailModal()" class="text-slate-400 hover:text-white p-2"><i class="fa-solid fa-xmark"></i></button>
       </div>
-      <div id="viewTextDetailTimestamp" class="hidden mb-3 bg-slate-900/80 border border-slate-700 rounded-xl px-3 py-2 text-[11px] text-slate-300"><i class="fa-regular fa-clock text-amber-400 mr-2"></i><span></span></div>
+      <div class="flex flex-col sm:flex-row gap-2 mb-3">
+        <div id="viewTextDetailTimestamp" class="hidden flex-1 bg-slate-900/80 border border-slate-700 rounded-xl px-3 py-2 text-[11px] text-slate-300">
+          <i class="fa-regular fa-clock text-amber-400 mr-2"></i><span></span>
+        </div>
+        <button id="reportHistoryButton" type="button" onclick="toggleReportHistory()" class="hidden px-3 py-2 rounded-xl bg-violet-600 hover:bg-violet-500 text-white text-[11px] font-black whitespace-nowrap">
+          <i class="fa-regular fa-calendar-days mr-1"></i> Historial
+        </button>
+      </div>
+
+      <div id="reportHistoryPanel" class="hidden mb-3 bg-[#030712] border border-violet-500/30 rounded-xl p-3">
+        <div class="flex flex-col sm:flex-row sm:items-end gap-2 mb-3">
+          <div class="flex-1">
+            <label class="block text-[10px] font-black text-violet-300 uppercase mb-1">Buscar reportes por fecha</label>
+            <input id="reportHistoryDate" type="date" onchange="renderReportHistory()" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-violet-500">
+          </div>
+          <button type="button" onclick="clearReportHistoryDate()" class="px-3 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-[10px] font-bold">
+            Ver todos
+          </button>
+        </div>
+        <div id="reportHistoryList" class="space-y-2 max-h-56 overflow-y-auto"></div>
+      </div>
+
       <div id="viewTextDetailContent" class="bg-[#030712] border border-slate-800 rounded-xl p-4 text-xs text-slate-200 whitespace-pre-wrap break-words max-h-[55vh] overflow-y-auto leading-relaxed"></div>
       <div class="flex justify-end gap-2 pt-4">
         <button type="button" onclick="copyCurrentDetailText()" class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-black"><i class="fa-regular fa-copy mr-1"></i> Copiar texto</button>
@@ -3315,15 +3336,143 @@ body.cioe-custom-theme #themeCustomizerBtn{background-color:var(--cioe-accent)!i
       });
     }
 
+    // ===== HISTORIAL DE REPORTES POR CÁMARA =====
+    const REPORT_HISTORY_KEY = 'cioe_report_history_v1';
+    let reportHistory = {};
+    let currentDetailCamId = null;
+
+    try {
+      reportHistory = JSON.parse(localStorage.getItem(REPORT_HISTORY_KEY) || '{}') || {};
+    } catch (e) {
+      reportHistory = {};
+    }
+
+    function saveReportHistoryStorage() {
+      localStorage.setItem(REPORT_HISTORY_KEY, JSON.stringify(reportHistory));
+    }
+
+    function reportHistoryIsoNow() {
+      return new Date().toISOString();
+    }
+
+    function reportHistoryDisplayNow() {
+      return new Date().toLocaleString('es-PE', {
+        day:'2-digit', month:'2-digit', year:'numeric',
+        hour:'2-digit', minute:'2-digit', second:'2-digit',
+        hour12:true
+      });
+    }
+
+    function addReportHistory(camId, textValue, timestampValue = '') {
+      const key = String(camId);
+      if (!reportHistory[key]) reportHistory[key] = [];
+      reportHistory[key].unshift({
+        text: String(textValue || 'SIN REPORTE'),
+        timestamp: timestampValue || reportHistoryDisplayNow(),
+        iso: reportHistoryIsoNow()
+      });
+      // Evita crecimiento ilimitado: conserva los 500 reportes más recientes por cámara.
+      reportHistory[key] = reportHistory[key].slice(0, 500);
+      saveReportHistoryStorage();
+    }
+
+    function normalizeHistoryDate(entry) {
+      if (entry && entry.iso) {
+        const d = new Date(entry.iso);
+        if (!Number.isNaN(d.getTime())) {
+          const y = d.getFullYear();
+          const m = String(d.getMonth()+1).padStart(2,'0');
+          const day = String(d.getDate()).padStart(2,'0');
+          return `${y}-${m}-${day}`;
+        }
+      }
+      const s = String(entry?.timestamp || '');
+      const m = s.match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+      if (m) return `${m[3]}-${String(m[2]).padStart(2,'0')}-${String(m[1]).padStart(2,'0')}`;
+      return '';
+    }
+
+    function toggleReportHistory() {
+      const panel = document.getElementById('reportHistoryPanel');
+      if (!panel) return;
+      panel.classList.toggle('hidden');
+      if (!panel.classList.contains('hidden')) renderReportHistory();
+    }
+
+    function clearReportHistoryDate() {
+      const input = document.getElementById('reportHistoryDate');
+      if (input) input.value = '';
+      renderReportHistory();
+    }
+
+    function renderReportHistory() {
+      const list = document.getElementById('reportHistoryList');
+      const dateInput = document.getElementById('reportHistoryDate');
+      if (!list) return;
+
+      const entries = currentDetailCamId == null
+        ? []
+        : (reportHistory[String(currentDetailCamId)] || []);
+
+      const selected = dateInput ? dateInput.value : '';
+      const filtered = selected
+        ? entries.filter(entry => normalizeHistoryDate(entry) === selected)
+        : entries;
+
+      if (!filtered.length) {
+        list.innerHTML = `<div class="border border-slate-800 rounded-lg p-3 text-center text-[11px] text-slate-500">
+          <i class="fa-regular fa-calendar-xmark mr-1"></i>
+          ${selected ? 'No hay reportes guardados en esta fecha.' : 'Todavía no hay reportes anteriores guardados para esta cámara.'}
+        </div>`;
+        return;
+      }
+
+      list.innerHTML = filtered.map((entry, index) => `
+        <button type="button" onclick="showHistoryReport(${index}, ${selected ? 'true' : 'false'})"
+          class="w-full text-left bg-slate-900/80 hover:bg-slate-800 border border-slate-800 hover:border-violet-500/50 rounded-lg p-3 transition">
+          <div class="flex items-center justify-between gap-2 mb-1">
+            <span class="text-[10px] font-black text-violet-300"><i class="fa-regular fa-calendar mr-1"></i>${escapeHtml(entry.timestamp || 'SIN FECHA')}</span>
+            <span class="text-[9px] text-slate-500">VER REPORTE</span>
+          </div>
+          <div class="text-[11px] text-slate-300 line-clamp-2">${escapeHtml(entry.text || 'SIN REPORTE')}</div>
+        </button>
+      `).join('');
+
+      // Guardamos la lista filtrada para que el índice del botón corresponda a lo mostrado.
+      window.__cioeVisibleReportHistory = filtered;
+    }
+
+    function showHistoryReport(index) {
+      const entry = (window.__cioeVisibleReportHistory || [])[index];
+      if (!entry) return;
+      currentDetailText = String(entry.text || 'SIN REPORTE');
+      document.getElementById('viewTextDetailContent').textContent = currentDetailText;
+      const tsBox = document.getElementById('viewTextDetailTimestamp');
+      tsBox.classList.remove('hidden');
+      tsBox.querySelector('span').textContent = 'Reporte guardado: ' + (entry.timestamp || 'SIN FECHA');
+    }
+
     let currentDetailText = '';
 
-    function openTextDetailModal(title, text, timestamp = '') {
+    function openTextDetailModal(title, text, timestamp = '', camId = null) {
+      currentDetailCamId = camId;
       currentDetailText = String(text || 'SIN DETALLE');
       document.getElementById('viewTextDetailTitle').innerHTML = '<i class="fa-regular fa-eye text-amber-400 mr-2"></i>' + title;
       document.getElementById('viewTextDetailContent').textContent = currentDetailText;
       const tsBox = document.getElementById('viewTextDetailTimestamp');
+      const historyBtn = document.getElementById('reportHistoryButton');
+      const historyPanel = document.getElementById('reportHistoryPanel');
+      const historyDate = document.getElementById('reportHistoryDate');
+
       if (timestamp) { tsBox.classList.remove('hidden'); tsBox.querySelector('span').textContent = 'Reporte guardado: ' + timestamp; }
       else { tsBox.classList.add('hidden'); tsBox.querySelector('span').textContent = ''; }
+
+      if (camId !== null && camId !== undefined) historyBtn.classList.remove('hidden');
+      else historyBtn.classList.add('hidden');
+
+      historyPanel.classList.add('hidden');
+      if (historyDate) historyDate.value = '';
+
       document.getElementById('viewTextDetailModal').classList.remove('hidden');
       document.getElementById('viewTextDetailModal').classList.add('flex');
     }
@@ -3372,8 +3521,8 @@ body.cioe-custom-theme #themeCustomizerBtn{background-color:var(--cioe-accent)!i
 
     function showVecinalDetail(idx) { const x=vecinalCameras[idx]; if(x) openTextDetailModal('REPORTE DE ' + (x.camara || 'CÁMARA VECINAL'), x.detalles || 'SIN REPORTE', x.reportTimestamp || ''); }
     function showFijaDetail(camaraNum, subIndex) { ensureFijaArrays(camaraNum); const ov=OVERRIDES[camaraNum]; openTextDetailModal('REPORTE DE CÁMARA FIJA ' + camaraNum, ov.subDetails[subIndex] || ov.details || 'SIN REPORTE', ov.subReportTimestamps[subIndex] || ''); }
-    function showMainCameraDetail(camId) { const log=getLogForCamera(camId); openTextDetailModal('REPORTE DE ' + formatCamName((cameras.find(c=>c.id===camId)||{}).camara || camId), log.details, reportTimestamps[camId] || ''); }
-    function showReportDetail(camId) { const cam=cameras.find(c=>c.id===camId); const log=getLogForCamera(camId); openTextDetailModal('REPORTE DE ' + formatCamName(cam ? cam.camara : camId), log.details || 'SIN REPORTE', reportTimestamps[camId] || ''); }
+    function showMainCameraDetail(camId) { const log=getLogForCamera(camId); openTextDetailModal('REPORTE DE ' + formatCamName((cameras.find(c=>c.id===camId)||{}).camara || camId), log.details, reportTimestamps[camId] || '', camId); }
+    function showReportDetail(camId) { const cam=cameras.find(c=>c.id===camId); const log=getLogForCamera(camId); openTextDetailModal('REPORTE DE ' + formatCamName(cam ? cam.camara : camId), log.details || 'SIN REPORTE', reportTimestamps[camId] || '', camId); }
     async function copyReportText(camId) { const log=getLogForCamera(camId); await copyTextSafe(log.details); alert('Reporte copiado.'); }
 
     function openUnifiedReportEditor(type, id, subIndex = '') {
@@ -3413,6 +3562,7 @@ body.cioe-custom-theme #themeCustomizerBtn{background-color:var(--cioe-accent)!i
       const ts=nowReportTimestamp();
       if (type === 'general') {
         const log=getLogForCamera(id); setLogForCamera(id, log.status, text || 'SIN DETALLE'); reportTimestamps[id]=ts; saveReportTimestamps();
+        addReportHistory(id, text || 'SIN DETALLE', ts);
         const savedCam = cameras.find(c => c.id === id);
         if (savedCam) saveLatestReportRecord(savedCam.camara, ts);
         renderTable(); renderSearchReportTable();
@@ -3449,6 +3599,7 @@ body.cioe-custom-theme #themeCustomizerBtn{background-color:var(--cioe-accent)!i
       setLogForCamera(camId, log.status, newText || 'CÁMARA PRINCIPAL FUNCIONA');
       reportTimestamps[camId] = nowReportTimestamp();
       saveReportTimestamps();
+      addReportHistory(camId, newText || 'CÁMARA PRINCIPAL FUNCIONA', reportTimestamps[camId]);
 
       const newTimestampStr = reportTimestamps[camId];
       saveLatestReportRecord(camNum, newTimestampStr);
