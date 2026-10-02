@@ -28,6 +28,7 @@ const DEFAULT_PERMISSIONS = {
   editar_reportes: true,
   reporte_whatsapp: true,
   exportar_csv: true,
+  personalizar_colores: true,
   telefono_perifoneo: true,
   editar_perifoneo: true,
   estado_perifoneo: true,
