@@ -3735,6 +3735,9 @@
 
       // CREACIÓN POR TURNO
       ["turnos", "Entrar a Creación por Turno", "Acceso a Creación de Estaciones/Pares por Turno", "fa-calendar-day", "Creación por Turno"],
+      ["turno_manana", "Turno Mañana", "Permitir seleccionar y trabajar en TURNO MAÑANA", "fa-sun", "Turnos permitidos"],
+      ["turno_tarde", "Turno Tarde", "Permitir seleccionar y trabajar en TURNO TARDE", "fa-cloud-sun", "Turnos permitidos"],
+      ["turno_noche", "Turno Noche", "Permitir seleccionar y trabajar en TURNO NOCHE", "fa-moon", "Turnos permitidos"],
       ["turnos_crear", "Crear registros por turno", "Crear Estaciones/Pares y cámaras por turno", "fa-plus", "Creación por Turno"],
       ["turnos_editar", "Editar registros por turno", "Modificar registros y cámaras del turno", "fa-pen", "Creación por Turno"],
       ["turnos_eliminar", "Eliminar registros por turno", "Borrar registros y cámaras del turno", "fa-trash", "Creación por Turno"],
@@ -3777,6 +3780,9 @@
       setPermissionElements('[onclick*="showCreacionTurnoView"]', hasPermission("estaciones_pares"));
       setPermissionElements('[onclick*="showTotemsView"]', hasPermission("totems"));
       setPermissionElements('[onclick*="showSearchReportView"]', hasPermission("ver_reportes"));
+      setPermissionElements('[onclick*="seleccionarTurnoCreador(\'MAÑANA\')"]', hasPermission("turno_manana"));
+      setPermissionElements('[onclick*="seleccionarTurnoCreador(\'TARDE\')"]', hasPermission("turno_tarde"));
+      setPermissionElements('[onclick*="seleccionarTurnoCreador(\'NOCHE\')"]', hasPermission("turno_noche"));
       setPermissionElements('[onclick*="abrirModuloTurnos"]', hasPermission("turnos"));
       setPermissionElements('[onclick*="copySummary"]', hasPermission("reporte_whatsapp"));
       setPermissionElements('[onclick*="exportCSV"]', hasPermission("exportar_csv"));
@@ -4094,7 +4100,7 @@
                 <span><span class="block text-xs font-black text-white">${title}</span><span class="block text-[10px] text-slate-500 mt-0.5">${desc}</span></span>
               </span>
               <span class="flex items-center gap-2 shrink-0">
-                <span id="permLabel_${key}" class="text-[10px] font-black ${perms[key] !== false ? 'text-emerald-400' : 'text-rose-400'}">${perms[key] !== false ? 'SÍ' : 'NO'}</span>
+                <span id="permLabel_${key}" class="text-[10px] font-black ${perms[key] !== false ? 'text-emerald-400' : 'text-rose-400'}">${perms[key] !== false ? 'ON' : 'OFF'}</span>
                 <input type="checkbox" data-permission-key="${key}" ${perms[key] !== false ? 'checked' : ''} onchange="updatePermissionSwitchLabel(this)" class="w-5 h-5 accent-violet-600">
               </span>
             </label>`).join("")}</div>
@@ -4108,7 +4114,7 @@
       const key = input.dataset.permissionKey;
       const label = document.getElementById(`permLabel_${key}`);
       if (!label) return;
-      label.textContent = input.checked ? "SÍ" : "NO";
+      label.textContent = input.checked ? "ON" : "OFF";
       label.className = `text-[10px] font-black ${input.checked ? 'text-emerald-400' : 'text-rose-400'}`;
       updatePermissionsCounter();
     }
@@ -4126,7 +4132,7 @@
         const key = input.dataset.permissionKey;
         const label = document.getElementById(`permLabel_${key}`);
         if (label) {
-          label.textContent = enabled ? 'SÍ' : 'NO';
+          label.textContent = enabled ? 'ON' : 'OFF';
           label.className = `text-[10px] font-black ${enabled ? 'text-emerald-400' : 'text-rose-400'}`;
         }
       });
@@ -4481,7 +4487,11 @@
       const menu=document.getElementById('ocurrenciasMenu'); if(menu) menu.classList.add('hidden');
       if(turnoCreadorActual){ document.getElementById('turnoSelectorPanel').classList.add('hidden');document.getElementById('turnoTrabajoPanel').classList.remove('hidden');renderRegistrosTurno(); }
     }
-    function seleccionarTurnoCreador(turno){ turnoCreadorActual=turno; document.getElementById('turnoActualLabel').textContent='TURNO '+turno; document.getElementById('turnoSelectorPanel').classList.add('hidden'); document.getElementById('turnoTrabajoPanel').classList.remove('hidden'); limpiarFormularioTurno(); renderRegistrosTurno(); }
+    function seleccionarTurnoCreador(turno){
+      const permisoTurno = {'MAÑANA':'turno_manana','TARDE':'turno_tarde','NOCHE':'turno_noche'}[turno];
+      if (permisoTurno && !hasPermission(permisoTurno)) { permissionDenied('acceder al TURNO '+turno); return; }
+      turnoCreadorActual=turno; document.getElementById('turnoActualLabel').textContent='TURNO '+turno; document.getElementById('turnoSelectorPanel').classList.add('hidden'); document.getElementById('turnoTrabajoPanel').classList.remove('hidden'); limpiarFormularioTurno(); renderRegistrosTurno();
+    }
     function cambiarTurnoCreador(){ turnoCreadorActual=''; document.getElementById('turnoSelectorPanel').classList.remove('hidden'); document.getElementById('turnoTrabajoPanel').classList.add('hidden'); }
     function limpiarFormularioTurno(){ document.getElementById('turnoEditId').value=''; document.getElementById('turnoTipo').value='ESTACIÓN'; document.getElementById('turnoNombre').value=''; document.getElementById('turnoResponsable').value=''; }
     function guardarCreacionTurno(e){
