@@ -3902,6 +3902,9 @@ body.cioe-custom-theme #themeCustomizerBtn{background-color:var(--cioe-accent)!i
       ["reporte_whatsapp", "Reporte WhatsApp", "Copiar el resumen para WhatsApp", "fa-share-nodes", "Reportes y datos"],
       ["exportar_csv", "Exportar CSV", "Descargar/exportar información del sistema", "fa-file-csv", "Reportes y datos"],
 
+      // APARIENCIA
+      ["personalizar_colores", "Personalizar colores", "Permitir cambiar y utilizar diseños de colores", "fa-palette", "Apariencia"],
+
       // PERIFONEO
       ["telefono_perifoneo", "Ver teléfono / perifoneo", "Consultar números y datos de perifoneo", "fa-phone", "Perifoneo"],
       ["editar_perifoneo", "Modificar perifoneo", "Editar número o información de perifoneo", "fa-phone-volume", "Perifoneo"],
@@ -3979,6 +3982,14 @@ body.cioe-custom-theme #themeCustomizerBtn{background-color:var(--cioe-accent)!i
       setPermissionElements('[onclick*="abrirModuloTurnos"]', hasPermission("turnos"));
       setPermissionElements('[onclick*="copySummary"]', hasPermission("reporte_whatsapp"));
       setPermissionElements('[onclick*="exportCSV"]', hasPermission("exportar_csv"));
+      setPermissionElements('#themeCustomizerBtn', hasPermission("personalizar_colores"));
+      if (!hasPermission("personalizar_colores")) {
+        document.body.classList.remove('cioe-custom-theme');
+        const themeModal = document.getElementById('themeCustomizerModal');
+        if (themeModal) { themeModal.classList.add('hidden'); themeModal.classList.remove('flex'); }
+      } else if (typeof window.restoreAllowedUserTheme === 'function') {
+        window.restoreAllowedUserTheme();
+      }
     }
 
     function classifyPermissionForElement(el) {
@@ -3995,6 +4006,7 @@ body.cioe-custom-theme #themeCustomizerBtn{background-color:var(--cioe-accent)!i
       if (action.includes("abrirmoduloturnos") || action.includes("showcreacionturnoview")) return ["turnos", "abrir Creación por Turno"];
       if (action.includes("showtotemsview")) return ["totems", "abrir Tótems"];
       if (action.includes("showsearchreportview")) return ["ver_reportes", "abrir el buscador de reportes"];
+      if (id.includes("themecustomizerbtn") || action.includes("openthemecustomizer")) return ["personalizar_colores", "personalizar los colores"];
 
       // Acciones específicas por módulo
       if (/deletevecinalcamera/.test(action)) return ["barrio_eliminar", "eliminar cámaras vecinales"];
@@ -4976,17 +4988,28 @@ body.cioe-custom-theme #themeCustomizerBtn{background-color:var(--cioe-accent)!i
    }
    const m=document.getElementById('themeMessage');if(m)m.textContent=next?'Diseño de colores ACTIVADO.':'Diseño de colores DESACTIVADO.';
  }
- window.openThemeCustomizer=function(){const m=document.getElementById('themeCustomizerModal');m.classList.remove('hidden');m.classList.add('flex');updatePowerUI()}
+ window.openThemeCustomizer=function(){
+   if(typeof hasPermission==='function' && !hasPermission('personalizar_colores')){
+     if(typeof permissionDenied==='function') permissionDenied('personalizar los colores');
+     return;
+   }
+   const m=document.getElementById('themeCustomizerModal');m.classList.remove('hidden');m.classList.add('flex');updatePowerUI()
+ }
  window.closeThemeCustomizer=function(){const m=document.getElementById('themeCustomizerModal');m.classList.add('hidden');m.classList.remove('flex')}
  window.applyThemePreset=function(name){if(!isEnabled()){localStorage.setItem(ENABLED_KEY,'1')}applyCioeTheme(presets[name]||presets.original)}
  window.previewCustomTheme=function(){if(!isEnabled()){localStorage.setItem(ENABLED_KEY,'1')}applyCioeTheme({bg:document.getElementById('themeBgColor').value,panel:document.getElementById('themePanelColor').value,accent:document.getElementById('themeAccentColor').value})}
  window.saveTheme=function(){const t={bg:document.getElementById('themeBgColor').value,panel:document.getElementById('themePanelColor').value,accent:document.getElementById('themeAccentColor').value};localStorage.setItem(KEY,JSON.stringify(t));localStorage.setItem(ENABLED_KEY,'1');applyCioeTheme(t);document.getElementById('themeMessage').textContent='Tema guardado y ACTIVADO.'}
  window.resetTheme=function(){localStorage.removeItem(KEY);localStorage.setItem(ENABLED_KEY,'1');applyCioeTheme(presets.original);document.getElementById('themeMessage').textContent='Tema original restaurado.'}
- document.addEventListener('DOMContentLoaded',()=>{
-   const b=document.getElementById('themeCustomizerBtn');if(b)b.classList.remove('hidden');
+ window.restoreAllowedUserTheme=function(){
+   const allowed = (typeof hasPermission!=='function') || !currentSystemUser || hasPermission('personalizar_colores');
+   if(!allowed){document.body.classList.remove('cioe-custom-theme');return}
    updatePowerUI();
-   if(isEnabled()){try{const saved=JSON.parse(localStorage.getItem(KEY)||'null');if(saved)applyCioeTheme(saved)}catch(e){}}
+   if(isEnabled()){try{const saved=JSON.parse(localStorage.getItem(KEY)||'null');if(saved)applyCioeTheme(saved);else applyCioeTheme(presets.original)}catch(e){}}
    else document.body.classList.remove('cioe-custom-theme');
+ };
+ document.addEventListener('DOMContentLoaded',()=>{
+   updatePowerUI();
+   if(!currentSystemUser) document.body.classList.remove('cioe-custom-theme');
  });
 })();
 </script>
