@@ -144,6 +144,10 @@ body.cioe-custom-theme #themeCustomizerBtn{background-color:var(--cioe-accent)!i
               <i class="fa-solid fa-magnifying-glass text-amber-400"></i>
               <span>Buscar reporte de cámara</span>
             </button>
+            <button type="button" onclick="openGlobalReportHistory(event)" class="w-full text-left px-3.5 py-2.5 rounded-xl hover:bg-amber-500 hover:text-black font-bold text-slate-200 transition flex items-center gap-2">
+              <i class="fa-regular fa-calendar-days text-cyan-400"></i>
+              <span>Calendario / Historial de reportes</span>
+            </button>
             <button type="button" onclick="showVecinalesView(event)" class="w-full text-left px-3.5 py-2.5 rounded-xl hover:bg-amber-500 hover:text-black font-bold text-slate-200 transition flex items-center gap-2">
               <i class="fa-solid fa-users-viewfinder text-emerald-400"></i>
               <span>Cámaras vecinales / Barrio Seguro</span>
@@ -4811,6 +4815,102 @@ body.cioe-custom-theme #themeCustomizerBtn{background-color:var(--cioe-accent)!i
 })();
 </script>
 
+  <!-- ==================== CALENDARIO / HISTORIAL GLOBAL DE REPORTES ==================== -->
+  <div id="globalReportHistoryModal" class="hidden fixed inset-0 z-[125] bg-black/80 backdrop-blur-sm items-center justify-center p-4">
+    <div class="w-full max-w-5xl max-h-[88vh] bg-[#0a0f1d] border border-cyan-500/40 rounded-2xl shadow-2xl overflow-hidden flex flex-col">
+      <div class="p-5 border-b border-slate-800 flex items-center justify-between gap-3">
+        <div>
+          <h2 class="font-black text-white"><i class="fa-regular fa-calendar-days text-cyan-400 mr-2"></i>CALENDARIO / HISTORIAL DE REPORTES</h2>
+          <p class="text-xs text-slate-400 mt-1">Consulta reportes anteriores por cámara y fecha.</p>
+        </div>
+        <button type="button" onclick="closeGlobalReportHistory()" class="text-slate-400 hover:text-white p-2"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="p-4 border-b border-slate-800 grid sm:grid-cols-3 gap-3">
+        <div>
+          <label class="block text-[10px] font-black text-slate-400 uppercase mb-1">Cámara</label>
+          <select id="globalHistoryCamera" onchange="renderGlobalReportHistory()" class="w-full bg-[#030712] border border-slate-700 rounded-xl px-3 py-2.5 text-xs text-white">
+            <option value="">TODAS LAS CÁMARAS</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-[10px] font-black text-slate-400 uppercase mb-1">Fecha</label>
+          <input id="globalHistoryDate" type="date" onchange="renderGlobalReportHistory()" class="w-full bg-[#030712] border border-slate-700 rounded-xl px-3 py-2.5 text-xs text-white">
+        </div>
+        <div class="flex items-end">
+          <button type="button" onclick="clearGlobalReportFilters()" class="w-full bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-xl px-3 py-2.5 text-xs font-bold text-slate-200"><i class="fa-solid fa-filter-circle-xmark mr-1"></i> Limpiar filtros</button>
+        </div>
+      </div>
+      <div class="px-5 py-3 border-b border-slate-800 flex justify-between text-[11px]">
+        <span class="text-slate-400">Fecha, hora, año, cámara y contenido del reporte.</span>
+        <span id="globalHistoryCount" class="font-black text-cyan-400">0 reportes</span>
+      </div>
+      <div id="globalReportHistoryList" class="p-4 space-y-2 overflow-y-auto flex-1"></div>
+      <div class="p-4 border-t border-slate-800 flex justify-end">
+        <button type="button" onclick="closeGlobalReportHistory()" class="bg-slate-800 hover:bg-slate-700 px-4 py-2 rounded-xl text-xs font-bold text-slate-200">Cerrar</button>
+      </div>
+    </div>
+  </div>
+
+<script>
+(function(){
+  function historyDateKey(entry){
+    if(entry && entry.iso){
+      const d=new Date(entry.iso);
+      if(!Number.isNaN(d.getTime())){
+        return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+      }
+    }
+    const s=String(entry?.timestamp||'');
+    const m=s.match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+    return m?m[3]+'-'+String(m[2]).padStart(2,'0')+'-'+String(m[1]).padStart(2,'0'):'';
+  }
+  window.openGlobalReportHistory=function(event){
+    if(event){event.preventDefault();event.stopPropagation()}
+    const menu=document.getElementById('ocurrenciasMenu');if(menu)menu.classList.add('hidden');
+    const select=document.getElementById('globalHistoryCamera');
+    if(select){
+      const previous=select.value;
+      select.innerHTML='<option value="">TODAS LAS CÁMARAS</option>';
+      (window.cameras||cameras||[]).forEach(cam=>{
+        const opt=document.createElement('option');opt.value=String(cam.id);opt.textContent=formatCamName(cam.camara);select.appendChild(opt);
+      });
+      select.value=previous;
+    }
+    const modal=document.getElementById('globalReportHistoryModal');modal.classList.remove('hidden');modal.classList.add('flex');
+    renderGlobalReportHistory();
+  };
+  window.closeGlobalReportHistory=function(){const m=document.getElementById('globalReportHistoryModal');m.classList.add('hidden');m.classList.remove('flex')};
+  window.clearGlobalReportFilters=function(){document.getElementById('globalHistoryCamera').value='';document.getElementById('globalHistoryDate').value='';renderGlobalReportHistory()};
+  window.renderGlobalReportHistory=function(){
+    const list=document.getElementById('globalReportHistoryList');
+    const camFilter=document.getElementById('globalHistoryCamera').value;
+    const dateFilter=document.getElementById('globalHistoryDate').value;
+    let store={};try{store=JSON.parse(localStorage.getItem('cioe_report_history_v1')||'{}')||{}}catch(e){}
+    let rows=[];
+    Object.entries(store).forEach(([camId,entries])=>{
+      if(camFilter && String(camId)!==String(camFilter))return;
+      const cam=(window.cameras||cameras||[]).find(c=>String(c.id)===String(camId));
+      (Array.isArray(entries)?entries:[]).forEach(entry=>{
+        if(dateFilter && historyDateKey(entry)!==dateFilter)return;
+        rows.push({camId,camName:cam?formatCamName(cam.camara):('CÁMARA '+camId),...entry});
+      });
+    });
+    rows.sort((a,b)=>String(b.iso||b.timestamp||'').localeCompare(String(a.iso||a.timestamp||'')));
+    document.getElementById('globalHistoryCount').textContent=rows.length+' reporte'+(rows.length===1?'':'s');
+    if(!rows.length){
+      list.innerHTML='<div class="p-8 text-center border border-slate-800 rounded-xl text-slate-500 text-xs"><i class="fa-regular fa-calendar-xmark text-2xl mb-2 block"></i>No hay reportes para los filtros seleccionados.</div>';return;
+    }
+    list.innerHTML=rows.map(r=>`<div class="bg-[#030712] border border-slate-800 rounded-xl p-4">
+      <div class="flex flex-wrap items-center justify-between gap-2 mb-2">
+        <span class="font-black text-white text-xs">${escapeHtml(r.camName)}</span>
+        <span class="text-[10px] font-black text-cyan-300"><i class="fa-regular fa-clock mr-1"></i>${escapeHtml(r.timestamp||'SIN FECHA')}</span>
+      </div>
+      <div class="text-xs text-slate-300 whitespace-pre-wrap break-words">${escapeHtml(r.text||'SIN REPORTE')}</div>
+    </div>`).join('');
+  };
+})();
+</script>
+
   <!-- ==================== PERSONALIZADOR DE COLORES ==================== -->
   <div id="themeCustomizerModal" class="hidden fixed inset-0 z-[120] bg-black/75 backdrop-blur-sm items-center justify-center p-4">
     <div class="w-full max-w-2xl bg-[#0a0f1d] border border-cyan-500/40 rounded-2xl shadow-2xl overflow-hidden">
@@ -4819,6 +4919,15 @@ body.cioe-custom-theme #themeCustomizerBtn{background-color:var(--cioe-accent)!i
         <button onclick="closeThemeCustomizer()" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
       </div>
       <div class="p-5 space-y-5">
+        <div class="bg-[#030712] border border-slate-700 rounded-xl p-4 flex items-center justify-between gap-4">
+          <div>
+            <p class="text-xs font-black text-white">DISEÑO DE COLORES</p>
+            <p class="text-[10px] text-slate-400 mt-1">ON aplica el tema elegido. OFF vuelve al diseño oscuro original.</p>
+          </div>
+          <button id="themePowerBtn" type="button" onclick="toggleThemePower()" class="min-w-[82px] px-4 py-2 rounded-xl bg-emerald-600 text-white text-xs font-black transition">
+            <i class="fa-solid fa-power-off mr-1"></i><span id="themePowerText">ON</span>
+          </button>
+        </div>
         <div><p class="text-[10px] font-black text-slate-400 uppercase mb-2">Temas rápidos</p><div class="grid grid-cols-2 sm:grid-cols-5 gap-2">
           <button onclick="applyThemePreset('original')" class="theme-preset">Original</button><button onclick="applyThemePreset('blue')" class="theme-preset">Azul</button><button onclick="applyThemePreset('purple')" class="theme-preset">Morado</button><button onclick="applyThemePreset('green')" class="theme-preset">Verde</button><button onclick="applyThemePreset('red')" class="theme-preset">Rojo</button>
         </div></div>
@@ -4836,17 +4945,49 @@ body.cioe-custom-theme #themeCustomizerBtn{background-color:var(--cioe-accent)!i
 <script id="cioeThemeScript">
 (function(){
  const KEY='cioe_theme_v1';
+ const ENABLED_KEY='cioe_theme_enabled_v1';
  const presets={original:{bg:'#030712',panel:'#0a0f1d',accent:'#06b6d4'},blue:{bg:'#020617',panel:'#071426',accent:'#3b82f6'},purple:{bg:'#090511',panel:'#160b25',accent:'#8b5cf6'},green:{bg:'#02100b',panel:'#071a13',accent:'#10b981'},red:{bg:'#120506',panel:'#220a0d',accent:'#ef4444'}};
  function shade(hex){let h=hex.replace('#','');let r=parseInt(h.slice(0,2),16),g=parseInt(h.slice(2,4),16),b=parseInt(h.slice(4,6),16);r=Math.min(255,r+28);g=Math.min(255,g+28);b=Math.min(255,b+28);return '#'+[r,g,b].map(v=>v.toString(16).padStart(2,'0')).join('')}
- window.applyCioeTheme=function(t){document.body.classList.add('cioe-custom-theme');document.documentElement.style.setProperty('--cioe-bg',t.bg);document.documentElement.style.setProperty('--cioe-panel',t.panel);document.documentElement.style.setProperty('--cioe-accent',t.accent);document.documentElement.style.setProperty('--cioe-border',shade(t.panel));['themeBgColor','themePanelColor','themeAccentColor'].forEach((id,i)=>{const e=document.getElementById(id);if(e)e.value=[t.bg,t.panel,t.accent][i]})}
- window.openThemeCustomizer=function(){const m=document.getElementById('themeCustomizerModal');m.classList.remove('hidden');m.classList.add('flex')}
+ function isEnabled(){return localStorage.getItem(ENABLED_KEY)!=='0'}
+ function updatePowerUI(){
+   const on=isEnabled(),btn=document.getElementById('themePowerBtn'),txt=document.getElementById('themePowerText');
+   if(txt)txt.textContent=on?'ON':'OFF';
+   if(btn){btn.classList.toggle('bg-emerald-600',on);btn.classList.toggle('bg-rose-600',!on)}
+ }
+ window.applyCioeTheme=function(t){
+   if(!isEnabled()){document.body.classList.remove('cioe-custom-theme');updatePowerUI();return}
+   document.body.classList.add('cioe-custom-theme');
+   document.documentElement.style.setProperty('--cioe-bg',t.bg);
+   document.documentElement.style.setProperty('--cioe-panel',t.panel);
+   document.documentElement.style.setProperty('--cioe-accent',t.accent);
+   document.documentElement.style.setProperty('--cioe-border',shade(t.panel));
+   ['themeBgColor','themePanelColor','themeAccentColor'].forEach((id,i)=>{const e=document.getElementById(id);if(e)e.value=[t.bg,t.panel,t.accent][i]});
+   updatePowerUI();
+ }
+ window.toggleThemePower=function(){
+   const next=!isEnabled();
+   localStorage.setItem(ENABLED_KEY,next?'1':'0');
+   if(next){
+     let saved=null;try{saved=JSON.parse(localStorage.getItem(KEY)||'null')}catch(e){}
+     applyCioeTheme(saved||presets.original);
+   }else{
+     document.body.classList.remove('cioe-custom-theme');
+     updatePowerUI();
+   }
+   const m=document.getElementById('themeMessage');if(m)m.textContent=next?'Diseño de colores ACTIVADO.':'Diseño de colores DESACTIVADO.';
+ }
+ window.openThemeCustomizer=function(){const m=document.getElementById('themeCustomizerModal');m.classList.remove('hidden');m.classList.add('flex');updatePowerUI()}
  window.closeThemeCustomizer=function(){const m=document.getElementById('themeCustomizerModal');m.classList.add('hidden');m.classList.remove('flex')}
- window.applyThemePreset=function(name){applyCioeTheme(presets[name]||presets.original)}
- window.previewCustomTheme=function(){applyCioeTheme({bg:document.getElementById('themeBgColor').value,panel:document.getElementById('themePanelColor').value,accent:document.getElementById('themeAccentColor').value})}
- window.saveTheme=function(){const t={bg:document.getElementById('themeBgColor').value,panel:document.getElementById('themePanelColor').value,accent:document.getElementById('themeAccentColor').value};localStorage.setItem(KEY,JSON.stringify(t));applyCioeTheme(t);document.getElementById('themeMessage').textContent='Tema guardado correctamente.'}
- window.resetTheme=function(){localStorage.removeItem(KEY);applyCioeTheme(presets.original);document.getElementById('themeMessage').textContent='Tema original restaurado.'}
- try{const saved=JSON.parse(localStorage.getItem(KEY)||'null');if(saved)document.addEventListener('DOMContentLoaded',()=>applyCioeTheme(saved))}catch(e){}
- document.addEventListener('DOMContentLoaded',()=>{const b=document.getElementById('themeCustomizerBtn');if(b)b.classList.remove('hidden')});
+ window.applyThemePreset=function(name){if(!isEnabled()){localStorage.setItem(ENABLED_KEY,'1')}applyCioeTheme(presets[name]||presets.original)}
+ window.previewCustomTheme=function(){if(!isEnabled()){localStorage.setItem(ENABLED_KEY,'1')}applyCioeTheme({bg:document.getElementById('themeBgColor').value,panel:document.getElementById('themePanelColor').value,accent:document.getElementById('themeAccentColor').value})}
+ window.saveTheme=function(){const t={bg:document.getElementById('themeBgColor').value,panel:document.getElementById('themePanelColor').value,accent:document.getElementById('themeAccentColor').value};localStorage.setItem(KEY,JSON.stringify(t));localStorage.setItem(ENABLED_KEY,'1');applyCioeTheme(t);document.getElementById('themeMessage').textContent='Tema guardado y ACTIVADO.'}
+ window.resetTheme=function(){localStorage.removeItem(KEY);localStorage.setItem(ENABLED_KEY,'1');applyCioeTheme(presets.original);document.getElementById('themeMessage').textContent='Tema original restaurado.'}
+ document.addEventListener('DOMContentLoaded',()=>{
+   const b=document.getElementById('themeCustomizerBtn');if(b)b.classList.remove('hidden');
+   updatePowerUI();
+   if(isEnabled()){try{const saved=JSON.parse(localStorage.getItem(KEY)||'null');if(saved)applyCioeTheme(saved)}catch(e){}}
+   else document.body.classList.remove('cioe-custom-theme');
+ });
 })();
 </script>
 
