@@ -1078,7 +1078,7 @@
 
   <!-- ==================== PERMISOS POR USUARIO ==================== -->
   <div id="permissionsModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm hidden items-center justify-center z-[130] p-4">
-    <div class="bg-[#0a0f1d] border border-violet-500/40 rounded-2xl w-full max-w-3xl shadow-2xl overflow-hidden">
+    <div class="bg-[#0a0f1d] border border-violet-500/40 rounded-2xl w-full max-w-6xl max-h-[92vh] shadow-2xl overflow-hidden flex flex-col">
       <div class="p-5 border-b border-slate-800 flex justify-between items-center">
         <div>
           <h2 class="text-lg font-black text-white"><i class="fa-solid fa-user-shield text-violet-400 mr-2"></i>PERMISOS DE <span id="permissionsUserName" class="text-amber-400">USUARIO</span></h2>
@@ -1088,7 +1088,17 @@
       </div>
       <div class="p-5">
         <input type="hidden" id="permissionsUserId">
-        <div id="permissionsGrid" class="grid grid-cols-1 md:grid-cols-2 gap-3"></div>
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 mb-4 bg-[#030712] border border-slate-800 rounded-xl p-3">
+          <div>
+            <div class="text-[10px] uppercase font-black text-slate-500">Control de acceso</div>
+            <div id="permissionsCounter" class="text-sm font-black text-violet-300">0 de 0 permisos habilitados</div>
+          </div>
+          <div class="flex flex-wrap gap-2">
+            <button type="button" onclick="setAllPermissions(true)" class="bg-emerald-600/20 border border-emerald-500/40 text-emerald-300 hover:bg-emerald-600 hover:text-white px-3 py-2 rounded-lg text-[11px] font-black"><i class="fa-solid fa-check-double mr-1"></i>Activar todos</button>
+            <button type="button" onclick="setAllPermissions(false)" class="bg-rose-600/20 border border-rose-500/40 text-rose-300 hover:bg-rose-600 hover:text-white px-3 py-2 rounded-lg text-[11px] font-black"><i class="fa-solid fa-ban mr-1"></i>Desactivar todos</button>
+          </div>
+        </div>
+        <div id="permissionsGrid" class="grid grid-cols-1 lg:grid-cols-2 gap-4 overflow-y-auto max-h-[58vh] pr-1"></div>
         <p id="permissionsMessage" class="text-xs min-h-5 mt-4"></p>
         <div class="flex justify-end gap-2 mt-3">
           <button type="button" onclick="closePermissionsModal()" class="bg-slate-800 border border-slate-700 px-4 py-2.5 rounded-xl text-xs font-bold text-white">Cancelar</button>
@@ -3685,18 +3695,56 @@
     }
 
     const PERMISSION_DEFS = [
-      ["cambiar_estado", "Cambiar estado", "OPERATIVA / INOPERATIVA / MANTENIMIENTO", "fa-arrows-rotate"],
-      ["agregar_camara", "Añadir / crear cámaras", "Crear cámaras y nuevos registros", "fa-circle-plus"],
-      ["editar_camara", "Editar cámaras", "Modificar datos, detalles y registros", "fa-pen-to-square"],
-      ["eliminar_camara", "Eliminar cámaras", "Borrar cámaras o registros", "fa-trash"],
-      ["telefono_perifoneo", "Teléfono / perifoneo", "Usar y modificar funciones de teléfono o perifoneo", "fa-phone"],
-      ["ver_reportes", "Reportes / detalles", "Abrir reportes y detalles de cámaras", "fa-clipboard-list"],
-      ["barrio_seguro", "Barrio Seguro", "Acceso a Cámaras vecinales / Barrio Seguro", "fa-users-viewfinder"],
-      ["camaras_fijas", "Cámaras Fijas", "Acceso al listado de cámaras fijas", "fa-video"],
-      ["estaciones_pares", "Estaciones y Pares", "Acceso al módulo Estaciones / Pares", "fa-tower-broadcast"],
-      ["totems", "Tótems", "Acceso al módulo de Tótems municipales", "fa-tower-observation"]
-    ];
+      // CENTRO DE CONTROL
+      ["ver_centro_control", "Ver Centro de Control", "Acceso al panel principal y listado general", "fa-gauge-high", "Centro de Control"],
+      ["cambiar_estado", "Cambiar estado", "OPERATIVA / INOPERATIVA / MANTENIMIENTO", "fa-arrows-rotate", "Centro de Control"],
+      ["agregar_camara", "Añadir / crear cámaras", "Crear cámaras y nuevos registros generales", "fa-circle-plus", "Centro de Control"],
+      ["editar_camara", "Editar cámaras", "Modificar datos, ubicación y registros generales", "fa-pen-to-square", "Centro de Control"],
+      ["eliminar_camara", "Eliminar cámaras", "Borrar cámaras o registros generales", "fa-trash", "Centro de Control"],
+      ["buscar_filtrar", "Buscar y filtrar", "Usar buscadores y filtros del sistema", "fa-filter", "Centro de Control"],
 
+      // REPORTES Y DATOS
+      ["ver_reportes", "Ver reportes / detalles", "Abrir reportes y detalles de cámaras", "fa-clipboard-list", "Reportes y datos"],
+      ["editar_reportes", "Editar reportes", "Crear o modificar novedades y detalles", "fa-file-pen", "Reportes y datos"],
+      ["reporte_whatsapp", "Reporte WhatsApp", "Copiar el resumen para WhatsApp", "fa-share-nodes", "Reportes y datos"],
+      ["exportar_csv", "Exportar CSV", "Descargar/exportar información del sistema", "fa-file-csv", "Reportes y datos"],
+
+      // PERIFONEO
+      ["telefono_perifoneo", "Ver teléfono / perifoneo", "Consultar números y datos de perifoneo", "fa-phone", "Perifoneo"],
+      ["editar_perifoneo", "Modificar perifoneo", "Editar número o información de perifoneo", "fa-phone-volume", "Perifoneo"],
+      ["estado_perifoneo", "Cambiar estado de perifoneo", "OPERATIVO / INOPERATIVO / MANTENIMIENTO", "fa-tower-broadcast", "Perifoneo"],
+
+      // BARRIO SEGURO
+      ["barrio_seguro", "Entrar a Barrio Seguro", "Acceso a cámaras vecinales / Barrio Seguro", "fa-users-viewfinder", "Barrio Seguro"],
+      ["barrio_agregar", "Añadir cámara vecinal", "Crear cámaras dentro de Barrio Seguro", "fa-circle-plus", "Barrio Seguro"],
+      ["barrio_editar", "Editar cámara vecinal", "Modificar registros de Barrio Seguro", "fa-pen", "Barrio Seguro"],
+      ["barrio_eliminar", "Eliminar cámara vecinal", "Borrar registros de Barrio Seguro", "fa-trash", "Barrio Seguro"],
+
+      // CÁMARAS FIJAS
+      ["camaras_fijas", "Entrar a Cámaras Fijas", "Acceso al listado de cámaras fijas", "fa-video", "Cámaras Fijas"],
+      ["fijas_agregar", "Añadir cámara fija", "Crear cámaras o filas en Cámaras Fijas", "fa-circle-plus", "Cámaras Fijas"],
+      ["fijas_editar", "Editar cámara fija", "Modificar registros de Cámaras Fijas", "fa-pen", "Cámaras Fijas"],
+      ["fijas_eliminar", "Eliminar cámara fija", "Borrar registros de Cámaras Fijas", "fa-trash", "Cámaras Fijas"],
+
+      // ESTACIONES Y PARES
+      ["estaciones_pares", "Entrar a Estaciones y Pares", "Acceso al módulo Estaciones / Pares", "fa-tower-broadcast", "Estaciones y Pares"],
+      ["ep_crear_grupo", "Crear Estación / Par", "Crear nuevos grupos de Estaciones o Pares", "fa-layer-group", "Estaciones y Pares"],
+      ["ep_agregar_camara", "Añadir cámara a Estación / Par", "Agregar cámaras dentro de los grupos", "fa-camera", "Estaciones y Pares"],
+      ["ep_editar", "Editar Estación / Par", "Modificar registros del módulo", "fa-pen", "Estaciones y Pares"],
+      ["ep_eliminar", "Eliminar en Estación / Par", "Borrar registros del módulo", "fa-trash", "Estaciones y Pares"],
+
+      // CREACIÓN POR TURNO
+      ["turnos", "Entrar a Creación por Turno", "Acceso a Creación de Estaciones/Pares por Turno", "fa-calendar-day", "Creación por Turno"],
+      ["turnos_crear", "Crear registros por turno", "Crear Estaciones/Pares y cámaras por turno", "fa-plus", "Creación por Turno"],
+      ["turnos_editar", "Editar registros por turno", "Modificar registros y cámaras del turno", "fa-pen", "Creación por Turno"],
+      ["turnos_eliminar", "Eliminar registros por turno", "Borrar registros y cámaras del turno", "fa-trash", "Creación por Turno"],
+
+      // TÓTEMS
+      ["totems", "Entrar a Tótems", "Acceso al módulo de Tótems municipales", "fa-tower-observation", "Tótems"],
+      ["totems_agregar", "Añadir Tótem", "Crear cámaras o grupos de Tótems", "fa-circle-plus", "Tótems"],
+      ["totems_editar", "Editar Tótem", "Modificar información de Tótems", "fa-pen", "Tótems"],
+      ["totems_eliminar", "Eliminar Tótem", "Borrar registros de Tótems", "fa-trash", "Tótems"]
+    ];
     function hasPermission(key) {
       if (!currentSystemUser) return false;
       if (isAdminUser()) return true;
@@ -3729,6 +3777,9 @@
       setPermissionElements('[onclick*="showCreacionTurnoView"]', hasPermission("estaciones_pares"));
       setPermissionElements('[onclick*="showTotemsView"]', hasPermission("totems"));
       setPermissionElements('[onclick*="showSearchReportView"]', hasPermission("ver_reportes"));
+      setPermissionElements('[onclick*="abrirModuloTurnos"]', hasPermission("turnos"));
+      setPermissionElements('[onclick*="copySummary"]', hasPermission("reporte_whatsapp"));
+      setPermissionElements('[onclick*="exportCSV"]', hasPermission("exportar_csv"));
     }
 
     function classifyPermissionForElement(el) {
@@ -3736,17 +3787,52 @@
       const action = (el.getAttribute("onclick") || "").toLowerCase();
       const text = (el.textContent || el.title || "").toLowerCase();
       const id = (el.id || "").toLowerCase();
+      const all = action + " " + text + " " + id;
 
+      // Acceso a módulos
       if (action.includes("showvecinalesview")) return ["barrio_seguro", "abrir Barrio Seguro"];
       if (action.includes("showcamarasfijasview")) return ["camaras_fijas", "abrir Cámaras Fijas"];
       if (action.includes("showestacionesparesview")) return ["estaciones_pares", "abrir Estaciones y Pares"];
-      if (action.includes("showcreacionturnoview")) return ["estaciones_pares", "abrir Creación de Estaciones/Pares por Turno"];
+      if (action.includes("abrirmoduloturnos") || action.includes("showcreacionturnoview")) return ["turnos", "abrir Creación por Turno"];
       if (action.includes("showtotemsview")) return ["totems", "abrir Tótems"];
-      if (action.includes("showsearchreportview") || /reporte|detalle/.test(text) && /ver|buscar|abrir/.test(text)) return ["ver_reportes", "ver reportes o detalles"];
-      if (/phone|telefono|teléfono|perif|megaf/.test(action + " " + text + " " + id)) return ["telefono_perifoneo", "usar teléfono o perifoneo"];
-      if (/delete|remove|eliminar|borrar/.test(action + " " + text)) return ["eliminar_camara", "eliminar cámaras"];
-      if (/open.*add|addcamera|add.*camera|newgroup|añadir|agregar|crear grupo|nuevo/.test(action + " " + text)) return ["agregar_camara", "añadir cámaras"];
-      if (/edit|editar|openmodal/.test(action + " " + text)) return ["editar_camara", "editar cámaras"];
+      if (action.includes("showsearchreportview")) return ["ver_reportes", "abrir el buscador de reportes"];
+
+      // Acciones específicas por módulo
+      if (/deletevecinalcamera/.test(action)) return ["barrio_eliminar", "eliminar cámaras vecinales"];
+      if (/editvecinalmodal|savevecinaldetail/.test(action)) return ["barrio_editar", "editar cámaras vecinales"];
+      if (/openvecinalmodal|openvecinaladd|addvecinal/.test(action)) return ["barrio_agregar", "añadir cámaras vecinales"];
+
+      if (/deletefijasubrow/.test(action)) return ["fijas_eliminar", "eliminar cámaras fijas"];
+      if (/addfijasubrow|openfijasubmodal/.test(action)) return ["fijas_agregar", "añadir cámaras fijas"];
+      if (/editfija|savefija/.test(action)) return ["fijas_editar", "editar cámaras fijas"];
+
+      if (/deleteestacionparrow/.test(action)) return ["ep_eliminar", "eliminar registros de Estaciones/Pares"];
+      if (/editestacionparrow/.test(action)) return ["ep_editar", "editar registros de Estaciones/Pares"];
+      if (/openepgroupmanager/.test(action)) return ["ep_crear_grupo", "crear Estaciones/Pares"];
+      if (/openepaddcameramodal/.test(action)) return ["ep_agregar_camara", "añadir cámaras a Estaciones/Pares"];
+
+      if (/eliminarcamaraturno|eliminarregistroturno/.test(action)) return ["turnos_eliminar", "eliminar registros del turno"];
+      if (/editarcamaraturno|editarregistroturno/.test(action)) return ["turnos_editar", "editar registros del turno"];
+      if (/abrirturnocamaramodal/.test(action)) return ["turnos_crear", "crear cámaras por turno"];
+
+      if (/deletetotem/.test(action)) return ["totems_eliminar", "eliminar Tótems"];
+      if (/edittotem/.test(action)) return ["totems_editar", "editar Tótems"];
+      if (/opentotemmodal/.test(action)) return ["totems_agregar", "añadir Tótems"];
+
+      // Reportes / exportación
+      if (/exportcsv/.test(action)) return ["exportar_csv", "exportar CSV"];
+      if (/copysummary/.test(action)) return ["reporte_whatsapp", "generar el reporte de WhatsApp"];
+      if (/saveunifiedreport|savedetailreport|openunifiedreporteditor/.test(action)) return ["editar_reportes", "editar reportes"];
+      if (/showreportdetail|showfijadetail|showvecinaldetail|showtotemreport|showepdetail/.test(action)) return ["ver_reportes", "ver reportes o detalles"];
+
+      // Perifoneo
+      if (/perif/.test(all) && /edit|save|modif/.test(all)) return ["editar_perifoneo", "modificar perifoneo"];
+      if (/phone|telefono|teléfono|perif|megaf/.test(all)) return ["telefono_perifoneo", "usar teléfono o perifoneo"];
+
+      // Acciones generales (compatibilidad con lo que ya funcionaba)
+      if (/deletecamera|remove|eliminar|borrar/.test(all)) return ["eliminar_camara", "eliminar cámaras"];
+      if (/openmodal/.test(action) && !/detail|report/.test(all)) return ["agregar_camara", "añadir cámaras"];
+      if (/editmodal/.test(action)) return ["editar_camara", "editar cámaras"];
       return null;
     }
 
@@ -3993,17 +4079,27 @@
       document.getElementById("permissionsUserName").textContent = String(user.username).toUpperCase();
       document.getElementById("permissionsMessage").textContent = "";
       const perms = user.permissions || {};
-      document.getElementById("permissionsGrid").innerHTML = PERMISSION_DEFS.map(([key, title, desc, icon]) => `
-        <label class="flex items-center justify-between gap-4 bg-[#030712] border border-slate-800 rounded-xl p-3 cursor-pointer hover:border-violet-500/50">
-          <span class="flex items-center gap-3 min-w-0">
-            <span class="w-9 h-9 shrink-0 rounded-lg bg-violet-500/10 text-violet-400 flex items-center justify-center"><i class="fa-solid ${icon}"></i></span>
-            <span><span class="block text-xs font-black text-white">${title}</span><span class="block text-[10px] text-slate-500 mt-0.5">${desc}</span></span>
-          </span>
-          <span class="flex items-center gap-2 shrink-0">
-            <span id="permLabel_${key}" class="text-[10px] font-black ${perms[key] !== false ? 'text-emerald-400' : 'text-rose-400'}">${perms[key] !== false ? 'SÍ' : 'NO'}</span>
-            <input type="checkbox" data-permission-key="${key}" ${perms[key] !== false ? 'checked' : ''} onchange="updatePermissionSwitchLabel(this)" class="w-5 h-5 accent-violet-600">
-          </span>
-        </label>`).join("");
+      const groups = {};
+      PERMISSION_DEFS.forEach(def => { (groups[def[4] || "General"] ||= []).push(def); });
+      document.getElementById("permissionsGrid").innerHTML = Object.entries(groups).map(([group, defs]) => `
+        <section class="bg-[#070b16] border border-slate-800 rounded-2xl overflow-hidden">
+          <div class="px-4 py-2.5 bg-slate-900/70 border-b border-slate-800 flex items-center justify-between">
+            <span class="text-[11px] font-black uppercase tracking-wider text-violet-300">${group}</span>
+            <span class="text-[9px] text-slate-500 font-bold">${defs.length} permisos</span>
+          </div>
+          <div class="p-2 space-y-2">${defs.map(([key, title, desc, icon]) => `
+            <label class="flex items-center justify-between gap-3 bg-[#030712] border border-slate-800 rounded-xl p-3 cursor-pointer hover:border-violet-500/50 transition">
+              <span class="flex items-center gap-3 min-w-0">
+                <span class="w-9 h-9 shrink-0 rounded-lg bg-violet-500/10 text-violet-400 flex items-center justify-center"><i class="fa-solid ${icon}"></i></span>
+                <span><span class="block text-xs font-black text-white">${title}</span><span class="block text-[10px] text-slate-500 mt-0.5">${desc}</span></span>
+              </span>
+              <span class="flex items-center gap-2 shrink-0">
+                <span id="permLabel_${key}" class="text-[10px] font-black ${perms[key] !== false ? 'text-emerald-400' : 'text-rose-400'}">${perms[key] !== false ? 'SÍ' : 'NO'}</span>
+                <input type="checkbox" data-permission-key="${key}" ${perms[key] !== false ? 'checked' : ''} onchange="updatePermissionSwitchLabel(this)" class="w-5 h-5 accent-violet-600">
+              </span>
+            </label>`).join("")}</div>
+        </section>`).join("");
+      updatePermissionsCounter();
       const modal = document.getElementById("permissionsModal");
       modal.classList.remove("hidden"); modal.classList.add("flex");
     }
@@ -4014,6 +4110,27 @@
       if (!label) return;
       label.textContent = input.checked ? "SÍ" : "NO";
       label.className = `text-[10px] font-black ${input.checked ? 'text-emerald-400' : 'text-rose-400'}`;
+      updatePermissionsCounter();
+    }
+
+    function updatePermissionsCounter() {
+      const inputs = Array.from(document.querySelectorAll('#permissionsGrid [data-permission-key]'));
+      const enabled = inputs.filter(i => i.checked).length;
+      const counter = document.getElementById('permissionsCounter');
+      if (counter) counter.textContent = `${enabled} de ${inputs.length} permisos habilitados`;
+    }
+
+    function setAllPermissions(enabled) {
+      document.querySelectorAll('#permissionsGrid [data-permission-key]').forEach(input => {
+        input.checked = enabled;
+        const key = input.dataset.permissionKey;
+        const label = document.getElementById(`permLabel_${key}`);
+        if (label) {
+          label.textContent = enabled ? 'SÍ' : 'NO';
+          label.className = `text-[10px] font-black ${enabled ? 'text-emerald-400' : 'text-rose-400'}`;
+        }
+      });
+      updatePermissionsCounter();
     }
 
     function closePermissionsModal() {
