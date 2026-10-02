@@ -47,17 +47,17 @@
     .fixed-list-table input.row-detail-input { width:100%; background:#030712; border:1px solid #334155; border-radius:6px; color:#e5e7eb; padding:5px 6px; font-size:11px; text-transform:uppercase; outline:none; }
     .fixed-list-table input.row-detail-input:focus { border-color:#f59e0b; }
     .fixed-list-titlebar { background:#111827 !important; color:#f3f4f6 !important; border:1px solid #1e293b !important; }
-
-    /* ===== PERSONALIZADOR DE COLOR CIOE ===== */
-    :root { --cioe-bg:#030712; --cioe-panel:#0a0f1d; --cioe-panel2:#111827; --cioe-border:#1e293b; --cioe-accent:#f59e0b; }
-    body.cioe-theme-custom { background-color:var(--cioe-bg) !important; }
-    body.cioe-theme-custom .bg\-\[\#0a0f1d\] { background-color:var(--cioe-panel) !important; }
-    body.cioe-theme-custom .bg\-\[\#030712\] { background-color:var(--cioe-bg) !important; }
-    body.cioe-theme-custom .bg-slate-900\/60, body.cioe-theme-custom .bg-slate-800\/80 { background-color:var(--cioe-panel2) !important; }
-    body.cioe-theme-custom .border-slate-800, body.cioe-theme-custom .border-slate-800\/80, body.cioe-theme-custom .border-slate-700 { border-color:var(--cioe-border) !important; }
-    .theme-swatch { width:34px; height:34px; border-radius:10px; border:2px solid rgba(255,255,255,.18); cursor:pointer; transition:.15s; }
-    .theme-swatch:hover { transform:scale(1.08); border-color:#fff; }
   </style>
+\n<style id="cioeThemeStyles">
+:root{--cioe-bg:#030712;--cioe-panel:#0a0f1d;--cioe-accent:#06b6d4;--cioe-border:#1e293b}
+body.cioe-custom-theme{background-color:var(--cioe-bg)!important}
+body.cioe-custom-theme .bg-\\[\\#030712\\]{background-color:var(--cioe-bg)!important}
+body.cioe-custom-theme .bg-\\[\\#0a0f1d\\]{background-color:var(--cioe-panel)!important}
+body.cioe-custom-theme .border-slate-800,body.cioe-custom-theme .border-slate-800\\/80{border-color:var(--cioe-border)!important}
+body.cioe-custom-theme #themeCustomizerBtn{background-color:var(--cioe-accent)!important}
+.theme-preset{background:#111827;border:1px solid #334155;border-radius:10px;padding:10px 8px;font-size:11px;font-weight:800}.theme-preset:hover{border-color:#22d3ee}.theme-color-box{background:#030712;border:1px solid #334155;border-radius:12px;padding:12px;color:#cbd5e1;font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:space-between;gap:10px}.theme-color-box input{width:42px;height:32px;border:0;background:transparent;cursor:pointer}
+</style>
+
 </head>
 <body class="min-h-screen flex flex-col p-3 md:p-5 space-y-4 w-full">
 
@@ -4601,41 +4601,46 @@
     }
   });
 })();
-\n\n    // ==================== PERSONALIZADOR DE COLORES ====================\n    const CIOE_THEME_KEY = "cioe_theme_v1";\n    const CIOE_THEME_PRESETS = {\n      original:{bg:"#030712",panel:"#0a0f1d",panel2:"#111827",border:"#1e293b"},\n      azul:{bg:"#020617",panel:"#07152b",panel2:"#0b2142",border:"#1d4ed8"},\n      morado:{bg:"#090511",panel:"#160b28",panel2:"#25113f",border:"#7c3aed"},\n      verde:{bg:"#03100c",panel:"#071c16",panel2:"#0b2b21",border:"#059669"},\n      rojo:{bg:"#120506",panel:"#21090c",panel2:"#351014",border:"#e11d48"}\n    };\n\n    function applyCioeTheme(theme){\n      const t={...CIOE_THEME_PRESETS.original,...(theme||{})};\n      const root=document.documentElement;\n      root.style.setProperty("--cioe-bg",t.bg);\n      root.style.setProperty("--cioe-panel",t.panel);\n      root.style.setProperty("--cioe-panel2",t.panel2);\n      root.style.setProperty("--cioe-border",t.border);\n      document.body.classList.add("cioe-theme-custom");\n      document.body.style.backgroundColor=t.bg;\n    }\n\n    function loadCioeTheme(){\n      try {\n        const saved=JSON.parse(localStorage.getItem(CIOE_THEME_KEY)||"null");\n        applyCioeTheme(saved||CIOE_THEME_PRESETS.original);\n      } catch(e){ applyCioeTheme(CIOE_THEME_PRESETS.original); }\n    }\n\n    function openThemeCustomizer(){\n      if(!isAdminUser()) return;\n      let t=CIOE_THEME_PRESETS.original;\n      try{ t={...t,...JSON.parse(localStorage.getItem(CIOE_THEME_KEY)||"{}")}; }catch(e){}\n      document.getElementById("themeBgColor").value=t.bg;\n      document.getElementById("themePanelColor").value=t.panel;\n      document.getElementById("themePanel2Color").value=t.panel2;\n      document.getElementById("themeBorderColor").value=t.border;\n      const m=document.getElementById("themeCustomizerModal"); m.classList.remove("hidden"); m.classList.add("flex");\n    }\n    function closeThemeCustomizer(){ const m=document.getElementById("themeCustomizerModal"); m.classList.add("hidden"); m.classList.remove("flex"); }\n    function getThemeForm(){ return {bg:document.getElementById("themeBgColor").value,panel:document.getElementById("themePanelColor").value,panel2:document.getElementById("themePanel2Color").value,border:document.getElementById("themeBorderColor").value}; }\n    function previewCioeTheme(){ applyCioeTheme(getThemeForm()); }\n    function setCioeThemePreset(name){ const t=CIOE_THEME_PRESETS[name]||CIOE_THEME_PRESETS.original; document.getElementById("themeBgColor").value=t.bg; document.getElementById("themePanelColor").value=t.panel; document.getElementById("themePanel2Color").value=t.panel2; document.getElementById("themeBorderColor").value=t.border; applyCioeTheme(t); }\n    function saveCioeTheme(){ const t=getThemeForm(); localStorage.setItem(CIOE_THEME_KEY,JSON.stringify(t)); applyCioeTheme(t); const m=document.getElementById("themeSaveMessage"); m.textContent="Tema guardado correctamente."; setTimeout(()=>{m.textContent="";closeThemeCustomizer();},700); }\n    function resetCioeTheme(){ localStorage.removeItem(CIOE_THEME_KEY); const t=CIOE_THEME_PRESETS.original; document.getElementById("themeBgColor").value=t.bg; document.getElementById("themePanelColor").value=t.panel; document.getElementById("themePanel2Color").value=t.panel2; document.getElementById("themeBorderColor").value=t.border; applyCioeTheme(t); }\n\n    // Mostrar el personalizador solo al administrador.\n    const _cioeThemeObserver=new MutationObserver(()=>{ const b=document.getElementById("themeCustomizerBtn"); if(b) b.classList.toggle("hidden",!isAdminUser()); });\n    _cioeThemeObserver.observe(document.documentElement,{subtree:true,childList:true,attributes:true});\n    document.addEventListener("DOMContentLoaded",()=>{ loadCioeTheme(); const b=document.getElementById("themeCustomizerBtn"); if(b) b.classList.toggle("hidden",!isAdminUser()); });\n</script>
+</script>
 
-
-  <!-- ==================== PERSONALIZADOR DE COLORES ==================== -->
-  <div id="themeCustomizerModal" class="hidden fixed inset-0 z-[120] bg-black/75 items-center justify-center p-4">
-    <div class="bg-[#0a0f1d] border border-slate-700 rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden">
+\n  <!-- ==================== PERSONALIZADOR DE COLORES ==================== -->
+  <div id="themeCustomizerModal" class="hidden fixed inset-0 z-[120] bg-black/75 backdrop-blur-sm items-center justify-center p-4">
+    <div class="w-full max-w-2xl bg-[#0a0f1d] border border-cyan-500/40 rounded-2xl shadow-2xl overflow-hidden">
       <div class="p-5 border-b border-slate-800 flex items-center justify-between">
-        <div><h3 class="font-black text-white"><i class="fa-solid fa-palette text-cyan-400 mr-2"></i>PERSONALIZAR COLORES</h3><p class="text-xs text-slate-400 mt-1">Cambia el aspecto general del sistema.</p></div>
-        <button onclick="closeThemeCustomizer()" class="text-slate-400 hover:text-white text-xl">&times;</button>
+        <div><h2 class="font-black text-white"><i class="fa-solid fa-palette text-cyan-400 mr-2"></i>PERSONALIZAR COLORES</h2><p class="text-xs text-slate-400 mt-1">Cambia la apariencia del Centro de Control.</p></div>
+        <button onclick="closeThemeCustomizer()" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
       </div>
       <div class="p-5 space-y-5">
-        <div>
-          <p class="text-xs font-black text-slate-300 uppercase mb-3">Temas rápidos</p>
-          <div class="grid grid-cols-2 sm:grid-cols-5 gap-2">
-            <button onclick="setCioeThemePreset('original')" class="bg-slate-800 border border-slate-700 rounded-xl p-3 text-xs font-bold">Original</button>
-            <button onclick="setCioeThemePreset('azul')" class="bg-blue-600/20 border border-blue-500/40 rounded-xl p-3 text-xs font-bold text-blue-300">Azul</button>
-            <button onclick="setCioeThemePreset('morado')" class="bg-violet-600/20 border border-violet-500/40 rounded-xl p-3 text-xs font-bold text-violet-300">Morado</button>
-            <button onclick="setCioeThemePreset('verde')" class="bg-emerald-600/20 border border-emerald-500/40 rounded-xl p-3 text-xs font-bold text-emerald-300">Verde</button>
-            <button onclick="setCioeThemePreset('rojo')" class="bg-rose-600/20 border border-rose-500/40 rounded-xl p-3 text-xs font-bold text-rose-300">Rojo</button>
-          </div>
+        <div><p class="text-[10px] font-black text-slate-400 uppercase mb-2">Temas rápidos</p><div class="grid grid-cols-2 sm:grid-cols-5 gap-2">
+          <button onclick="applyThemePreset('original')" class="theme-preset">Original</button><button onclick="applyThemePreset('blue')" class="theme-preset">Azul</button><button onclick="applyThemePreset('purple')" class="theme-preset">Morado</button><button onclick="applyThemePreset('green')" class="theme-preset">Verde</button><button onclick="applyThemePreset('red')" class="theme-preset">Rojo</button>
+        </div></div>
+        <div class="grid sm:grid-cols-3 gap-3">
+          <label class="theme-color-box">Fondo<input id="themeBgColor" type="color" value="#030712" oninput="previewCustomTheme()"></label>
+          <label class="theme-color-box">Paneles<input id="themePanelColor" type="color" value="#0a0f1d" oninput="previewCustomTheme()"></label>
+          <label class="theme-color-box">Acento<input id="themeAccentColor" type="color" value="#06b6d4" oninput="previewCustomTheme()"></label>
         </div>
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <label class="bg-[#030712] border border-slate-800 rounded-xl p-3 flex items-center justify-between"><span class="text-xs font-bold">Fondo de página</span><input id="themeBgColor" type="color" value="#030712" onchange="previewCioeTheme()" class="w-12 h-9 bg-transparent cursor-pointer"></label>
-          <label class="bg-[#030712] border border-slate-800 rounded-xl p-3 flex items-center justify-between"><span class="text-xs font-bold">Paneles</span><input id="themePanelColor" type="color" value="#0a0f1d" onchange="previewCioeTheme()" class="w-12 h-9 bg-transparent cursor-pointer"></label>
-          <label class="bg-[#030712] border border-slate-800 rounded-xl p-3 flex items-center justify-between"><span class="text-xs font-bold">Panel secundario</span><input id="themePanel2Color" type="color" value="#111827" onchange="previewCioeTheme()" class="w-12 h-9 bg-transparent cursor-pointer"></label>
-          <label class="bg-[#030712] border border-slate-800 rounded-xl p-3 flex items-center justify-between"><span class="text-xs font-bold">Bordes</span><input id="themeBorderColor" type="color" value="#1e293b" onchange="previewCioeTheme()" class="w-12 h-9 bg-transparent cursor-pointer"></label>
-        </div>
-        <p id="themeSaveMessage" class="text-xs min-h-4 text-emerald-400 font-bold"></p>
+        <p id="themeMessage" class="text-xs text-emerald-400 font-bold min-h-4"></p>
       </div>
-      <div class="p-4 border-t border-slate-800 flex justify-end gap-2">
-        <button onclick="resetCioeTheme()" class="bg-slate-800 hover:bg-slate-700 border border-slate-700 px-4 py-2 rounded-xl text-xs font-bold">Restablecer</button>
-        <button onclick="saveCioeTheme()" class="bg-cyan-600 hover:bg-cyan-500 px-4 py-2 rounded-xl text-xs font-black"><i class="fa-solid fa-floppy-disk mr-1"></i> Guardar tema</button>
-      </div>
+      <div class="p-4 border-t border-slate-800 flex justify-end gap-2"><button onclick="resetTheme()" class="bg-slate-800 border border-slate-700 px-4 py-2 rounded-xl text-xs font-bold">Restablecer</button><button onclick="saveTheme()" class="bg-cyan-600 hover:bg-cyan-500 px-4 py-2 rounded-xl text-xs font-black"><i class="fa-solid fa-floppy-disk mr-1"></i> Guardar tema</button></div>
     </div>
   </div>
+
+\n<script id="cioeThemeScript">
+(function(){
+ const KEY='cioe_theme_v1';
+ const presets={original:{bg:'#030712',panel:'#0a0f1d',accent:'#06b6d4'},blue:{bg:'#020617',panel:'#071426',accent:'#3b82f6'},purple:{bg:'#090511',panel:'#160b25',accent:'#8b5cf6'},green:{bg:'#02100b',panel:'#071a13',accent:'#10b981'},red:{bg:'#120506',panel:'#220a0d',accent:'#ef4444'}};
+ function shade(hex){let h=hex.replace('#','');let r=parseInt(h.slice(0,2),16),g=parseInt(h.slice(2,4),16),b=parseInt(h.slice(4,6),16);r=Math.min(255,r+28);g=Math.min(255,g+28);b=Math.min(255,b+28);return '#'+[r,g,b].map(v=>v.toString(16).padStart(2,'0')).join('')}
+ window.applyCioeTheme=function(t){document.body.classList.add('cioe-custom-theme');document.documentElement.style.setProperty('--cioe-bg',t.bg);document.documentElement.style.setProperty('--cioe-panel',t.panel);document.documentElement.style.setProperty('--cioe-accent',t.accent);document.documentElement.style.setProperty('--cioe-border',shade(t.panel));['themeBgColor','themePanelColor','themeAccentColor'].forEach((id,i)=>{const e=document.getElementById(id);if(e)e.value=[t.bg,t.panel,t.accent][i]})}
+ window.openThemeCustomizer=function(){const m=document.getElementById('themeCustomizerModal');m.classList.remove('hidden');m.classList.add('flex')}
+ window.closeThemeCustomizer=function(){const m=document.getElementById('themeCustomizerModal');m.classList.add('hidden');m.classList.remove('flex')}
+ window.applyThemePreset=function(name){applyCioeTheme(presets[name]||presets.original)}
+ window.previewCustomTheme=function(){applyCioeTheme({bg:document.getElementById('themeBgColor').value,panel:document.getElementById('themePanelColor').value,accent:document.getElementById('themeAccentColor').value})}
+ window.saveTheme=function(){const t={bg:document.getElementById('themeBgColor').value,panel:document.getElementById('themePanelColor').value,accent:document.getElementById('themeAccentColor').value};localStorage.setItem(KEY,JSON.stringify(t));applyCioeTheme(t);document.getElementById('themeMessage').textContent='Tema guardado correctamente.'}
+ window.resetTheme=function(){localStorage.removeItem(KEY);applyCioeTheme(presets.original);document.getElementById('themeMessage').textContent='Tema original restaurado.'}
+ try{const saved=JSON.parse(localStorage.getItem(KEY)||'null');if(saved)document.addEventListener('DOMContentLoaded',()=>applyCioeTheme(saved))}catch(e){}
+ document.addEventListener('DOMContentLoaded',()=>{const b=document.getElementById('themeCustomizerBtn');if(b)b.classList.remove('hidden')});
+})();
+</script>
 
 </body>
 </html>
