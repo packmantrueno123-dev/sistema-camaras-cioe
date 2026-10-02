@@ -301,7 +301,7 @@ body.cioe-custom-theme #themeCustomizerBtn{background-color:var(--cioe-accent)!i
 
     <main class="flex-1 bg-[#0a0f1d] rounded-2xl border border-slate-800/80 shadow-2xl overflow-hidden flex flex-col w-full">
       <div class="overflow-x-auto w-full">
-        <table class="w-full text-left text-xs border-collapse min-w-[1200px]">
+        <table class="w-full text-left text-xs border-collapse min-w-[1450px]">
           <thead>
             <tr class="bg-black text-white uppercase tracking-wider text-[11px] font-black border-b border-slate-800">
               <th class="p-3.5 text-center w-28">CÁMARA</th>
@@ -312,6 +312,8 @@ body.cioe-custom-theme #themeCustomizerBtn{background-color:var(--cioe-accent)!i
               <th class="p-3.5">URBANIZACIÓN</th>
               <th class="p-3.5 w-28">ZONA/SECTOR</th>
               <th class="p-3.5">SUMINISTROS</th>
+              <th class="p-3.5 text-center w-28">N° PERIFONEO</th>
+              <th class="p-3.5 text-center w-36">ESTADO PERIFONEO</th>
               <th class="p-3.5 text-center w-32">REPORTES</th>
               <th class="p-3.5 text-center w-24">ACCIONES</th>
             </tr>
@@ -2063,6 +2065,12 @@ body.cioe-custom-theme #themeCustomizerBtn{background-color:var(--cioe-accent)!i
         const ov = OVERRIDES[cam.camara];
         const estacion = ov && ov.estacion ? ov.estacion : cam.estacion;
         const sistema = ov && ov.sistema ? ov.sistema : cam.sistema;
+        const perif = getAnexo(cam.camara);
+        const perifEstado = String(perif?.estado || 'INOPERATIVO').toUpperCase();
+        const perifEstadoClass =
+          perifEstado === 'OPERATIVO' ? 'text-emerald-400' :
+          perifEstado === 'MANTENIMIENTO' ? 'text-blue-400' :
+          'text-rose-400';
         const tr = document.createElement('tr');
         tr.className = "border-b border-slate-800/60 hover:bg-slate-800/30 transition text-slate-200";
 
@@ -2081,6 +2089,8 @@ body.cioe-custom-theme #themeCustomizerBtn{background-color:var(--cioe-accent)!i
           <td class="p-3.5">${cam.urbanizacion}</td>
           <td class="p-3.5">${cam.zona}</td>
           <td class="p-3.5 text-slate-300 font-semibold uppercase">${cam.suministro || 'NO CUENTA CON SUMINISTRO'}</td>
+          <td class="p-3.5 text-center font-black text-amber-300">${escapeHtml(perif?.numero || '—')}</td>
+          <td class="p-3.5 text-center font-black ${perifEstadoClass}">${escapeHtml(perifEstado)}</td>
           <td class="p-3.5 text-center">
             <button onclick="showMainCameraDetail(${cam.id})" class="px-3 py-1.5 rounded-lg bg-slate-800 text-amber-400 hover:bg-slate-700 text-[10px] font-black whitespace-nowrap" title="Ver reporte"><i class="fa-regular fa-eye mr-1"></i> VER REPORTE</button>
           </td>
