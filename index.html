@@ -237,6 +237,192 @@ body.cioe-custom-theme #themeCustomizerBtn{background-color:var(--cioe-accent)!i
 }
 </style>
 
+
+<style id="cioeThemeModalCompactFix">
+/* =========================================================
+   PERSONALIZAR COLORES - AJUSTE PARA PANTALLA AL 100%
+   Solo modifica presentación. No cambia la lógica existente.
+   ========================================================= */
+
+/* El modal nunca debe salirse de la pantalla */
+#themeModal{
+  padding:12px !important;
+  overflow:hidden !important;
+}
+#themeModal > div{
+  width:min(680px, calc(100vw - 24px)) !important;
+  max-width:680px !important;
+  max-height:calc(100vh - 24px) !important;
+  overflow-y:auto !important;
+  overflow-x:hidden !important;
+  border-radius:20px !important;
+  scrollbar-width:thin;
+}
+
+/* Cabecera y contenido más compactos */
+#themeModal > div > div:first-child{
+  padding-top:12px !important;
+  padding-bottom:12px !important;
+}
+#themeModal .p-5{padding:14px !important}
+#themeModal .p-4{padding:12px !important}
+#themeModal .p-3{padding:9px !important}
+#themeModal .gap-4{gap:10px !important}
+#themeModal .gap-3{gap:8px !important}
+#themeModal .space-y-4 > :not([hidden]) ~ :not([hidden]){margin-top:10px !important}
+#themeModal .space-y-3 > :not([hidden]) ~ :not([hidden]){margin-top:8px !important}
+
+/* Tarjetas de mascotas más bajas */
+#themeModal .pet-option-box{
+  min-height:46px !important;
+  padding:7px 10px !important;
+  border-radius:14px !important;
+}
+#themeModal .pet-option-box p{line-height:1.05 !important}
+#themeModal .pet-option-box .text-slate-400{
+  margin-top:2px !important;
+  line-height:1.05 !important;
+}
+
+/* ON/OFF: cápsulas realmente redondeadas */
+#themeModal #petToggleAkita,
+#themeModal #petToggleFox,
+#themeModal #petTogglePanda,
+#themeModal #petToggleTotoro,
+#themeModal #petToggleCat,
+#themeModal #petMovementBtn,
+#themeModal #headerAnimationBtn,
+#themeModal #throwBallToggleBtn,
+#themeModal #themeEnabledBtn,
+#themeModal .pet-toggle,
+#themeModal button[id$="PetBtn"]{
+  width:auto !important;
+  min-width:58px !important;
+  height:28px !important;
+  min-height:28px !important;
+  padding:0 11px !important;
+  border-radius:9999px !important;
+  display:inline-flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+  gap:4px !important;
+  line-height:1 !important;
+  font-size:10px !important;
+  font-weight:900 !important;
+  flex:0 0 auto !important;
+  overflow:hidden !important;
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.10),0 3px 8px rgba(0,0,0,.18) !important;
+}
+
+/* Corrige el bloque "Tipo de perro" que aparecía pegado */
+#themeModal .dog-config-box{
+  margin-top:7px !important;
+  display:grid !important;
+  grid-template-columns:145px minmax(0,1fr) !important;
+  align-items:center !important;
+  gap:10px !important;
+  padding:9px 10px !important;
+  border-radius:14px !important;
+}
+#themeModal .dog-config-title{
+  display:flex !important;
+  align-items:center !important;
+  gap:7px !important;
+  min-width:0 !important;
+}
+#themeModal .dog-config-title > span{font-size:17px !important}
+#themeModal .dog-config-title b{
+  display:block !important;
+  font-size:10px !important;
+  line-height:1.1 !important;
+}
+#themeModal .dog-config-title small{
+  display:block !important;
+  font-size:8px !important;
+  line-height:1.1 !important;
+  margin-top:2px !important;
+}
+
+/* Selectores de perro/gato alineados y compactos */
+#themeModal select{
+  height:32px !important;
+  min-height:32px !important;
+  border-radius:9999px !important;
+  padding-top:0 !important;
+  padding-bottom:0 !important;
+}
+#themeModal .pet-dog-type-option{
+  grid-column:1/-1 !important;
+}
+#themeModal .pet-dog-type-option select{
+  width:100% !important;
+  max-width:none !important;
+}
+
+/* Temas rápidos más compactos */
+#themeModal .theme-preset{
+  min-height:31px !important;
+  padding:6px 8px !important;
+  border-radius:9999px !important;
+}
+
+/* Selectores de color: muestra circular en vez de cuadrada */
+#themeModal input[type="color"]{
+  -webkit-appearance:none !important;
+  appearance:none !important;
+  width:34px !important;
+  height:34px !important;
+  min-width:34px !important;
+  padding:0 !important;
+  border:2px solid #475569 !important;
+  border-radius:50% !important;
+  overflow:hidden !important;
+  cursor:pointer !important;
+  background:transparent !important;
+}
+#themeModal input[type="color"]::-webkit-color-swatch-wrapper{
+  padding:0 !important;
+  border-radius:50% !important;
+}
+#themeModal input[type="color"]::-webkit-color-swatch{
+  border:0 !important;
+  border-radius:50% !important;
+}
+#themeModal input[type="color"]::-moz-color-swatch{
+  border:0 !important;
+  border-radius:50% !important;
+}
+#themeModal .theme-color-box{
+  min-height:50px !important;
+  padding:8px 11px !important;
+  border-radius:14px !important;
+}
+
+/* En pantallas con poca altura, comprime un poco más */
+@media (max-height:850px){
+  #themeModal > div{max-height:calc(100vh - 16px) !important}
+  #themeModal{padding:8px !important}
+  #themeModal .p-5{padding:11px !important}
+  #themeModal .p-4{padding:10px !important}
+  #themeModal .pet-option-box{min-height:42px !important;padding:6px 9px !important}
+  #themeModal .dog-config-box{padding:7px 9px !important;margin-top:5px !important}
+  #themeModal .theme-color-box{min-height:44px !important;padding:6px 10px !important}
+  #themeModal .theme-preset{min-height:28px !important}
+}
+
+/* Responsive */
+@media (max-width:640px){
+  #themeModal > div{
+    width:calc(100vw - 16px) !important;
+    max-height:calc(100vh - 16px) !important;
+  }
+  #themeModal .dog-config-box{
+    grid-template-columns:1fr !important;
+    gap:6px !important;
+  }
+}
+</style>
+
 </head>
 <body class="min-h-screen flex flex-col p-3 md:p-5 space-y-4 w-full">
 
