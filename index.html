@@ -137,6 +137,66 @@ body.cioe-rgb-background:before{content:"";position:fixed;inset:0;pointer-events
 @media(max-width:700px){.theme-premium-modal{max-height:94vh}.pet-premium-card{min-height:125px}.pet-preview{height:48px}}
 </style>
 
+
+<style id="cioeThemeFunctionalFix">
+/* Tema: aplica fondo, paneles, bordes y acento de forma visible */
+body.cioe-custom-theme{
+  background:var(--cioe-bg,#030712)!important;
+  background-color:var(--cioe-bg,#030712)!important;
+}
+body.cioe-custom-theme header,
+body.cioe-custom-theme main,
+body.cioe-custom-theme .bg-\[\#030712\],
+body.cioe-custom-theme .bg-\[\#0a0f1d\],
+body.cioe-custom-theme .bg-slate-900,
+body.cioe-custom-theme .bg-slate-950{
+  border-color:var(--cioe-border,#1e293b)!important;
+}
+body.cioe-custom-theme .bg-\[\#0a0f1d\],
+body.cioe-custom-theme .bg-slate-900{
+  background-color:var(--cioe-panel,#0a0f1d)!important;
+}
+body.cioe-custom-theme #themeCustomizerBtn,
+body.cioe-custom-theme .theme-save-btn{
+  background:var(--cioe-accent,#06b6d4)!important;
+}
+body.cioe-custom-theme input:focus,
+body.cioe-custom-theme select:focus,
+body.cioe-custom-theme textarea:focus{
+  border-color:var(--cioe-accent,#06b6d4)!important;
+  box-shadow:0 0 0 1px var(--cioe-accent,#06b6d4)!important;
+}
+
+/* RGB visible en toda la página */
+html.cioe-rgb-html,
+body.cioe-rgb-background{
+  min-height:100%;
+  background:linear-gradient(120deg,#ff1744,#ff9100,#ffee00,#00e676,#00b0ff,#651fff,#d500f9,#ff1744)!important;
+  background-size:600% 600%!important;
+  animation:cioeRgbShift var(--cioe-rgb-speed,12s) linear infinite!important;
+}
+body.cioe-rgb-background{
+  background-attachment:fixed!important;
+}
+body.cioe-rgb-background > *:not(#themeCustomizerModal):not(script):not(style){
+  position:relative;
+}
+body.cioe-rgb-background .theme-premium-modal{
+  background:#07101f!important;
+}
+
+/* Hace que el selector de color sea realmente clickeable */
+.background-card input[type="color"]{
+  position:absolute!important;
+  inset:0!important;
+  width:100%!important;
+  height:100%!important;
+  opacity:0!important;
+  cursor:pointer!important;
+  pointer-events:auto!important;
+}
+</style>
+
 </head>
 <body class="min-h-screen flex flex-col p-3 md:p-5 space-y-4 w-full">
 
@@ -5180,6 +5240,7 @@ body.cioe-rgb-background:before{content:"";position:fixed;inset:0;pointer-events
  window.applyCioeTheme=function(t){
    if(!isEnabled()){document.body.classList.remove('cioe-custom-theme');updatePowerUI();return}
    document.body.classList.add('cioe-custom-theme');
+   document.body.style.backgroundColor=t.bg;
    document.documentElement.style.setProperty('--cioe-bg',t.bg);
    document.documentElement.style.setProperty('--cioe-panel',t.panel);
    document.documentElement.style.setProperty('--cioe-accent',t.accent);
@@ -5195,6 +5256,8 @@ body.cioe-rgb-background:before{content:"";position:fixed;inset:0;pointer-events
      applyCioeTheme(saved||presets.original);
    }else{
      document.body.classList.remove('cioe-custom-theme');
+     document.body.style.backgroundColor='';
+     if(typeof disableRgbBackground==='function') disableRgbBackground();
      updatePowerUI();
    }
    const m=document.getElementById('themeMessage');if(m)m.textContent=next?'Diseño de colores ACTIVADO.':'Diseño de colores DESACTIVADO.';
@@ -5235,9 +5298,15 @@ body.cioe-rgb-background:before{content:"";position:fixed;inset:0;pointer-events
  function refresh(){
    const s=settings(),on=isOn(),body=document.body;
    body.classList.toggle('cioe-rgb-background',on);
+   document.documentElement.classList.toggle('cioe-rgb-html',on);
    document.documentElement.style.setProperty('--cioe-rgb-speed',s.speed+'s');
    document.documentElement.style.setProperty('--cioe-rgb-dim',String(Math.max(0,.62-(s.brightness/100)*.45)));
    document.documentElement.style.setProperty('--cioe-rgb-saturation',s.saturation+'%');
+   if(on){
+     body.style.filter='saturate('+s.saturation+'%) brightness('+Math.max(.55,s.brightness/100)+')';
+   }else{
+     body.style.filter='';
+   }
    const ids={rgbSpeed:s.speed,rgbBrightness:s.brightness,rgbSaturation:s.saturation};
    Object.entries(ids).forEach(([id,v])=>{const e=document.getElementById(id);if(e)e.value=v});
    const a=document.getElementById('rgbSpeedValue'),b=document.getElementById('rgbBrightnessValue'),c=document.getElementById('rgbSaturationValue');
@@ -5246,7 +5315,7 @@ body.cioe-rgb-background:before{content:"";position:fixed;inset:0;pointer-events
    if(txt)txt.textContent=on?'ON':'OFF';
    if(btn){btn.classList.toggle('bg-emerald-600',on);btn.classList.toggle('bg-rose-600',!on)}
  }
- window.enableRgbBackground=function(){localStorage.setItem(KEY,'1');localStorage.setItem('cioe_theme_enabled_v1','1');refresh();const m=document.getElementById('themeMessage');if(m)m.textContent='Fondo RGB ACTIVADO.'}
+ window.enableRgbBackground=function(){localStorage.setItem(KEY,'1');localStorage.setItem('cioe_theme_enabled_v1','1');document.body.style.backgroundColor='';refresh();const m=document.getElementById('themeMessage');if(m)m.textContent='Fondo RGB ACTIVADO.'}
  window.disableRgbBackground=function(){localStorage.setItem(KEY,'0');refresh()}
  window.toggleRgbBackground=function(){localStorage.setItem(KEY,isOn()?'0':'1');refresh()}
  window.updateRgbSettings=function(){
