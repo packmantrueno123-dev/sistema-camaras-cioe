@@ -903,30 +903,6 @@ body.cioe-custom-theme #themeCustomizerBtn{background-color:var(--cioe-accent)!i
 #headerPetBall{z-index:12!important}
 </style>
 
-
-<style id="cioeLandscapeScaleFinalFix">
-/* Paisajes: background y foreground siempre alineados */
-#headerPixelArtWrap{
-  height:104px!important;
-  overflow:hidden!important;
-  background:#07111f!important;
-  isolation:isolate!important;
-}
-#headerPixelArt,
-#headerLandscapeForeground{
-  position:absolute!important;
-  left:0!important;right:0!important;bottom:0!important;top:auto!important;
-  width:100%!important;height:100%!important;
-  object-fit:fill!important;
-  object-position:center bottom!important;
-  image-rendering:pixelated!important;
-}
-#headerPixelArt{z-index:0!important}
-#headerLandscapeForeground{z-index:1!important;pointer-events:none!important}
-#headerDogPet,#headerPixelArtWrap .header-extra-pet{z-index:10!important}
-#headerPetBall{z-index:12!important}
-</style>
-
 </head>
 <body class="min-h-screen flex flex-col p-3 md:p-5 space-y-4 w-full">
 
@@ -6694,18 +6670,20 @@ document.addEventListener('DOMContentLoaded', function(){
     const b='pets/backgrounds/'+scene+'/';
     const names = type==='background'
       ? [
-          'background-dark-small.png','background-light-small.png',
-          'background-dark-medium.png','background-light-medium.png',
-          'background-dark-nano.png','background-light-nano.png',
-          'background-dark-large.png','background-light-large.png',
-          'background.png','background-dark.png','background-light.png'
+          'background-dark-large.png','background-dark-medium.png',
+          'background-dark-small.png','background-dark-nano.png',
+          'background-large.png','background-medium.png','background-small.png','background-nano.png',
+          'background-dark.png','background.png',
+          'background-light-large.png','background-light-medium.png',
+          'background-light-small.png','background-light-nano.png','background-light.png'
         ]
       : [
-          'foreground-dark-small.png','foreground-light-small.png',
-          'foreground-dark-medium.png','foreground-light-medium.png',
-          'foreground-dark-nano.png','foreground-light-nano.png',
-          'foreground-dark-large.png','foreground-light-large.png',
-          'foreground.png','foreground-dark.png','foreground-light.png'
+          'foreground-dark-large.png','foreground-dark-medium.png',
+          'foreground-dark-small.png','foreground-dark-nano.png',
+          'foreground-large.png','foreground-medium.png','foreground-small.png','foreground-nano.png',
+          'foreground-dark.png','foreground.png',
+          'foreground-light-large.png','foreground-light-medium.png',
+          'foreground-light-small.png','foreground-light-nano.png','foreground-light.png'
         ];
     return names.map(n=>b+n);
   }
@@ -6713,16 +6691,35 @@ document.addEventListener('DOMContentLoaded', function(){
   function officialFiles(scene,type){
     const b=OFFICIAL+scene+'/';
     return [
-      b+type+'-dark-small.png',
+      b+type+'-dark-large.png',
       b+type+'-dark-medium.png',
-      b+type+'-dark-nano.png',
-      b+type+'-dark-large.png'
+      b+type+'-dark-small.png',
+      b+type+'-dark-nano.png'
     ];
   }
 
   function files(scene,type){
-    // Usa primero tus archivos de GitHub.
-    // Si una carpeta quedó incompleta, usa el recurso oficial como respaldo.
+    // Autumn necesita priorizar la variante SMALL para mantener la escala correcta.
+    // Los demás paisajes conservan exactamente el comportamiento anterior.
+    if(scene==='autumn'){
+      const b='pets/backgrounds/autumn/';
+      const autumnLocal = type==='background'
+        ? [
+            b+'background-dark-small.png', b+'background-light-small.png',
+            b+'background-dark-medium.png', b+'background-light-medium.png',
+            b+'background-dark-large.png', b+'background-light-large.png',
+            b+'background-dark-nano.png', b+'background-light-nano.png',
+            b+'background.png'
+          ]
+        : [
+            b+'foreground-dark-small.png', b+'foreground-light-small.png',
+            b+'foreground-dark-medium.png', b+'foreground-light-medium.png',
+            b+'foreground-dark-large.png', b+'foreground-light-large.png',
+            b+'foreground-dark-nano.png', b+'foreground-light-nano.png',
+            b+'foreground.png'
+          ];
+      return autumnLocal.concat(officialFiles(scene,type));
+    }
     return localFiles(scene,type).concat(officialFiles(scene,type));
   }
 
