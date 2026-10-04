@@ -84,6 +84,23 @@
     bottom:2px !important;
   }
 
+
+/* ===== PERSONALIZAR COLORES: BOTONES MÁS REDONDEADOS ===== */
+#themeModal .theme-modal,#themeModal>div{border-radius:22px!important}
+#themeModal .pet-option-box{border-radius:16px!important}
+#themeModal .pet-toggle{border-radius:999px!important;min-width:46px!important}
+#themeModal .theme-preset{border-radius:999px!important}
+#themeModal select{border-radius:999px!important}
+#themeModal input[type="color"]{border-radius:50%!important;overflow:hidden}
+#themeModal button{transition:transform .15s ease,filter .15s ease}
+#themeModal button:hover{transform:translateY(-1px)}
+#themeModal button:active{transform:scale(.97)}
+#themeModal .rounded-xl{border-radius:18px!important}
+#themeModal .rounded-lg{border-radius:14px!important}
+.header-throw-ball{border-radius:999px!important}
+.pet-ball-option{grid-column:1/-1}
+@media(min-width:640px){.pet-ball-option{grid-column:auto}}
+
 </style>
 <style id="cioeThemeStyles">
 :root{--cioe-bg:#030712;--cioe-panel:#0a0f1d;--cioe-accent:#06b6d4;--cioe-border:#1e293b}
@@ -5082,7 +5099,7 @@ body.cioe-custom-theme #themeCustomizerBtn{background-color:var(--cioe-accent)!i
           </div>
           <div class="pet-actions-grid">
             <div class="pet-option-box"><div><p class="text-xs font-black text-white"><i class="fa-solid fa-person-running text-cyan-400 mr-2"></i>MOVIMIENTO</p><p class="text-[10px] text-slate-400 mt-1">Caminar, correr y descansar.</p></div><button id="petMovementBtn" type="button" onclick="togglePetMovement()" class="pet-toggle bg-emerald-600">ON</button></div>
-            <div class="pet-option-box"><div><p class="text-xs font-black text-white"><i class="fa-solid fa-panorama text-violet-400 mr-2"></i>ESCENA</p><p class="text-[10px] text-slate-400 mt-1">Mostrar la franja pixel-art.</p></div><button id="headerAnimationBtn" type="button" onclick="toggleHeaderAnimation()" class="pet-toggle bg-emerald-600"><span id="headerAnimationText">ON</span></button></div>
+            <div class="pet-option-box"><div><p class="text-xs font-black text-white"><i class="fa-solid fa-panorama text-violet-400 mr-2"></i>ESCENA</p><p class="text-[10px] text-slate-400 mt-1">Mostrar la franja pixel-art.</p></div><button id="headerAnimationBtn" type="button" onclick="toggleHeaderAnimation()" class="pet-toggle bg-emerald-600"><span id="headerAnimationText">ON</span></button></div><div class="pet-option-box pet-ball-option"><div><p class="text-xs font-black text-white"><span class="mr-2">⚾</span>TIRAR PELOTA</p><p class="text-[10px] text-slate-400 mt-1">Mostrar u ocultar el botón de la pelota.</p></div><button id="throwBallToggleBtn" type="button" onclick="toggleThrowBallButton(event)" class="pet-toggle bg-emerald-600"><span id="throwBallToggleText">ON</span></button></div>
           </div>
         </div>
         <div><p class="text-[10px] font-black text-slate-400 uppercase mb-2">Temas rápidos</p><div class="grid grid-cols-2 sm:grid-cols-5 gap-2">
@@ -5543,5 +5560,35 @@ document.addEventListener('DOMContentLoaded', function(){
   });
 })();
 </script>
+
+<script>
+(function(){
+  const KEY='cioe_throw_ball_button_enabled_v1';
+  function isOn(){
+    const v=localStorage.getItem(KEY);
+    return v===null ? true : v==='1';
+  }
+  window.applyThrowBallButtonSetting=function(){
+    const on=isOn();
+    const headerBtn=document.getElementById('headerThrowBallBtn');
+    if(headerBtn) headerBtn.style.display=on?'':'none';
+    const btn=document.getElementById('throwBallToggleBtn');
+    const label=document.getElementById('throwBallToggleText');
+    if(btn){
+      btn.classList.toggle('bg-emerald-600',on);
+      btn.classList.toggle('bg-rose-600',!on);
+    }
+    if(label) label.textContent=on?'ON':'OFF';
+  };
+  window.toggleThrowBallButton=function(e){
+    if(e){e.preventDefault();e.stopPropagation();}
+    localStorage.setItem(KEY,isOn()?'0':'1');
+    window.applyThrowBallButtonSetting();
+  };
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',window.applyThrowBallButtonSetting);
+  else window.applyThrowBallButtonSetting();
+})();
+</script>
+
 </body>
 </html>
