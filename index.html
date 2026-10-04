@@ -6734,7 +6734,16 @@ document.addEventListener('DOMContentLoaded', function(){
     // WINTER: exclusivamente las dos imágenes seleccionadas.
     if(scene==='winter'){
       const b='pets/backgrounds/winter/';
-      return type==='background' ? [b+'background.png'] : [b+'foreground.png'];
+      return type==='background'
+        ? [
+            b+'background.png',
+            b+'winter-background-mountains.png',
+            b+'background-light-small.png'
+          ]
+        : [
+            b+'foreground.png',
+            b+'foreground-light-small.png'
+          ];
     }
 
     // Autumn necesita priorizar la variante SMALL para mantener la escala correcta.
@@ -6819,8 +6828,14 @@ document.addEventListener('DOMContentLoaded', function(){
       load(bg,files(scene,'background'),function(ok){
         if(!ok){
           bg.onerror=null;
-          bg.src='pets/background-dark-small.png';
-          bg.style.opacity='.92';
+          if(scene==='winter'){
+            // Winter no debe volver al bosque original si falta su imagen.
+            bg.removeAttribute('src');
+            bg.style.opacity='0';
+          }else{
+            bg.src='pets/background-dark-small.png';
+            bg.style.opacity='.92';
+          }
         }
       });
     }
