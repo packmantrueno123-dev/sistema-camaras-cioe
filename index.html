@@ -5157,6 +5157,36 @@ body.cioe-custom-theme #themeCustomizerBtn{background-color:var(--cioe-accent)!i
 })();
 </script>
 
+
+<style id="cioePetVisibilityFix">
+/* Mascotas adicionales: misma capa y comportamiento visual que Akita */
+#headerPixelArtWrap{position:relative!important;overflow:hidden!important;}
+#headerPixelArtWrap .header-extra-pet{
+  position:absolute!important;
+  bottom:3px!important;
+  width:auto!important;
+  height:46px!important;
+  max-width:none!important;
+  max-height:none!important;
+  object-fit:contain!important;
+  image-rendering:pixelated!important;
+  z-index:5!important;
+  opacity:1!important;
+  visibility:visible;
+  pointer-events:none;
+  transform-origin:center bottom!important;
+  filter:brightness(1.32) contrast(1.18) saturate(1.18) drop-shadow(0 2px 2px rgba(0,0,0,.65))!important;
+  will-change:left,transform;
+}
+#headerPixelArtWrap .header-extra-pet[alt="fox"]{height:50px!important;filter:brightness(1.45) contrast(1.20) saturate(1.28) drop-shadow(0 2px 2px rgba(0,0,0,.65))!important;}
+#headerPixelArtWrap .header-extra-pet[alt="panda"]{height:50px!important;filter:brightness(1.55) contrast(1.12) saturate(1.08) drop-shadow(0 2px 2px rgba(0,0,0,.65))!important;}
+#headerPixelArtWrap .header-extra-pet[alt="totoro"]{height:48px!important;filter:brightness(1.35) contrast(1.12) drop-shadow(0 2px 2px rgba(0,0,0,.65))!important;}
+#headerPixelArtWrap .header-extra-pet.pet-moving-right{transform:scaleX(1)!important;}
+#headerPixelArtWrap .header-extra-pet.pet-moving-left{transform:scaleX(-1)!important;}
+/* El Akita queda exactamente con su configuración original */
+#headerDogPet{z-index:5!important;}
+</style>
+
 <script id="cioeMultiPetHeader">
 document.addEventListener('DOMContentLoaded', function(){
   const wrap=document.getElementById('headerPixelArtWrap');
@@ -5286,41 +5316,9 @@ document.addEventListener('DOMContentLoaded', function(){
 </script>
 
 <script id="cioeTotoroFitPatch">
+/* Compatibilidad: los tamaños individuales ahora se controlan por CSS. */
 (function(){
-  function fitHeaderPets(){
-    const wrap=document.getElementById('headerPixelArtWrap');
-    if(!wrap) return;
-    wrap.querySelectorAll('img').forEach(img=>{
-      const src=(img.getAttribute('src')||'').toLowerCase();
-      if(src.includes('/totoro/') || src.includes('totoro')) {
-        img.style.width='auto';
-        img.style.height='auto';
-        img.style.maxWidth='72px';
-        img.style.maxHeight='54px';
-        img.style.objectFit='contain';
-        img.style.bottom='2px';
-        img.style.transformOrigin='center bottom';
-      } else if(src.includes('/dog/') || src.includes('akita') ||
-                src.includes('/fox/') || src.includes('zorro') ||
-                src.includes('/panda/') || src.includes('panda')) {
-        img.style.width='auto';
-        img.style.height='auto';
-        img.style.maxWidth='96px';
-        img.style.maxHeight='58px';
-        img.style.objectFit='contain';
-        img.style.transformOrigin='center bottom';
-      }
-    });
-  }
-  window.fitHeaderPets=fitHeaderPets;
-  document.addEventListener('DOMContentLoaded',()=>{
-    fitHeaderPets();
-    const wrap=document.getElementById('headerPixelArtWrap');
-    if(wrap){
-      new MutationObserver(fitHeaderPets).observe(wrap,{childList:true,subtree:true,attributes:true,attributeFilter:['src']});
-    }
-  });
-  setInterval(fitHeaderPets,1200);
+  window.fitHeaderPets=function(){};
 })();
 </script>
 
