@@ -935,6 +935,51 @@ body.cioe-custom-theme #themeCustomizerBtn{background-color:var(--cioe-accent)!i
 #headerPixelArtWrap.winter-scene #headerPetBall{z-index:12!important}
 </style>
 
+
+<style id="cioeWinterSizingFixV2">
+#headerPixelArtWrap.winter-scene{
+  position:relative!important;
+  overflow:hidden!important;
+  background:#dff6ff!important;
+}
+#headerPixelArtWrap.winter-scene #headerPixelArt{
+  display:block!important;
+  position:absolute!important;
+  inset:0!important;
+  width:100%!important;
+  height:100%!important;
+  max-width:none!important;
+  max-height:none!important;
+  object-fit:cover!important;
+  object-position:center bottom!important;
+  opacity:1!important;
+  visibility:visible!important;
+  z-index:0!important;
+}
+#headerPixelArtWrap.winter-scene #headerLandscapeForeground{
+  display:block!important;
+  position:absolute!important;
+  inset:0!important;
+  width:100%!important;
+  height:100%!important;
+  max-width:none!important;
+  max-height:none!important;
+  object-fit:fill!important;
+  object-position:center bottom!important;
+  opacity:1!important;
+  visibility:visible!important;
+  z-index:1!important;
+  pointer-events:none!important;
+}
+#headerPixelArtWrap.winter-scene #headerDogPet,
+#headerPixelArtWrap.winter-scene .header-extra-pet{
+  z-index:10!important;
+}
+#headerPixelArtWrap.winter-scene #headerPetBall{
+  z-index:12!important;
+}
+</style>
+
 </head>
 <body class="min-h-screen flex flex-col p-3 md:p-5 space-y-4 w-full">
 
@@ -6735,8 +6780,8 @@ document.addEventListener('DOMContentLoaded', function(){
     if(scene==='winter'){
       const b='pets/backgrounds/winter/';
       return type==='background'
-        ? [b+'winter-background.png']
-        : [b+'winter-foreground.png'];
+        ? [b+'winter-background.png?v=2']
+        : [b+'winter-foreground.png?v=2'];
     }
 
     // Autumn necesita priorizar la variante SMALL para mantener la escala correcta.
