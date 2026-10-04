@@ -197,6 +197,24 @@
 #themeModal .pet-dog-type-option{grid-column:1/-1!important}
 #themeModal .pet-dog-type-option select{width:min(305px,72%)!important}
 
+
+/* ===== FIX FINAL MASCOTAS: selectores dentro del modal + botones cápsula ===== */
+#themeModal .dog-config-box{margin-top:10px;display:grid;grid-template-columns:150px 1fr;align-items:center;gap:12px;padding:11px;border:1px solid rgba(245,158,11,.20);border-radius:14px;background:rgba(245,158,11,.035)}
+#themeModal .dog-config-title{display:flex;align-items:center;gap:8px}
+#themeModal .dog-config-title>span{font-size:20px}
+#themeModal .dog-config-title b{display:block;font-size:10px;color:#e2e8f0}
+#themeModal .dog-config-title small{display:block;font-size:8px;color:#64748b;margin-top:2px}
+#themeModal #petToggleAkita,#themeModal #petToggleFox,#themeModal #petTogglePanda,#themeModal #petToggleTotoro,#themeModal #petToggleCat,
+#themeModal #petMovementBtn,#themeModal #headerAnimationBtn,#themeModal #throwBallToggleBtn{
+ width:66px!important;min-width:66px!important;height:30px!important;min-height:30px!important;padding:0 10px!important;border-radius:9999px!important;
+ display:inline-flex!important;align-items:center!important;justify-content:center!important;gap:5px!important;font-size:10px!important;font-weight:900!important;line-height:1!important;flex:0 0 66px!important;color:#fff!important;border:1px solid rgba(255,255,255,.12)!important;
+}
+#themeModal #petToggleAkita::before,#themeModal #petToggleFox::before,#themeModal #petTogglePanda::before,#themeModal #petToggleTotoro::before,#themeModal #petToggleCat::before,
+#themeModal #petMovementBtn::before,#themeModal #headerAnimationBtn::before,#themeModal #throwBallToggleBtn::before{content:"⏻";font-size:11px;font-weight:900}
+#themeModal .bg-emerald-600{background:#059669!important}
+#themeModal .bg-rose-600{background:#e11d48!important}
+@media(max-width:640px){#themeModal .dog-config-box{grid-template-columns:1fr}}
+
 </style>
 <style id="cioeThemeStyles">
 :root{--cioe-bg:#030712;--cioe-panel:#0a0f1d;--cioe-accent:#06b6d4;--cioe-border:#1e293b}
@@ -5182,6 +5200,16 @@ body.cioe-custom-theme #themeCustomizerBtn{background-color:var(--cioe-accent)!i
             <div class="pet-choice"><span class="pet-choice-icon">🐢</span><div><b>Tortuga</b><small>Totoro</small></div><button id="petToggleTotoro" type="button" onclick="toggleHeaderPet('totoro')" class="pet-toggle bg-rose-600">OFF</button></div>
             <div class="pet-choice pet-choice-cat"><span class="pet-choice-icon">🐱</span><div><b>Gato</b><small>Color seleccionable</small></div><button id="petToggleCat" type="button" onclick="toggleHeaderPet('cat')" class="pet-toggle bg-rose-600">OFF</button></div>
           </div>
+          <div class="dog-config-box">
+            <div class="dog-config-title"><span>🐶</span><div><b>TIPO DE PERRO</b><small>Selecciona el color del perro</small></div></div>
+            <select id="dogTypeSelect" class="cat-select" onchange="changeDogVariant(this.value)">
+              <option value="akita">🟠 Akita</option>
+              <option value="black">⚫ Negro</option>
+              <option value="brown">🟤 Marrón</option>
+              <option value="red">🔴 Rojo</option>
+              <option value="white">⚪ Blanco</option>
+            </select>
+          </div>
           <div class="cat-config-box">
             <div class="cat-config-title"><span>🐱</span><div><b>TIPO DE GATO</b><small>Selecciona el color y los ojos</small></div></div>
             <select id="catVariantSelect" class="cat-select" onchange="changeCatVariant(this.value)">
@@ -5346,12 +5374,16 @@ document.addEventListener('DOMContentLoaded', function(){
   if(bg) bg.addEventListener('error',function(){this.style.opacity='.15';});
 
   const PETS={
-    akita:{el:akita, key:'akita', folder:'pets', prefix:'akita', defaultOn:true, x:18, dir:1, speed:52, phase:0},
+    akita:{el:akita, key:'akita', folder:'pets/dog', prefix:'akita', defaultOn:true, x:18, dir:1, speed:52, phase:0},
     fox:{key:'fox', folder:'pets/fox', prefix:'red', defaultOn:false, x:120, dir:1, speed:58, phase:1200},
     panda:{key:'panda', folder:'pets/panda', prefix:'black', defaultOn:false, x:230, dir:-1, speed:48, phase:2400},
     totoro:{key:'totoro', folder:'pets/totoro', prefix:'gray', defaultOn:false, x:340, dir:-1, speed:44, phase:3600},
     cat:{key:'cat', folder:'pets/cat', prefix:'cat_blanco_negro_ojos_dorados', defaultOn:false, x:400, dir:1, speed:52, phase:4800}
   };
+  const DOG_VARIANT_KEY='cioe_header_dog_variant_v1';
+  const DOG_VARIANTS=['akita','black','brown','red','white'];
+  function currentDogVariant(){const v=localStorage.getItem(DOG_VARIANT_KEY)||'akita';return DOG_VARIANTS.includes(v)?v:'akita'}
+  PETS.akita.prefix=currentDogVariant();
   const CAT_VARIANT_KEY='cioe_header_cat_variant_v1';
   const CAT_VARIANTS=['blanco_negro_ojos_dorados','blanco_ojos_celestes','gris_ojos_azules','marron_ojos_ambar','naranja_ojos_verdes','negro_ojos_amarillos'];
   function currentCatVariant(){const v=localStorage.getItem(CAT_VARIANT_KEY)||'blanco_negro_ojos_dorados';return CAT_VARIANTS.includes(v)?v:'blanco_negro_ojos_dorados'}
@@ -5419,6 +5451,13 @@ document.addEventListener('DOMContentLoaded', function(){
     localStorage.setItem(MOVE_KEY,movementEnabled()?'0':'1');
     refreshPetUI();
   };
+  window.changeDogVariant=function(v){
+    if(!DOG_VARIANTS.includes(v)) return;
+    localStorage.setItem(DOG_VARIANT_KEY,v);
+    PETS.akita.prefix=v;
+    setGif(PETS.akita,PETS.akita.mode==='run'?'run':(PETS.akita.mode==='idle'?'idle':'walk'));
+    const sel=document.getElementById('dogTypeSelect'); if(sel) sel.value=v;
+  };
   window.changeCatVariant=function(v){
     if(!CAT_VARIANTS.includes(v)) return;
     localStorage.setItem(CAT_VARIANT_KEY,v);
@@ -5447,6 +5486,7 @@ document.addEventListener('DOMContentLoaded', function(){
     ballActive=true; ballEnd=performance.now()+2600;
     active.forEach(p=>{p.mode='run';p.pauseUntil=0;p.dir=(ballX>=p.x)?1:-1;setGif(p,'run')});
   };
+  const dogSelect=document.getElementById('dogTypeSelect'); if(dogSelect) dogSelect.value=currentDogVariant();
   const catSelect=document.getElementById('catVariantSelect'); if(catSelect) catSelect.value=currentCatVariant();
 
   Object.values(PETS).forEach(p=>{
@@ -5685,79 +5725,6 @@ document.addEventListener('DOMContentLoaded', function(){
   else window.applyThrowBallButtonSetting();
 })();
 </script>
-
-
-<script>
-(function(){
-  function capsuleControls(){
-    const selectors=[
-      '#themeModal button[id$="PetBtn"]',
-      '#themeModal #petMovementBtn',
-      '#themeModal #headerAnimationBtn',
-      '#themeModal #throwBallToggleBtn',
-      '#themeModal button[onclick*="toggleHeaderPet"]'
-    ];
-    document.querySelectorAll(selectors.join(',')).forEach(function(b){
-      b.style.setProperty('width','64px','important');
-      b.style.setProperty('min-width','64px','important');
-      b.style.setProperty('height','29px','important');
-      b.style.setProperty('border-radius','9999px','important');
-      b.style.setProperty('display','inline-flex','important');
-      b.style.setProperty('align-items','center','important');
-      b.style.setProperty('justify-content','center','important');
-      b.style.setProperty('padding','0 10px','important');
-      b.style.setProperty('flex','0 0 64px','important');
-    });
-  }
-  window.addEventListener('load',capsuleControls);
-  document.addEventListener('click',function(e){
-    if(e.target.closest && e.target.closest('#themeModal')) setTimeout(capsuleControls,0);
-  });
-  new MutationObserver(capsuleControls).observe(document.documentElement,{subtree:true,childList:true});
-})();
-</script>
-
-
-<script>
-(function(){
- const DOG_KEY='cioe_dog_type_v1';
- const valid=['akita','black','brown','red','white'];
- function dogType(){const v=localStorage.getItem(DOG_KEY)||'akita';return valid.includes(v)?v:'akita'}
- function dogFile(action){
-   const t=dogType();
-   const a=(action==='idle'||action==='walk'||action==='run'||action==='with_ball')?action:'walk';
-   return 'pets/dog/'+t+'_'+a+'_8fps.gif';
- }
- window.setDogType=function(type){
-   if(!valid.includes(type)) type='akita';
-   localStorage.setItem(DOG_KEY,type);
-   const sel=document.getElementById('dogTypeSelect'); if(sel) sel.value=type;
-   const dog=document.getElementById('headerDogPet');
-   if(dog) dog.src=dogFile('walk');
- };
- window.getSelectedDogPetFile=dogFile;
- function initDog(){
-   const sel=document.getElementById('dogTypeSelect'); if(sel) sel.value=dogType();
-   const dog=document.getElementById('headerDogPet');
-   if(dog) dog.src=dogFile('walk');
- }
- if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',initDog); else initDog();
-})();
-</script>
-
+  
 </body>
 </html>
-<div class="pet-option-box pet-dog-type-option">
-  <div>
-    <p class="text-xs font-black text-white"><span class="mr-2">🐶</span>TIPO DE PERRO</p>
-    <p class="text-[10px] text-slate-400 mt-1">Selecciona el color del perro.</p>
-  </div>
-  <select id="dogTypeSelect" onchange="setDogType(this.value)" class="pet-select-premium">
-    <option value="akita">🟠 Akita</option>
-    <option value="black">⚫ Negro</option>
-    <option value="brown">🟤 Marrón</option>
-    <option value="red">🟠 Rojo</option>
-    <option value="white">⚪ Blanco</option>
-  </select>
-</div>
-
