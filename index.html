@@ -423,6 +423,227 @@ body.cioe-custom-theme #themeCustomizerBtn{background-color:var(--cioe-accent)!i
 }
 </style>
 
+
+<style id="cioeThemeModalFinalLayoutFix">
+/* ===== PERSONALIZAR COLORES: PANEL FINAL PARA 100% ===== */
+
+/* Modal más ancho, centrado y con altura segura */
+#themeModal{
+  padding:16px !important;
+  align-items:center !important;
+  justify-content:center !important;
+  overflow:hidden !important;
+}
+#themeModal > div{
+  width:min(860px, calc(100vw - 32px)) !important;
+  max-width:860px !important;
+  max-height:calc(100vh - 32px) !important;
+  overflow-y:auto !important;
+  overflow-x:hidden !important;
+  border-radius:22px !important;
+}
+
+/* Mantener contenido cómodo sin hacerlo gigante */
+#themeModal > div > div:first-child{
+  padding:14px 20px !important;
+}
+#themeModal .p-5{padding:16px !important}
+#themeModal .p-4{padding:13px !important}
+#themeModal .gap-4{gap:12px !important}
+#themeModal .gap-3{gap:10px !important}
+
+/* Mascotas: dos columnas amplias */
+#themeModal .pet-option-box{
+  min-height:52px !important;
+  padding:8px 12px !important;
+  border-radius:16px !important;
+}
+
+/* ON/OFF: interruptores cápsula, nunca cuadrados */
+#themeModal #themeEnabledBtn,
+#themeModal #petToggleAkita,
+#themeModal #petToggleFox,
+#themeModal #petTogglePanda,
+#themeModal #petToggleTotoro,
+#themeModal #petToggleCat,
+#themeModal #petMovementBtn,
+#themeModal #headerAnimationBtn,
+#themeModal #throwBallToggleBtn,
+#themeModal button[id$="PetBtn"],
+#themeModal .pet-toggle{
+  width:62px !important;
+  min-width:62px !important;
+  max-width:62px !important;
+  height:30px !important;
+  min-height:30px !important;
+  padding:0 !important;
+  border-radius:9999px !important;
+  display:inline-flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+  gap:4px !important;
+  flex:0 0 62px !important;
+  font-size:10px !important;
+  font-weight:900 !important;
+  line-height:30px !important;
+  overflow:hidden !important;
+  border:1px solid rgba(255,255,255,.15) !important;
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.04),0 3px 8px rgba(0,0,0,.18) !important;
+}
+
+/* Evita que estilos genéricos conviertan el botón en cuadrado */
+#themeModal #themeEnabledBtn.bg-emerald-600,
+#themeModal #petToggleAkita.bg-emerald-600,
+#themeModal #petToggleFox.bg-emerald-600,
+#themeModal #petTogglePanda.bg-emerald-600,
+#themeModal #petToggleTotoro.bg-emerald-600,
+#themeModal #petToggleCat.bg-emerald-600,
+#themeModal #petMovementBtn.bg-emerald-600,
+#themeModal #headerAnimationBtn.bg-emerald-600,
+#themeModal #throwBallToggleBtn.bg-emerald-600{
+  background:#059669 !important;
+  border-radius:9999px !important;
+}
+#themeModal #themeEnabledBtn.bg-rose-600,
+#themeModal #petToggleAkita.bg-rose-600,
+#themeModal #petToggleFox.bg-rose-600,
+#themeModal #petTogglePanda.bg-rose-600,
+#themeModal #petToggleTotoro.bg-rose-600,
+#themeModal #petToggleCat.bg-rose-600,
+#themeModal #petMovementBtn.bg-rose-600,
+#themeModal #headerAnimationBtn.bg-rose-600,
+#themeModal #throwBallToggleBtn.bg-rose-600{
+  background:#e11d48 !important;
+  border-radius:9999px !important;
+}
+
+/* Tipo de perro: título y ayuda ya no se pegan */
+#themeModal .dog-type-help{
+  display:block !important;
+  margin-top:3px !important;
+  color:#64748b !important;
+  font-size:9px !important;
+  font-weight:500 !important;
+  line-height:1.2 !important;
+}
+#themeModal .dog-config-box{
+  margin-top:9px !important;
+  display:grid !important;
+  grid-template-columns:180px minmax(0,1fr) !important;
+  align-items:center !important;
+  gap:14px !important;
+  padding:10px 12px !important;
+  border-radius:16px !important;
+}
+#themeModal .dog-config-title{
+  min-width:0 !important;
+}
+#themeModal .dog-config-title b{
+  display:block !important;
+  margin:0 !important;
+  line-height:1.15 !important;
+}
+#themeModal .dog-config-title small{
+  display:block !important;
+  margin-top:3px !important;
+  line-height:1.2 !important;
+}
+
+/* Selector de perro a todo el ancho disponible */
+#themeModal .pet-dog-type-option{
+  grid-column:1/-1 !important;
+}
+#themeModal .pet-dog-type-option select,
+#themeModal .dog-config-box select{
+  width:100% !important;
+  max-width:none !important;
+  height:34px !important;
+  border-radius:9999px !important;
+}
+
+/* Tipo de gato bien alineado */
+#themeModal #catTypeSelect,
+#themeModal #catStyleSelect,
+#themeModal select[id*="cat" i]{
+  height:34px !important;
+  border-radius:9999px !important;
+}
+
+/* Temas rápidos */
+#themeModal .theme-preset{
+  min-height:34px !important;
+  border-radius:9999px !important;
+}
+
+/* Muestras de color totalmente circulares */
+#themeModal input[type="color"]{
+  -webkit-appearance:none !important;
+  appearance:none !important;
+  width:36px !important;
+  height:36px !important;
+  min-width:36px !important;
+  padding:0 !important;
+  border:2px solid #475569 !important;
+  border-radius:50% !important;
+  overflow:hidden !important;
+  background:transparent !important;
+}
+#themeModal input[type="color"]::-webkit-color-swatch-wrapper{
+  padding:0 !important;
+  border-radius:50% !important;
+}
+#themeModal input[type="color"]::-webkit-color-swatch{
+  border:0 !important;
+  border-radius:50% !important;
+}
+#themeModal input[type="color"]::-moz-color-swatch{
+  border:0 !important;
+  border-radius:50% !important;
+}
+#themeModal .theme-color-box{
+  min-height:54px !important;
+  border-radius:16px !important;
+  padding:9px 13px !important;
+}
+
+/* Pantallas Full HD al 100%: usa mejor el espacio */
+@media (min-width:1200px) and (min-height:800px){
+  #themeModal > div{
+    width:min(900px, calc(100vw - 48px)) !important;
+    max-width:900px !important;
+  }
+}
+
+/* Si la pantalla es baja, conserva todo dentro del viewport */
+@media (max-height:850px){
+  #themeModal{padding:8px !important}
+  #themeModal > div{
+    max-height:calc(100vh - 16px) !important;
+  }
+  #themeModal > div > div:first-child{padding:10px 16px !important}
+  #themeModal .p-5{padding:12px !important}
+  #themeModal .p-4{padding:10px !important}
+  #themeModal .pet-option-box{min-height:46px !important;padding:6px 10px !important}
+  #themeModal .dog-config-box{margin-top:6px !important;padding:7px 10px !important}
+  #themeModal .theme-color-box{min-height:46px !important;padding:6px 10px !important}
+}
+
+/* Celular/tablet */
+@media (max-width:640px){
+  #themeModal{
+    padding:8px !important;
+  }
+  #themeModal > div{
+    width:calc(100vw - 16px) !important;
+    max-height:calc(100vh - 16px) !important;
+  }
+  #themeModal .dog-config-box{
+    grid-template-columns:1fr !important;
+    gap:7px !important;
+  }
+}
+</style>
+
 </head>
 <body class="min-h-screen flex flex-col p-3 md:p-5 space-y-4 w-full">
 
