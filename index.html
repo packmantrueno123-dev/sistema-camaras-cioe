@@ -101,6 +101,49 @@
 .pet-ball-option{grid-column:1/-1}
 @media(min-width:640px){.pet-ball-option{grid-column:auto}}
 
+
+/* ===== MASCOTAS: PANEL ORDENADO + INTERRUPTORES CÁPSULA ===== */
+#themeModal .pet-toggle{
+  min-width:64px!important;
+  height:30px!important;
+  padding:0 12px!important;
+  border:1px solid rgba(16,185,129,.55)!important;
+  border-radius:999px!important;
+  display:inline-flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  gap:5px!important;
+  font-size:10px!important;
+  font-weight:900!important;
+  line-height:1!important;
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.04),0 5px 12px rgba(0,0,0,.15)!important;
+}
+#themeModal .pet-toggle.bg-emerald-600::before{content:"⏻";font-size:11px}
+#themeModal .pet-toggle.bg-rose-600::before{content:"⏻";font-size:11px}
+#themeModal .pet-toggle.bg-emerald-600{background:#059669!important;color:#fff!important}
+#themeModal .pet-toggle.bg-rose-600{background:#e11d48!important;color:#fff!important;border-color:rgba(244,63,94,.55)!important}
+#themeModal .pet-option-box{
+  min-height:50px!important;
+  padding:9px 11px!important;
+  border-radius:17px!important;
+  align-items:center!important;
+}
+#themeModal .pet-option-box > div:first-child{min-width:0}
+#themeModal .pet-option-box p{margin:0}
+#themeModal .pet-option-box .text-slate-400{margin-top:3px!important}
+#themeModal .theme-preset{
+  min-height:32px!important;
+  border-radius:999px!important;
+}
+#themeModal select{
+  height:34px!important;
+  border-radius:999px!important;
+}
+#themeModal .pet-ball-option{grid-column:auto!important}
+#themeModal .grid.grid-cols-1.sm\:grid-cols-2.gap-2{
+  align-items:stretch!important;
+}
+
 </style>
 <style id="cioeThemeStyles">
 :root{--cioe-bg:#030712;--cioe-panel:#0a0f1d;--cioe-accent:#06b6d4;--cioe-border:#1e293b}
@@ -199,7 +242,7 @@ body.cioe-custom-theme #themeCustomizerBtn{background-color:var(--cioe-accent)!i
       <div class="header-pets-area">
         <div id="headerPixelArtWrap" title="Mascotas animadas">
           <img id="headerPixelArt" src="pets/background-dark-small.png" alt="Bosque pixel art">
-          <img id="headerDogPet" src="pets/akita_walk_8fps.gif" alt="Akita animado">
+          <img id="headerDogPet" src="pets/dog/akita_walk_8fps.gif" alt="Akita animado">
         </div>
         <button id="headerThrowBallBtn" type="button" onclick="throwPetBall()" class="header-throw-ball" title="Tirar pelota">
           <span class="header-ball-icon">⚾</span>
