@@ -4513,9 +4513,12 @@ body.cioe-custom-theme #themeCustomizerBtn{background-color:var(--cioe-accent)!i
         };
         persistFijas();
         populateCamaraFijasFilter();
-      } else {
-        saveToStorage();
       }
+
+      // IMPORTANTE: la lista principal también se guarda siempre.
+      // saveToStorage() escribe cioe_cameras_v101 en localStorage y el
+      // sincronizador existente lo envía a /api/state (PostgreSQL).
+      saveToStorage();
 
       closeModal();
       populateMainCameraFilter();
@@ -4531,9 +4534,13 @@ body.cioe-custom-theme #themeCustomizerBtn{background-color:var(--cioe-accent)!i
           delete OVERRIDES[deleting.camara];
           persistFijas();
           populateCamaraFijasFilter();
-        } else {
-          saveToStorage();
         }
+
+        // Guardar siempre la eliminación en la lista principal.
+        // El interceptor de localStorage ya existente sincroniza este cambio
+        // con /api/state para que no reaparezca al recargar o entrar desde otra PC.
+        saveToStorage();
+
         populateMainCameraFilter();
         renderTable();
         if (!document.getElementById('camarasFijasView').classList.contains('hidden')) renderCamarasFijasTable();
