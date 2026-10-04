@@ -6776,12 +6776,23 @@ document.addEventListener('DOMContentLoaded', function(){
   }
 
   function files(scene,type){
-    // WINTER: exclusivamente las dos imágenes seleccionadas.
+    // WINTER: usa directamente los archivos que existen en GitHub.
+    // Prioriza SMALL porque encaja mejor en la franja horizontal.
     if(scene==='winter'){
       const b='pets/backgrounds/winter/';
       return type==='background'
-        ? [b+'winter-background.png?v=2']
-        : [b+'winter-foreground.png?v=2'];
+        ? [
+            b+'background-dark-small.png?v=3',
+            b+'background-light-small.png?v=3',
+            b+'background-dark-medium.png?v=3',
+            b+'background.png?v=3'
+          ]
+        : [
+            b+'foreground-dark-small.png?v=3',
+            b+'foreground-light-small.png?v=3',
+            b+'foreground-dark-medium.png?v=3',
+            b+'foreground.png?v=3'
+          ];
     }
 
     // Autumn necesita priorizar la variante SMALL para mantener la escala correcta.
