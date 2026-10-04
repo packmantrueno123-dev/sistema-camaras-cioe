@@ -106,210 +106,8 @@ body.cioe-custom-theme #themeCustomizerBtn{background-color:var(--cioe-accent)!i
 }
 </style>
 
-
-<style id="cioePremiumThemePanel">
-.theme-premium-modal{box-shadow:0 0 0 1px rgba(6,182,212,.15),0 28px 90px rgba(0,0,0,.65),0 0 45px rgba(6,182,212,.10)}
-.theme-premium-head{background:linear-gradient(120deg,rgba(14,165,233,.08),rgba(139,92,246,.06),rgba(236,72,153,.05))}
-.theme-section{background:linear-gradient(145deg,rgba(3,7,18,.94),rgba(8,18,36,.92));border:1px solid rgba(71,85,105,.72);border-radius:18px;padding:16px;box-shadow:inset 0 1px 0 rgba(255,255,255,.025)}
-.theme-icon-box{width:42px;height:42px;display:grid;place-items:center;border-radius:13px;background:rgba(14,165,233,.10);border:1px solid rgba(56,189,248,.28);font-size:18px;flex:0 0 auto}
-.theme-power{min-width:96px;padding:10px 18px;border-radius:14px;color:white;font-size:12px;font-weight:900;box-shadow:0 0 18px rgba(16,185,129,.18)}
-.pet-premium-card{min-height:150px;border:1px solid #334155;border-radius:16px;padding:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px;background:rgba(2,6,23,.72);transition:.2s;overflow:hidden}
-.pet-premium-card:hover{transform:translateY(-2px);border-color:#64748b}
-.pet-akita{box-shadow:inset 0 0 28px rgba(245,158,11,.08)}.pet-fox{box-shadow:inset 0 0 28px rgba(244,63,94,.08)}.pet-panda{box-shadow:inset 0 0 28px rgba(168,85,247,.08)}.pet-totoro{box-shadow:inset 0 0 28px rgba(16,185,129,.08)}
-.pet-preview{height:62px;width:100%;display:grid;place-items:center}.pet-preview img{max-width:86px;max-height:62px;image-rendering:pixelated;object-fit:contain}
-.pet-card-toggle{width:100%;max-width:145px;padding:8px 12px;border-radius:12px;color:white;font-size:11px;font-weight:900}
-.theme-mini-control{display:flex;align-items:center;justify-content:space-between;gap:12px;border:1px solid #334155;border-radius:14px;padding:12px;background:rgba(2,6,23,.55)}
-.theme-mini-control b{display:block;font-size:11px}.theme-mini-control small{display:block;color:#94a3b8;font-size:9px;margin-top:3px}
-.premium-preset{height:82px!important;display:flex!important;flex-direction:column;gap:6px;align-items:center;justify-content:center!important}
-.preset-preview{display:block;width:100%;height:30px;border-radius:8px;border:1px solid rgba(255,255,255,.10)}
-.preset-preview.original{background:linear-gradient(135deg,#030712,#111827)}.preset-preview.blue{background:linear-gradient(135deg,#020617,#0ea5e9)}.preset-preview.purple{background:linear-gradient(135deg,#090511,#8b5cf6)}.preset-preview.green{background:linear-gradient(135deg,#02100b,#10b981)}.preset-preview.red{background:linear-gradient(135deg,#120506,#ef4444)}.preset-preview.rgb,.bg-rgb{background:linear-gradient(120deg,#ff1744,#ffea00,#00e676,#00b0ff,#7c4dff,#ff1744);background-size:300% 300%;animation:cioeRgbShift 6s linear infinite}
-.background-card{position:relative;min-height:105px;border:1px solid #334155;border-radius:15px;padding:9px;display:flex;flex-direction:column;gap:8px;align-items:center;justify-content:center;background:#020617;font-size:11px;transition:.2s}
-.background-card:hover{border-color:#22d3ee;transform:translateY(-2px)}.rgb-selected{box-shadow:0 0 20px rgba(34,211,238,.12)}
-.bg-card-preview{width:100%;height:55px;border-radius:10px;border:1px solid rgba(255,255,255,.08)}.bg-dark{background:#030712}.bg-panel{background:linear-gradient(145deg,#030712,#0a0f1d)}
-.premium-color{min-height:52px!important}
-.rgb-config-box{border:1px solid #334155;border-radius:16px;padding:14px;background:rgba(2,6,23,.75)}
-.rgb-slider-row{display:grid;grid-template-columns:72px 1fr 44px;align-items:center;gap:8px;margin:12px 0;font-size:10px;color:#cbd5e1}.rgb-slider-row input{width:100%;accent-color:#06b6d4}.rgb-slider-row strong{text-align:right;color:#e2e8f0}
-.theme-save-btn{color:white;background:linear-gradient(90deg,#0891b2,#2563eb);box-shadow:0 0 20px rgba(6,182,212,.20)}
-.theme-scroll::-webkit-scrollbar{width:7px}.theme-scroll::-webkit-scrollbar-thumb{background:#334155;border-radius:10px}
-@keyframes cioeRgbShift{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
-body.cioe-rgb-background{background:linear-gradient(120deg,#13051d,#071d35,#05251d,#251505,#250615,#13051d)!important;background-size:500% 500%!important;animation:cioeRgbShift var(--cioe-rgb-speed,12s) linear infinite!important}
-body.cioe-rgb-background:before{content:"";position:fixed;inset:0;pointer-events:none;z-index:-1;background:rgba(0,0,0,var(--cioe-rgb-dim,.30))}
-@media(max-width:700px){.theme-premium-modal{max-height:94vh}.pet-premium-card{min-height:125px}.pet-preview{height:48px}}
-</style>
-
-
-<style id="cioeThemeFunctionalFix">
-/* Tema: aplica fondo, paneles, bordes y acento de forma visible */
-body.cioe-custom-theme{
-  background:var(--cioe-bg,#030712)!important;
-  background-color:var(--cioe-bg,#030712)!important;
-}
-body.cioe-custom-theme header,
-body.cioe-custom-theme main,
-body.cioe-custom-theme .bg-\[\#030712\],
-body.cioe-custom-theme .bg-\[\#0a0f1d\],
-body.cioe-custom-theme .bg-slate-900,
-body.cioe-custom-theme .bg-slate-950{
-  border-color:var(--cioe-border,#1e293b)!important;
-}
-body.cioe-custom-theme .bg-\[\#0a0f1d\],
-body.cioe-custom-theme .bg-slate-900{
-  background-color:var(--cioe-panel,#0a0f1d)!important;
-}
-body.cioe-custom-theme #themeCustomizerBtn,
-body.cioe-custom-theme .theme-save-btn{
-  background:var(--cioe-accent,#06b6d4)!important;
-}
-body.cioe-custom-theme input:focus,
-body.cioe-custom-theme select:focus,
-body.cioe-custom-theme textarea:focus{
-  border-color:var(--cioe-accent,#06b6d4)!important;
-  box-shadow:0 0 0 1px var(--cioe-accent,#06b6d4)!important;
-}
-
-/* RGB visible en toda la página */
-html.cioe-rgb-html,
-body.cioe-rgb-background{
-  min-height:100%;
-  background:linear-gradient(120deg,#ff1744,#ff9100,#ffee00,#00e676,#00b0ff,#651fff,#d500f9,#ff1744)!important;
-  background-size:600% 600%!important;
-  animation:cioeRgbShift var(--cioe-rgb-speed,12s) linear infinite!important;
-}
-body.cioe-rgb-background{
-  background-attachment:fixed!important;
-}
-body.cioe-rgb-background > *:not(#themeCustomizerModal):not(script):not(style){
-  position:relative;
-}
-body.cioe-rgb-background .theme-premium-modal{
-  background:#07101f!important;
-}
-
-/* Hace que el selector de color sea realmente clickeable */
-.background-card input[type="color"]{
-  position:absolute!important;
-  inset:0!important;
-  width:100%!important;
-  height:100%!important;
-  opacity:0!important;
-  cursor:pointer!important;
-  pointer-events:auto!important;
-}
-</style>
-
-
-<style id="cioeRgbSafeRepair">
-/* REPARACIÓN RGB: nunca pintar ni filtrar BODY/HTML completos */
-html.cioe-rgb-html,
-body.cioe-rgb-background{
-  background:#030712 !important;
-  background-color:#030712 !important;
-  background-image:none !important;
-  animation:none !important;
-  filter:none !important;
-}
-
-/* Capa RGB independiente, detrás de la aplicación */
-#cioeRgbBackdrop{
-  position:fixed;
-  inset:0;
-  z-index:-2;
-  display:none;
-  pointer-events:none;
-  background:linear-gradient(120deg,#ff1744,#ff9100,#ffee00,#00e676,#00b0ff,#651fff,#d500f9,#ff1744);
-  background-size:600% 600%;
-  animation:cioeRgbShift var(--cioe-rgb-speed,12s) linear infinite;
-  filter:saturate(var(--cioe-rgb-saturation,100%)) brightness(var(--cioe-rgb-brightness,72%));
-}
-body.cioe-rgb-background #cioeRgbBackdrop{display:block}
-
-/* El sistema queda por encima y conserva legibilidad */
-body.cioe-rgb-background #app,
-body.cioe-rgb-background main,
-body.cioe-rgb-background header{
-  position:relative;
-  z-index:1;
-}
-
-/* El login SIEMPRE conserva su fondo oscuro */
-#loginOverlay,#loginModal,.login-overlay,.login-screen{
-  filter:none !important;
-}
-</style>
-
-
-<style id="cioeInterfaceRepairV2">
-/* LOGIN: siempre ocupa toda la pantalla y queda centrado */
-#loginView{
-  position:fixed!important; inset:0!important; width:100vw!important; height:100dvh!important;
-  min-height:100vh!important; display:flex; align-items:center!important; justify-content:center!important;
-  padding:24px!important; background:#030712!important; z-index:9999!important;
-  filter:none!important; transform:none!important;
-}
-#loginView.hidden{display:none!important}
-#loginView>div{width:min(100%,420px)!important; margin:auto!important}
-
-/* Menú Ocurrencias más limpio y usable */
-#ocurrenciasMenu{
-  width:310px!important; max-height:min(72vh,620px)!important; overflow-y:auto!important;
-  padding:8px!important; border-radius:16px!important; background:#07101f!important;
-  border:1px solid #334155!important; box-shadow:0 24px 70px rgba(0,0,0,.65)!important;
-}
-#ocurrenciasMenu button{
-  min-height:46px!important; padding:10px 12px!important; border-radius:11px!important;
-  line-height:1.25!important; gap:10px!important;
-}
-#ocurrenciasMenu button i{width:18px!important;text-align:center!important;flex:0 0 18px!important}
-#ocurrenciasMenu button span{white-space:normal!important}
-
-/* Vistas de Ocurrencias: misma estructura visual */
-#searchReportView,#vecinalesView,#camarasFijasView,#estacionesParesView,#creacionTurnoView,#totemsView{
-  width:100%!important; min-width:0!important; padding:16px!important; gap:14px!important;
-}
-#searchReportView>section,#vecinalesView>section,#camarasFijasView>section,
-#estacionesParesView>section,#creacionTurnoView>section,#totemsView>section{
-  border-radius:16px!important; border-color:#25334a!important; box-shadow:0 10px 28px rgba(0,0,0,.18)!important;
-}
-#searchReportView table,#vecinalesView table,#camarasFijasView table,#estacionesParesView table,
-#creacionTurnoView table,#totemsView table{font-size:11px!important}
-#searchReportView input,#searchReportView select,#vecinalesView input,#vecinalesView select,
-#camarasFijasView input,#camarasFijasView select,#estacionesParesView input,#estacionesParesView select,
-#creacionTurnoView input,#creacionTurnoView select,#totemsView input,#totemsView select{
-  min-height:40px;
-}
-
-/* Historial */
-#globalReportHistoryModal{z-index:10050!important}
-#globalReportHistoryModal>div{
-  width:min(1180px,96vw)!important; max-width:1180px!important; max-height:92dvh!important;
-  border-radius:18px!important; background:#07101f!important;
-}
-#globalReportHistoryList{min-height:240px!important}
-
-/* Calendario CIOE propio */
-#cioeCalendarModal{z-index:10150!important}
-.cioe-cal-card{width:min(420px,94vw);background:#07101f;border:1px solid #22d3ee55;border-radius:18px;overflow:hidden;box-shadow:0 30px 90px rgba(0,0,0,.75)}
-.cioe-cal-head{display:flex;align-items:center;justify-content:space-between;padding:16px 18px;border-bottom:1px solid #1e293b}
-.cioe-cal-nav{width:36px;height:36px;border:1px solid #334155;border-radius:10px;background:#0f172a;color:#e2e8f0}
-.cioe-cal-nav:hover{background:#164e63;border-color:#22d3ee}
-.cioe-cal-week,.cioe-cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
-.cioe-cal-week{padding:12px 14px 4px;color:#64748b;font-size:10px;font-weight:900;text-align:center}
-.cioe-cal-grid{padding:8px 14px 16px}
-.cioe-cal-day{height:42px;border:1px solid #1e293b;border-radius:10px;background:#0b1220;color:#e2e8f0;font-size:12px;font-weight:800}
-.cioe-cal-day:hover{background:#164e63;border-color:#22d3ee;color:white}
-.cioe-cal-day.today{border-color:#f59e0b;color:#fbbf24}
-.cioe-cal-day.selected{background:#0891b2!important;border-color:#22d3ee!important;color:white!important}
-.cioe-cal-day.empty{visibility:hidden}
-@media(max-width:900px){
- #ocurrenciasMenu{width:min(310px,88vw)!important}
- #searchReportView,#vecinalesView,#camarasFijasView,#estacionesParesView,#creacionTurnoView,#totemsView{padding:8px!important}
-}
-</style>
-
 </head>
 <body class="min-h-screen flex flex-col p-3 md:p-5 space-y-4 w-full">
-<div id="cioeRgbBackdrop" aria-hidden="true"></div>
-
 
   <!-- ==================== VISTA 0: PANTALLA DE LOGIN ==================== -->
   <div id="loginView" class="fixed inset-0 bg-[#030712] z-50 flex items-center justify-center p-4">
@@ -5233,91 +5031,54 @@ body.cioe-rgb-background header{
 })();
 </script>
 
-  <!-- ==================== PERSONALIZADOR DE COLORES PREMIUM ==================== -->
-  <div id="themeCustomizerModal" class="hidden fixed inset-0 z-[120] bg-black/80 backdrop-blur-md items-center justify-center p-4">
-    <div class="theme-premium-modal w-full max-w-4xl bg-[#07101f] border border-cyan-400/50 rounded-[24px] shadow-2xl overflow-hidden">
-      <div class="theme-premium-head px-6 py-5 border-b border-slate-700/70 flex items-center justify-between">
-        <div>
-          <h2 class="font-black text-white text-xl"><i class="fa-solid fa-palette text-cyan-400 mr-3"></i>PERSONALIZAR COLORES</h2>
-          <p class="text-xs text-slate-400 mt-1">Cambia la apariencia del Centro de Control.</p>
-        </div>
-        <button onclick="closeThemeCustomizer()" class="w-9 h-9 rounded-xl hover:bg-white/10 text-slate-400 hover:text-white transition"><i class="fa-solid fa-xmark"></i></button>
+  <!-- ==================== PERSONALIZADOR DE COLORES ==================== -->
+  <div id="themeCustomizerModal" class="hidden fixed inset-0 z-[120] bg-black/75 backdrop-blur-sm items-center justify-center p-4">
+    <div class="w-full max-w-2xl bg-[#0a0f1d] border border-cyan-500/40 rounded-2xl shadow-2xl overflow-hidden">
+      <div class="p-5 border-b border-slate-800 flex items-center justify-between">
+        <div><h2 class="font-black text-white"><i class="fa-solid fa-palette text-cyan-400 mr-2"></i>PERSONALIZAR COLORES</h2><p class="text-xs text-slate-400 mt-1">Cambia la apariencia del Centro de Control.</p></div>
+        <button onclick="closeThemeCustomizer()" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
       </div>
-
-      <div class="p-5 md:p-6 space-y-4 max-h-[76vh] overflow-y-auto theme-scroll">
-        <section class="theme-section flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div class="flex items-center gap-4">
-            <div class="theme-icon-box text-cyan-400"><i class="fa-solid fa-palette"></i></div>
-            <div><p class="text-sm font-black text-white">DISEÑO DE COLORES</p><p class="text-[11px] text-slate-400 mt-1">ON aplica el tema elegido. OFF vuelve al diseño oscuro original.</p></div>
+      <div class="p-5 space-y-5">
+        <div class="bg-[#030712] border border-slate-700 rounded-xl p-4 flex items-center justify-between gap-4">
+          <div>
+            <p class="text-xs font-black text-white">DISEÑO DE COLORES</p>
+            <p class="text-[10px] text-slate-400 mt-1">ON aplica el tema elegido. OFF vuelve al diseño oscuro original.</p>
           </div>
-          <button id="themePowerBtn" type="button" onclick="toggleThemePower()" class="theme-power bg-emerald-600"><i class="fa-solid fa-power-off mr-2"></i><span id="themePowerText">ON</span></button>
-        </section>
-
-        <section class="theme-section">
-          <div class="flex items-center gap-3 mb-4">
-            <div class="theme-icon-box text-amber-400"><i class="fa-solid fa-paw"></i></div>
-            <div><p class="text-sm font-black text-white">MASCOTAS DEL ENCABEZADO</p><p class="text-[11px] text-slate-400 mt-1">Activa las mascotas que quieras mostrar en la franja superior.</p></div>
+          <button id="themePowerBtn" type="button" onclick="toggleThemePower()" class="min-w-[82px] px-4 py-2 rounded-xl bg-emerald-600 text-white text-xs font-black transition">
+            <i class="fa-solid fa-power-off mr-1"></i><span id="themePowerText">ON</span>
+          </button>
+        </div>
+        <div class="bg-[#030712] border border-slate-700 rounded-xl p-4 space-y-3">
+          <div>
+            <p class="text-xs font-black text-white"><i class="fa-solid fa-paw text-amber-400 mr-2"></i>MASCOTAS DEL ENCABEZADO</p>
+            <p class="text-[10px] text-slate-400 mt-1">Activa las mascotas que quieras mostrar en la franja superior.</p>
           </div>
-          <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
-            <div class="pet-premium-card pet-akita"><div class="pet-preview"><img src="pets/akita_idle_8fps.gif" alt="Akita"></div><b>🐕 Akita</b><button id="petToggleAkita" onclick="toggleHeaderPet('akita')" class="pet-card-toggle bg-emerald-600">ON</button></div>
-            <div class="pet-premium-card pet-fox"><div class="pet-preview"><img src="pets/fox/red_idle_8fps.gif" alt="Zorro" onerror="this.style.display='none'"></div><b>🦊 Zorro</b><button id="petToggleFox" onclick="toggleHeaderPet('fox')" class="pet-card-toggle bg-rose-600">OFF</button></div>
-            <div class="pet-premium-card pet-panda"><div class="pet-preview"><img src="pets/panda/panda_idle_8fps.gif" alt="Panda" onerror="this.style.display='none'"></div><b>🐼 Panda</b><button id="petTogglePanda" onclick="toggleHeaderPet('panda')" class="pet-card-toggle bg-rose-600">OFF</button></div>
-            <div class="pet-premium-card pet-totoro"><div class="pet-preview"><img src="pets/totoro/gray_idle_8fps.gif" alt="Totoro"></div><b>🌱 Totoro</b><button id="petToggleTotoro" onclick="toggleHeaderPet('totoro')" class="pet-card-toggle bg-rose-600">OFF</button></div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            <div class="pet-control-row"><span class="text-xs font-bold">🐕 Akita</span><button id="petToggleAkita" type="button" onclick="toggleHeaderPet('akita')" class="pet-toggle bg-emerald-600">ON</button></div>
+            <div class="pet-control-row"><span class="text-xs font-bold">🦊 Zorro</span><button id="petToggleFox" type="button" onclick="toggleHeaderPet('fox')" class="pet-toggle bg-rose-600">OFF</button></div>
+            <div class="pet-control-row"><span class="text-xs font-bold">🐼 Panda</span><button id="petTogglePanda" type="button" onclick="toggleHeaderPet('panda')" class="pet-toggle bg-rose-600">OFF</button></div>
+            <div class="pet-control-row"><span class="text-xs font-bold">🐢 Tortuga</span><button id="petToggleTotoro" type="button" onclick="toggleHeaderPet('totoro')" class="pet-toggle bg-rose-600">OFF</button></div>
           </div>
-          <div class="grid md:grid-cols-2 gap-3 mt-3">
-            <div class="theme-mini-control"><div><b><i class="fa-solid fa-person-running text-cyan-400 mr-2"></i>MOVIMIENTO</b><small>ON: caminan, corren y descansan. OFF: se quedan quietos.</small></div><button id="petMovementBtn" onclick="togglePetMovement()" class="pet-toggle bg-emerald-600">ON</button></div>
-            <div class="theme-mini-control"><div><b><i class="fa-regular fa-image text-emerald-400 mr-2"></i>ESCENA DEL ENCABEZADO</b><small>Muestra u oculta toda la franja pixel-art.</small></div><button id="headerAnimationBtn" onclick="toggleHeaderAnimation()" class="pet-toggle bg-emerald-600"><span id="headerAnimationText">ON</span></button></div>
+          <div class="pet-control-row">
+            <div><p class="text-xs font-black text-white">MOVIMIENTO</p><p class="text-[10px] text-slate-400">ON: caminan, corren y descansan. OFF: se quedan quietos.</p></div>
+            <button id="petMovementBtn" type="button" onclick="togglePetMovement()" class="pet-toggle bg-emerald-600">ON</button>
           </div>
-        </section>
-
-        <section class="theme-section">
-          <p class="text-sm font-black text-white mb-1"><i class="fa-solid fa-brush text-amber-400 mr-2"></i>TEMAS RÁPIDOS</p>
-          <p class="text-[11px] text-slate-400 mb-3">Aplica un estilo de color rápido al sistema.</p>
-          <div class="grid grid-cols-3 md:grid-cols-6 gap-2">
-            <button onclick="applyThemePreset('original')" class="theme-preset premium-preset"><span class="preset-preview original"></span>Original</button>
-            <button onclick="applyThemePreset('blue')" class="theme-preset premium-preset"><span class="preset-preview blue"></span>Azul</button>
-            <button onclick="applyThemePreset('purple')" class="theme-preset premium-preset"><span class="preset-preview purple"></span>Morado</button>
-            <button onclick="applyThemePreset('green')" class="theme-preset premium-preset"><span class="preset-preview green"></span>Verde</button>
-            <button onclick="applyThemePreset('red')" class="theme-preset premium-preset"><span class="preset-preview red"></span>Rojo</button>
-            <button onclick="enableRgbBackground()" class="theme-preset premium-preset rgb-preset"><span class="preset-preview rgb"></span>RGB</button>
+          <div class="pet-control-row">
+            <div><p class="text-xs font-black text-white">ESCENA DEL ENCABEZADO</p><p class="text-[10px] text-slate-400">Oculta o muestra toda la franja pixel-art.</p></div>
+            <button id="headerAnimationBtn" type="button" onclick="toggleHeaderAnimation()" class="pet-toggle bg-emerald-600"><span id="headerAnimationText">ON</span></button>
           </div>
-        </section>
-
-        <section class="theme-section">
-          <div class="flex items-center gap-3 mb-4">
-            <div class="theme-icon-box text-cyan-400"><i class="fa-solid fa-image"></i></div>
-            <div><p class="text-sm font-black text-white">FONDO DEL SISTEMA</p><p class="text-[11px] text-slate-400 mt-1">Puedes usar un color fijo o activar un fondo RGB animado.</p></div>
-          </div>
-
-          <div class="grid lg:grid-cols-[1fr_320px] gap-4">
-            <div>
-              <div class="grid grid-cols-3 gap-3">
-                <button type="button" onclick="disableRgbBackground();applyThemePreset('original')" class="background-card"><span class="bg-card-preview bg-dark"></span><b>Oscuro</b></button>
-                <label class="background-card cursor-pointer"><span class="bg-card-preview bg-panel"></span><b>Color</b><input id="themeBgColor" class="absolute opacity-0 pointer-events-none" type="color" value="#030712" oninput="disableRgbBackground();previewCustomTheme()"></label>
-                <button type="button" onclick="enableRgbBackground()" class="background-card rgb-selected"><span class="bg-card-preview bg-rgb"></span><b>RGB (Colores)</b></button>
-              </div>
-              <div class="grid sm:grid-cols-2 gap-3 mt-3">
-                <label class="theme-color-box premium-color">Paneles <input id="themePanelColor" type="color" value="#0a0f1d" oninput="previewCustomTheme()"></label>
-                <label class="theme-color-box premium-color">Acento <input id="themeAccentColor" type="color" value="#06b6d4" oninput="previewCustomTheme()"></label>
-              </div>
-            </div>
-
-            <div class="rgb-config-box">
-              <div class="flex items-center justify-between mb-4"><b class="text-sm"><i class="fa-solid fa-circle-half-stroke text-fuchsia-400 mr-2"></i>Configuración RGB</b><button id="rgbPowerBtn" onclick="toggleRgbBackground()" class="pet-toggle bg-rose-600"><span id="rgbPowerText">OFF</span></button></div>
-              <label class="rgb-slider-row"><span>Velocidad</span><input id="rgbSpeed" type="range" min="4" max="30" value="12" oninput="updateRgbSettings()"><strong id="rgbSpeedValue">12s</strong></label>
-              <label class="rgb-slider-row"><span>Brillo</span><input id="rgbBrightness" type="range" min="35" max="100" value="72" oninput="updateRgbSettings()"><strong id="rgbBrightnessValue">72%</strong></label>
-              <label class="rgb-slider-row"><span>Saturación</span><input id="rgbSaturation" type="range" min="40" max="140" value="100" oninput="updateRgbSettings()"><strong id="rgbSaturationValue">100%</strong></label>
-            </div>
-          </div>
-        </section>
-
+        </div>
+        <div><p class="text-[10px] font-black text-slate-400 uppercase mb-2">Temas rápidos</p><div class="grid grid-cols-2 sm:grid-cols-5 gap-2">
+          <button onclick="applyThemePreset('original')" class="theme-preset">Original</button><button onclick="applyThemePreset('blue')" class="theme-preset">Azul</button><button onclick="applyThemePreset('purple')" class="theme-preset">Morado</button><button onclick="applyThemePreset('green')" class="theme-preset">Verde</button><button onclick="applyThemePreset('red')" class="theme-preset">Rojo</button>
+        </div></div>
+        <div class="grid sm:grid-cols-3 gap-3">
+          <label class="theme-color-box">Fondo<input id="themeBgColor" type="color" value="#030712" oninput="previewCustomTheme()"></label>
+          <label class="theme-color-box">Paneles<input id="themePanelColor" type="color" value="#0a0f1d" oninput="previewCustomTheme()"></label>
+          <label class="theme-color-box">Acento<input id="themeAccentColor" type="color" value="#06b6d4" oninput="previewCustomTheme()"></label>
+        </div>
         <p id="themeMessage" class="text-xs text-emerald-400 font-bold min-h-4"></p>
       </div>
-
-      <div class="px-6 py-4 border-t border-slate-700/70 flex justify-end gap-3 bg-[#07101f]/95">
-        <button onclick="resetTheme()" class="bg-slate-800 hover:bg-slate-700 border border-slate-600 px-5 py-2.5 rounded-xl text-xs font-bold"><i class="fa-solid fa-rotate-left mr-2"></i>Restablecer</button>
-        <button onclick="saveTheme()" class="theme-save-btn px-5 py-2.5 rounded-xl text-xs font-black"><i class="fa-solid fa-floppy-disk mr-2"></i>Guardar tema</button>
-      </div>
+      <div class="p-4 border-t border-slate-800 flex justify-end gap-2"><button onclick="resetTheme()" class="bg-slate-800 border border-slate-700 px-4 py-2 rounded-xl text-xs font-bold">Restablecer</button><button onclick="saveTheme()" class="bg-cyan-600 hover:bg-cyan-500 px-4 py-2 rounded-xl text-xs font-black"><i class="fa-solid fa-floppy-disk mr-1"></i> Guardar tema</button></div>
     </div>
   </div>
 
@@ -5351,7 +5112,6 @@ body.cioe-rgb-background header{
  window.applyCioeTheme=function(t){
    if(!isEnabled()){document.body.classList.remove('cioe-custom-theme');updatePowerUI();return}
    document.body.classList.add('cioe-custom-theme');
-   document.body.style.backgroundColor=t.bg;
    document.documentElement.style.setProperty('--cioe-bg',t.bg);
    document.documentElement.style.setProperty('--cioe-panel',t.panel);
    document.documentElement.style.setProperty('--cioe-accent',t.accent);
@@ -5367,8 +5127,6 @@ body.cioe-rgb-background header{
      applyCioeTheme(saved||presets.original);
    }else{
      document.body.classList.remove('cioe-custom-theme');
-     document.body.style.backgroundColor='';
-     if(typeof disableRgbBackground==='function') disableRgbBackground();
      updatePowerUI();
    }
    const m=document.getElementById('themeMessage');if(m)m.textContent=next?'Diseño de colores ACTIVADO.':'Diseño de colores DESACTIVADO.';
@@ -5381,10 +5139,10 @@ body.cioe-rgb-background header{
    const m=document.getElementById('themeCustomizerModal');m.classList.remove('hidden');m.classList.add('flex');updatePowerUI()
  }
  window.closeThemeCustomizer=function(){const m=document.getElementById('themeCustomizerModal');m.classList.add('hidden');m.classList.remove('flex')}
- window.applyThemePreset=function(name){if(typeof disableRgbBackground==='function')disableRgbBackground();if(!isEnabled()){localStorage.setItem(ENABLED_KEY,'1')}applyCioeTheme(presets[name]||presets.original)}
+ window.applyThemePreset=function(name){if(!isEnabled()){localStorage.setItem(ENABLED_KEY,'1')}applyCioeTheme(presets[name]||presets.original)}
  window.previewCustomTheme=function(){if(!isEnabled()){localStorage.setItem(ENABLED_KEY,'1')}applyCioeTheme({bg:document.getElementById('themeBgColor').value,panel:document.getElementById('themePanelColor').value,accent:document.getElementById('themeAccentColor').value})}
  window.saveTheme=function(){const t={bg:document.getElementById('themeBgColor').value,panel:document.getElementById('themePanelColor').value,accent:document.getElementById('themeAccentColor').value};localStorage.setItem(KEY,JSON.stringify(t));localStorage.setItem(ENABLED_KEY,'1');applyCioeTheme(t);document.getElementById('themeMessage').textContent='Tema guardado y ACTIVADO.'}
- window.resetTheme=function(){if(typeof disableRgbBackground==='function')disableRgbBackground();localStorage.removeItem(KEY);localStorage.setItem(ENABLED_KEY,'1');applyCioeTheme(presets.original);document.getElementById('themeMessage').textContent='Tema original restaurado.'}
+ window.resetTheme=function(){localStorage.removeItem(KEY);localStorage.setItem(ENABLED_KEY,'1');applyCioeTheme(presets.original);document.getElementById('themeMessage').textContent='Tema original restaurado.'}
  window.restoreAllowedUserTheme=function(){
    const allowed = (typeof hasPermission!=='function') || !currentSystemUser || hasPermission('personalizar_colores');
    if(!allowed){document.body.classList.remove('cioe-custom-theme');return}
@@ -5396,45 +5154,6 @@ body.cioe-rgb-background header{
    updatePowerUI();
    if(!currentSystemUser) document.body.classList.remove('cioe-custom-theme');
  });
-})();
-</script>
-
-
-<script id="cioeRgbBackgroundScript">
-(function(){
- const KEY='cioe_rgb_background_v1';
- const SETTINGS='cioe_rgb_settings_v1';
- function isOn(){return localStorage.getItem(KEY)==='1'}
- function settings(){try{return Object.assign({speed:12,brightness:72,saturation:100},JSON.parse(localStorage.getItem(SETTINGS)||'{}'))}catch(e){return {speed:12,brightness:72,saturation:100}}}
- function refresh(){
-   const s=settings(),on=isOn(),body=document.body;
-   body.classList.toggle('cioe-rgb-background',on);
-   document.documentElement.classList.toggle('cioe-rgb-html',on);
-   document.documentElement.style.setProperty('--cioe-rgb-speed',s.speed+'s');
-   document.documentElement.style.setProperty('--cioe-rgb-dim',String(Math.max(0,.62-(s.brightness/100)*.45)));
-   document.documentElement.style.setProperty('--cioe-rgb-saturation',s.saturation+'%');
-   if(on){
-     body.style.filter='saturate('+s.saturation+'%) brightness('+Math.max(.55,s.brightness/100)+')';
-   }else{
-     body.style.filter='';
-   }
-   const ids={rgbSpeed:s.speed,rgbBrightness:s.brightness,rgbSaturation:s.saturation};
-   Object.entries(ids).forEach(([id,v])=>{const e=document.getElementById(id);if(e)e.value=v});
-   const a=document.getElementById('rgbSpeedValue'),b=document.getElementById('rgbBrightnessValue'),c=document.getElementById('rgbSaturationValue');
-   if(a)a.textContent=s.speed+'s';if(b)b.textContent=s.brightness+'%';if(c)c.textContent=s.saturation+'%';
-   const btn=document.getElementById('rgbPowerBtn'),txt=document.getElementById('rgbPowerText');
-   if(txt)txt.textContent=on?'ON':'OFF';
-   if(btn){btn.classList.toggle('bg-emerald-600',on);btn.classList.toggle('bg-rose-600',!on)}
- }
- window.enableRgbBackground=function(){localStorage.setItem(KEY,'1');localStorage.setItem('cioe_theme_enabled_v1','1');document.body.style.backgroundColor='';refresh();const m=document.getElementById('themeMessage');if(m)m.textContent='Fondo RGB ACTIVADO.'}
- window.disableRgbBackground=function(){localStorage.setItem(KEY,'0');refresh()}
- window.toggleRgbBackground=function(){localStorage.setItem(KEY,isOn()?'0':'1');refresh()}
- window.updateRgbSettings=function(){
-   const s={speed:+document.getElementById('rgbSpeed').value,brightness:+document.getElementById('rgbBrightness').value,saturation:+document.getElementById('rgbSaturation').value};
-   localStorage.setItem(SETTINGS,JSON.stringify(s));refresh();
- }
- document.addEventListener('DOMContentLoaded',refresh);
- window.addEventListener('load',refresh);
 })();
 </script>
 
@@ -5606,132 +5325,129 @@ document.addEventListener('DOMContentLoaded', function(){
 </script>
 
 
-<script id="cioeRgbSafeRuntime">
+
+<!-- ===== CIOE FIX FINAL: NAVEGACION Y BOTONES DE INTERFACES ===== -->
+<script id="cioeNavigationButtonsFix">
 (function(){
- const KEY='cioe_rgb_background_v1', SETTINGS='cioe_rgb_settings_v1';
- function settings(){
-   try{return Object.assign({speed:12,brightness:72,saturation:100},JSON.parse(localStorage.getItem(SETTINGS)||'{}'))}
-   catch(e){return {speed:12,brightness:72,saturation:100}}
- }
- function apply(){
-   const on=localStorage.getItem(KEY)==='1';
-   const st=settings();
-   document.body.classList.toggle('cioe-rgb-background',on);
-   document.documentElement.classList.remove('cioe-rgb-html');
-   document.body.style.filter='';
-   document.documentElement.style.setProperty('--cioe-rgb-speed',Math.max(2,Number(st.speed)||12)+'s');
-   document.documentElement.style.setProperty('--cioe-rgb-brightness',Math.max(20,Math.min(140,Number(st.brightness)||72))+'%');
-   document.documentElement.style.setProperty('--cioe-rgb-saturation',Math.max(0,Math.min(200,Number(st.saturation)||100))+'%');
- }
- const oldEnable=window.enableRgbBackground;
- window.enableRgbBackground=function(){
-   localStorage.setItem(KEY,'1');
-   localStorage.setItem('cioe_theme_enabled_v1','1');
-   document.body.style.filter='';
-   apply();
-   if(typeof window.refreshRgbBackgroundUI==='function') window.refreshRgbBackgroundUI();
- };
- const oldDisable=window.disableRgbBackground;
- window.disableRgbBackground=function(){
-   localStorage.setItem(KEY,'0');
-   document.body.classList.remove('cioe-rgb-background');
-   document.documentElement.classList.remove('cioe-rgb-html');
-   document.body.style.filter='';
-   apply();
-   if(typeof window.refreshRgbBackgroundUI==='function') window.refreshRgbBackgroundUI();
- };
- document.addEventListener('DOMContentLoaded',apply);
- window.addEventListener('storage',apply);
- setTimeout(apply,0);
+  'use strict';
+  const VIEW_IDS=['mainDashboardView','searchReportView','camarasFijasView','vecinalesView','estacionesParesView','creacionTurnoView','totemsView'];
+
+  function el(id){ return document.getElementById(id); }
+  function hideMenu(){ const m=el('ocurrenciasMenu'); if(m) m.classList.add('hidden'); }
+  function hideViews(){
+    VIEW_IDS.forEach(id=>{
+      const v=el(id); if(!v) return;
+      v.classList.add('hidden');
+      if(id!=='mainDashboardView') v.classList.remove('flex');
+    });
+  }
+  function showView(id){
+    hideMenu(); hideViews();
+    const v=el(id); if(!v){ console.error('[CIOE] Vista no encontrada:',id); return false; }
+    v.classList.remove('hidden');
+    if(id!=='mainDashboardView') v.classList.add('flex');
+    try{ window.scrollTo({top:0,left:0,behavior:'auto'}); }catch(_){ window.scrollTo(0,0); }
+    return true;
+  }
+  window.cioeShowView=showView;
+
+  // Menú Ocurrencias estable.
+  window.toggleOcurrenciasMenu=function(e){
+    if(e){e.preventDefault();e.stopPropagation();}
+    const m=el('ocurrenciasMenu'); if(m) m.classList.toggle('hidden');
+    return false;
+  };
+
+  window.showMainDashboardView=function(){
+    if(!showView('mainDashboardView')) return false;
+    if(typeof window.renderTable==='function') window.renderTable();
+    return false;
+  };
+  window.showSearchReportView=function(e){
+    if(e){e.preventDefault();e.stopPropagation();}
+    if(!showView('searchReportView')) return false;
+    if(typeof window.renderSearchReportTable==='function') window.renderSearchReportTable();
+    return false;
+  };
+  window.showCamarasFijasView=function(e){
+    if(e){e.preventDefault();e.stopPropagation();}
+    if(!showView('camarasFijasView')) return false;
+    if(typeof window.populateCamaraFijasFilter==='function') window.populateCamaraFijasFilter();
+    if(typeof window.renderCamarasFijasTable==='function') window.renderCamarasFijasTable();
+    return false;
+  };
+  window.showVecinalesView=function(e){
+    if(e){e.preventDefault();e.stopPropagation();}
+    if(!showView('vecinalesView')) return false;
+    if(typeof window.populateBarrioFilter==='function') window.populateBarrioFilter();
+    if(typeof window.renderVecinalesTable==='function') window.renderVecinalesTable();
+    return false;
+  };
+  window.showEstacionesParesView=function(e){
+    if(e){e.preventDefault();e.stopPropagation();}
+    if(!showView('estacionesParesView')) return false;
+    if(typeof window.populateEpGroupFilter==='function') window.populateEpGroupFilter();
+    if(typeof window.populateEpDestinoFilter==='function') window.populateEpDestinoFilter();
+    if(typeof window.renderEstacionesPares==='function') window.renderEstacionesPares();
+    return false;
+  };
+  window.showTotemsView=function(e){
+    if(e){e.preventDefault();e.stopPropagation();}
+    if(!showView('totemsView')) return false;
+    if(typeof window.renderTotems==='function') window.renderTotems();
+    return false;
+  };
+  window.abrirModuloTurnos=function(e){
+    if(e){e.preventDefault();e.stopPropagation();}
+    if(!showView('creacionTurnoView')) return false;
+    const selector=el('turnoSelectorPanel'), trabajo=el('turnoTrabajoPanel');
+    if(selector) selector.classList.remove('hidden');
+    if(trabajo) trabajo.classList.add('hidden');
+    return false;
+  };
+  window.showCreacionTurnoView=window.abrirModuloTurnos;
+
+  // Calendario/historial: apertura independiente y segura.
+  const previousHistory=window.openGlobalReportHistory;
+  window.openGlobalReportHistory=function(e){
+    if(e){e.preventDefault();e.stopPropagation();}
+    hideMenu();
+    try{
+      if(typeof previousHistory==='function') return previousHistory.call(window,e);
+    }catch(err){ console.warn('[CIOE] Se aplicó apertura de respaldo del historial:',err); }
+    const modal=el('globalReportHistoryModal');
+    if(!modal) return false;
+    modal.classList.remove('hidden'); modal.classList.add('flex');
+    if(typeof window.renderGlobalReportHistory==='function') window.renderGlobalReportHistory();
+    return false;
+  };
+  const previousCloseHistory=window.closeGlobalReportHistory;
+  window.closeGlobalReportHistory=function(){
+    const modal=el('globalReportHistoryModal');
+    if(modal){modal.classList.add('hidden');modal.classList.remove('flex');}
+    else if(typeof previousCloseHistory==='function') previousCloseHistory();
+  };
+  window.openGlobalHistoryCalendar=function(){
+    const input=el('globalHistoryDate'); if(!input) return;
+    try{ if(typeof input.showPicker==='function'){input.showPicker();return;} }catch(_){}
+    input.focus(); input.click();
+  };
+
+  // Cierra Ocurrencias al hacer clic fuera, sin bloquear botones internos.
+  document.addEventListener('click',function(e){
+    const menu=el('ocurrenciasMenu'), btn=el('ocurrenciasBtn');
+    if(menu && !menu.classList.contains('hidden') && !menu.contains(e.target) && !(btn&&btn.contains(e.target))) menu.classList.add('hidden');
+  });
+
+  // Diagnóstico visible en consola para detectar un botón cuyo handler no exista.
+  document.addEventListener('DOMContentLoaded',function(){
+    document.querySelectorAll('[onclick]').forEach(node=>{
+      const code=node.getAttribute('onclick')||'';
+      const m=code.match(/(?:window\.)?([A-Za-z_$][\w$]*)\s*\(/);
+      if(m && typeof window[m[1]]!=='function') console.warn('[CIOE] Función de botón no encontrada:',m[1],node);
+    });
+  });
 })();
 </script>
-
-
-<div id="cioeCalendarModal" class="hidden fixed inset-0 bg-black/80 backdrop-blur-sm items-center justify-center p-4">
-  <div class="cioe-cal-card">
-    <div class="cioe-cal-head">
-      <button type="button" class="cioe-cal-nav" onclick="cioeCalendarMove(-1)"><i class="fa-solid fa-chevron-left"></i></button>
-      <div class="text-center">
-        <div class="text-[10px] font-black text-cyan-400 uppercase tracking-widest">Seleccionar fecha</div>
-        <div id="cioeCalendarTitle" class="text-base font-black text-white mt-1">—</div>
-      </div>
-      <button type="button" class="cioe-cal-nav" onclick="cioeCalendarMove(1)"><i class="fa-solid fa-chevron-right"></i></button>
-    </div>
-    <div class="cioe-cal-week"><span>DOM</span><span>LUN</span><span>MAR</span><span>MIÉ</span><span>JUE</span><span>VIE</span><span>SÁB</span></div>
-    <div id="cioeCalendarGrid" class="cioe-cal-grid"></div>
-    <div class="px-4 py-3 border-t border-slate-800 flex justify-between gap-2">
-      <button type="button" onclick="cioeCalendarToday()" class="px-4 py-2 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white text-xs font-black">Hoy</button>
-      <button type="button" onclick="closeCioeCalendar()" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold">Cerrar</button>
-    </div>
-  </div>
-</div>
-
-
-<script id="cioeCalendarAndViewsRepair">
-(function(){
- let calCursor=new Date();
- const pad=n=>String(n).padStart(2,'0');
- const iso=d=>d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
-
- function renderCalendar(){
-   const grid=document.getElementById('cioeCalendarGrid'), title=document.getElementById('cioeCalendarTitle');
-   if(!grid||!title)return;
-   const y=calCursor.getFullYear(),m=calCursor.getMonth();
-   title.textContent=new Intl.DateTimeFormat('es-PE',{month:'long',year:'numeric'}).format(new Date(y,m,1)).toUpperCase();
-   const first=new Date(y,m,1).getDay(), days=new Date(y,m+1,0).getDate();
-   const selected=document.getElementById('globalHistoryDate')?.value||'';
-   const today=iso(new Date());
-   let html='';
-   for(let i=0;i<first;i++) html+='<button class="cioe-cal-day empty" tabindex="-1"></button>';
-   for(let d=1;d<=days;d++){
-     const value=y+'-'+pad(m+1)+'-'+pad(d);
-     const cls='cioe-cal-day'+(value===today?' today':'')+(value===selected?' selected':'');
-     html+=`<button type="button" class="${cls}" data-date="${value}">${d}</button>`;
-   }
-   grid.innerHTML=html;
-   grid.querySelectorAll('[data-date]').forEach(btn=>btn.addEventListener('click',()=>{
-     const input=document.getElementById('globalHistoryDate');
-     if(input){input.value=btn.dataset.date; input.dispatchEvent(new Event('change',{bubbles:true}));}
-     closeCioeCalendar();
-   }));
- }
- window.openGlobalHistoryCalendar=function(){
-   const input=document.getElementById('globalHistoryDate');
-   if(input?.value){
-     const [y,m,d]=input.value.split('-').map(Number);
-     if(y&&m)calCursor=new Date(y,m-1,d||1);
-   }else calCursor=new Date();
-   const modal=document.getElementById('cioeCalendarModal');
-   modal.classList.remove('hidden'); modal.classList.add('flex'); renderCalendar();
- };
- window.closeCioeCalendar=function(){
-   const modal=document.getElementById('cioeCalendarModal');
-   if(modal){modal.classList.add('hidden');modal.classList.remove('flex');}
- };
- window.cioeCalendarMove=function(step){calCursor=new Date(calCursor.getFullYear(),calCursor.getMonth()+step,1);renderCalendar()};
- window.cioeCalendarToday=function(){
-   const d=new Date(), input=document.getElementById('globalHistoryDate');
-   if(input){input.value=iso(d);input.dispatchEvent(new Event('change',{bubbles:true}));}
-   closeCioeCalendar();
- };
-
- // Cierra correctamente el calendario al tocar fuera.
- document.addEventListener('click',e=>{
-   const m=document.getElementById('cioeCalendarModal');
-   if(m && e.target===m) closeCioeCalendar();
- });
-
- // Evita que una vista anterior quede visible detrás de otra.
- const ids=['searchReportView','vecinalesView','camarasFijasView','estacionesParesView','creacionTurnoView','totemsView'];
- function normalizeVisibleViews(){
-   ids.forEach(id=>{
-     const el=document.getElementById(id);
-     if(el && el.classList.contains('hidden')) el.classList.remove('flex');
-   });
- }
- document.addEventListener('DOMContentLoaded',normalizeVisibleViews);
-})();
-</script>
-
 </body>
 </html>
