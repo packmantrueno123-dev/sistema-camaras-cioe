@@ -4663,8 +4663,6 @@ body.cioe-custom-theme #themeCustomizerBtn{background-color:var(--cioe-accent)!i
       const tableRows = rows.map(c => {
         const log = getLogForCamera(c.id);
         const anexo = (typeof getAnexo === 'function') ? getAnexo(c.camara) : {};
-        const numero = anexo && anexo.numero ? anexo.numero : '';
-        const estadoAnexo = anexo && anexo.estado ? anexo.estado : '';
         return [
           selectedDateStr,
           formatCamName(c.camara),
@@ -4675,8 +4673,8 @@ body.cioe-custom-theme #themeCustomizerBtn{background-color:var(--cioe-accent)!i
           c.urbanizacion,
           c.zona,
           c.suministro,
-          numero,
-          estadoAnexo,
+          (anexo && anexo.numero) ? anexo.numero : '',
+          (anexo && anexo.estado) ? anexo.estado : '',
           log.details || ''
         ];
       });
@@ -4692,15 +4690,8 @@ body.cioe-custom-theme #themeCustomizerBtn{background-color:var(--cioe-accent)!i
         '<html xmlns:o="urn:schemas-microsoft-com:office:office" ' +
         'xmlns:x="urn:schemas-microsoft-com:office:excel" ' +
         'xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="UTF-8"></head><body>' +
-        tableHtml + '
-    document.addEventListener('click', function(e) {
-      const panel = document.getElementById('excelReportPanel');
-      if (!panel || panel.classList.contains('hidden')) return;
-      const wrapper = panel.parentElement;
-      if (wrapper && !wrapper.contains(e.target)) panel.classList.add('hidden');
-    });
-
-</body></html>';
+        tableHtml +
+        '</body></html>';
 
       const blob = new Blob(['\ufeff', excelHtml], { type: 'application/vnd.ms-excel;charset=utf-8;' });
       const url = URL.createObjectURL(blob);
