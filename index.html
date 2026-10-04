@@ -980,6 +980,22 @@ body.cioe-custom-theme #themeCustomizerBtn{background-color:var(--cioe-accent)!i
 }
 </style>
 
+
+<style id="cioeWinterForegroundScaleFix">
+/* WINTER: agranda la capa frontal para que el muñeco de nieve y árboles se vean mejor */
+#headerPixelArtWrap.winter-scene #headerLandscapeForeground{
+  width:118% !important;
+  height:118% !important;
+  left:-3% !important;
+  right:auto !important;
+  top:auto !important;
+  bottom:0 !important;
+  object-fit:fill !important;
+  object-position:left bottom !important;
+  transform:none !important;
+}
+</style>
+
 </head>
 <body class="min-h-screen flex flex-col p-3 md:p-5 space-y-4 w-full">
 
