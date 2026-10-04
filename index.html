@@ -2230,7 +2230,11 @@ body.cioe-custom-theme #themeCustomizerBtn{background-color:var(--cioe-accent)!i
       { id: 282, camara: 282, estacion: "ESTACION 13", sistema: "IVS", ubicacion: "AV. PROCERES DE HUANDOY / CALLE 12", urbanizacion: "AA.HH. LOS ROSALES DE PRO", zona: "NORTE 4A" },
       { id: 283, camara: 283, estacion: "ESTACION 13", sistema: "IVS", ubicacion: "CALLE 15 / CALLE 1", urbanizacion: "AA.HH. LOS ROSALES DE PRO", zona: "NORTE 4A" },
       { id: 284, camara: 284, estacion: "ESTACION 13", sistema: "IVS", ubicacion: "AV. PROCERES DE HUANDOY / CALLE 15", urbanizacion: "AA.HH. LOS ROSALES DE PRO", zona: "NORTE 4A" },
-      { id: 285, camara: 285, estacion: "PAR ZARAGOZA", sistema: "IVS", ubicacion: "CALLE GRACIA / C. LA SANTIDAD", urbanizacion: "ASOC. DE VIV. LA ESTRELLA", zona: "NORTE 2A" }
+      { id: 285, camara: 285, estacion: "PAR ZARAGOZA", sistema: "IVS", ubicacion: "CALLE GRACIA / C. LA SANTIDAD", urbanizacion: "ASOC. DE VIV. LA ESTRELLA", zona: "NORTE 2A" },
+      { id: 286, camara: "POLIDEPORTIVO", estacion: "ESTACION 15", sistema: "IVS", ubicacion: "POLIDEPORTIVO", urbanizacion: "", zona: "" },
+      { id: 287, camara: "MUNICIPALIDAD", estacion: "ESTACION 15", sistema: "IVS", ubicacion: "MUNICIPALIDAD", urbanizacion: "", zona: "" },
+      { id: 288, camara: "IMOU - VECINAL", estacion: "ESTACION 15", sistema: "IMOU", ubicacion: "IMOU - VECINAL", urbanizacion: "", zona: "" },
+      { id: 289, camara: "PARQUE PLAZA CÍVICA LA BANDERA T3", estacion: "PAR CANTA CALLAO", sistema: "DSS", ubicacion: "PARQUE PLAZA CÍVICA LA BANDERA T3", urbanizacion: "", zona: "" }
     ];
 
     const INITIAL_VECINAL_CAMERAS = [
@@ -2335,7 +2339,7 @@ body.cioe-custom-theme #themeCustomizerBtn{background-color:var(--cioe-accent)!i
       "INOPERATIVA","OPERATIVA","OPERATIVA","OPERATIVA","OPERATIVA","INOPERATIVA","OPERATIVA","OPERATIVA","OPERATIVA","OPERATIVA",
       "OPERATIVA","OPERATIVA","INOPERATIVA","OPERATIVA","OPERATIVA","OPERATIVA","INOPERATIVA","OPERATIVA","OPERATIVA","OPERATIVA",
       "OPERATIVA","INOPERATIVA","OPERATIVA","OPERATIVA","OPERATIVA","OPERATIVA","OPERATIVA","INOPERATIVA","INOPERATIVA","INOPERATIVA",
-      "INOPERATIVA","INOPERATIVA","OPERATIVA","OPERATIVA","OPERATIVA"
+      "INOPERATIVA","INOPERATIVA","OPERATIVA","OPERATIVA","OPERATIVA","OPERATIVA","OPERATIVA","OPERATIVA","OPERATIVA"
     ];
 
     function buildMappedCameraLogs() {
@@ -2388,8 +2392,8 @@ body.cioe-custom-theme #themeCustomizerBtn{background-color:var(--cioe-accent)!i
     let storedCameras = null;
     let storedDailyLogs = null;
     try {
-      const rawCameras = localStorage.getItem("cioe_cameras_v100");
-      const rawLogs = localStorage.getItem("cioe_daily_logs_v100");
+      const rawCameras = localStorage.getItem("cioe_cameras_v101");
+      const rawLogs = localStorage.getItem("cioe_daily_logs_v101");
       storedCameras = rawCameras ? JSON.parse(rawCameras) : null;
       storedDailyLogs = rawLogs ? JSON.parse(rawLogs) : null;
     } catch (e) {
@@ -2438,8 +2442,8 @@ body.cioe-custom-theme #themeCustomizerBtn{background-color:var(--cioe-accent)!i
     let selectedDateStr = "21/09/2026";
 
     function saveToStorage() {
-      localStorage.setItem("cioe_cameras_v100", JSON.stringify(cameras));
-      localStorage.setItem("cioe_daily_logs_v100", JSON.stringify(dailyLogs));
+      localStorage.setItem("cioe_cameras_v101", JSON.stringify(cameras));
+      localStorage.setItem("cioe_daily_logs_v101", JSON.stringify(dailyLogs));
       localStorage.setItem("cioe_vecinales_v300", JSON.stringify(vecinalCameras));
       updateStats();
     }
@@ -2448,8 +2452,8 @@ body.cioe-custom-theme #themeCustomizerBtn{background-color:var(--cioe-accent)!i
     window.addEventListener('beforeunload', () => {
       if (window.__cioeApplyingRemoteReload) return;
       try {
-        localStorage.setItem("cioe_cameras_v100", JSON.stringify(cameras));
-        localStorage.setItem("cioe_daily_logs_v100", JSON.stringify(dailyLogs));
+        localStorage.setItem("cioe_cameras_v101", JSON.stringify(cameras));
+        localStorage.setItem("cioe_daily_logs_v101", JSON.stringify(dailyLogs));
         localStorage.setItem("cioe_vecinales_v300", JSON.stringify(vecinalCameras));
       } catch (e) {}
     });
