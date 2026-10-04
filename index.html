@@ -805,6 +805,93 @@ body.cioe-custom-theme #themeCustomizerBtn{background-color:var(--cioe-accent)!i
 @media(max-width:640px){#themeCustomizerModal .theme-landscape-box{grid-template-columns:1fr!important}}
 </style>
 
+
+<style id="cioeThemePanelOrdered2026">
+/* ===== AJUSTE FINAL DEL PANEL PERSONALIZAR ===== */
+#themeCustomizerModal{
+  padding:10px!important;
+  align-items:center!important;
+  justify-content:center!important;
+}
+#themeCustomizerModal .theme-redesign-shell{
+  width:min(1040px,calc(100vw - 20px))!important;
+  max-height:calc(100vh - 20px)!important;
+  border-radius:18px!important;
+}
+#themeCustomizerModal .theme-redesign-header{
+  min-height:68px!important;
+  padding:11px 18px!important;
+}
+#themeCustomizerModal .theme-redesign-logo{
+  width:40px!important;height:40px!important;font-size:18px!important;
+}
+#themeCustomizerModal .theme-redesign-title{gap:11px!important}
+#themeCustomizerModal .theme-redesign-title h2{
+  font-size:20px!important;line-height:1.05!important;
+}
+#themeCustomizerModal .theme-redesign-title p{
+  margin-top:5px!important;font-size:10px!important;
+}
+#themeCustomizerModal .theme-redesign-close{
+  width:38px!important;height:38px!important;font-size:17px!important;
+}
+#themeCustomizerModal .theme-redesign-body{
+  padding:12px 16px 10px!important;gap:11px!important;
+}
+#themeCustomizerModal .theme-redesign-section{
+  padding:12px!important;border-radius:15px!important;
+}
+#themeCustomizerModal .theme-section-icon{
+  width:34px!important;height:34px!important;
+}
+#themeCustomizerModal .theme-section-heading h3{
+  font-size:12px!important;
+}
+#themeCustomizerModal .theme-section-heading p{
+  font-size:9px!important;margin-top:2px!important;
+}
+#themeCustomizerModal .theme-quick-title,
+#themeCustomizerModal .theme-behavior-title{
+  margin:10px 0 7px!important;font-size:9px!important;
+}
+#themeCustomizerModal .pet-option-box{
+  min-height:58px!important;padding:9px 11px!important;border-radius:12px!important;
+}
+#themeCustomizerModal .pet-option-box p{
+  font-size:10px!important;
+}
+#themeCustomizerModal .pet-option-box small{
+  font-size:8px!important;line-height:1.25!important;
+}
+#themeCustomizerModal .pet-toggle{
+  min-width:54px!important;height:30px!important;font-size:9px!important;
+}
+#themeCustomizerModal .cat-select{
+  height:34px!important;font-size:9px!important;
+}
+#themeCustomizerModal .theme-landscape-box{
+  margin-top:9px!important;
+  grid-template-columns:205px minmax(0,1fr)!important;
+  gap:10px!important;padding:9px 11px!important;border-radius:12px!important;
+}
+#themeCustomizerModal .theme-landscape-title>span{font-size:20px!important}
+#themeCustomizerModal .theme-landscape-title b{font-size:9px!important}
+#themeCustomizerModal .theme-landscape-title small{font-size:7.5px!important}
+#themeCustomizerModal #petLandscapeSelect{
+  height:34px!important;font-size:9px!important;padding:0 10px!important;
+}
+#themeCustomizerModal .theme-redesign-footer{
+  padding:10px 16px!important;
+}
+#themeCustomizerModal .theme-redesign-footer button{
+  min-height:48px!important;font-size:10px!important;
+}
+@media(max-width:760px){
+  #themeCustomizerModal .theme-landscape-box{grid-template-columns:1fr!important}
+  #themeCustomizerModal .theme-redesign-title h2{font-size:17px!important}
+}
+</style>
+
 </head>
 <body class="min-h-screen flex flex-col p-3 md:p-5 space-y-4 w-full">
 
@@ -6558,92 +6645,136 @@ document.addEventListener('DOMContentLoaded', function(){
 <script id="cioePetLandscapeScript">
 (function(){
   'use strict';
+
   const KEY='cioe_header_pet_landscape_v1';
   const VALID=['none','autumn','beach','castle','forest','winter'];
+  const OFFICIAL='https://raw.githubusercontent.com/tonybaloney/vscode-pets/main/media/backgrounds/';
 
   function getScene(){
     const v=localStorage.getItem(KEY)||'none';
     return VALID.includes(v)?v:'none';
   }
-  function files(scene,type){
+
+  function localFiles(scene,type){
     const b='pets/backgrounds/'+scene+'/';
-    // Prueba todas las variantes de archivo disponibles en cada carpeta.
-    // Así funciona aunque un paisaje tenga dark/light, nano/small/medium/large o archivo base.
-    return type==='background'
+    const names = type==='background'
       ? [
-          b+'background-dark-large.png',
-          b+'background-dark-medium.png',
-          b+'background-dark-small.png',
-          b+'background-dark-nano.png',
-          b+'background-large.png',
-          b+'background-medium.png',
-          b+'background-small.png',
-          b+'background-nano.png',
-          b+'background-dark.png',
-          b+'background.png',
-          b+'background-light-large.png',
-          b+'background-light-medium.png',
-          b+'background-light-small.png',
-          b+'background-light-nano.png',
-          b+'background-light.png'
+          'background-dark-large.png','background-dark-medium.png',
+          'background-dark-small.png','background-dark-nano.png',
+          'background-large.png','background-medium.png','background-small.png','background-nano.png',
+          'background-dark.png','background.png',
+          'background-light-large.png','background-light-medium.png',
+          'background-light-small.png','background-light-nano.png','background-light.png'
         ]
       : [
-          b+'foreground-dark-large.png',
-          b+'foreground-dark-medium.png',
-          b+'foreground-dark-small.png',
-          b+'foreground-dark-nano.png',
-          b+'foreground-large.png',
-          b+'foreground-medium.png',
-          b+'foreground-small.png',
-          b+'foreground-nano.png',
-          b+'foreground-dark.png',
-          b+'foreground.png',
-          b+'foreground-light-large.png',
-          b+'foreground-light-medium.png',
-          b+'foreground-light-small.png',
-          b+'foreground-light-nano.png',
-          b+'foreground-light.png'
+          'foreground-dark-large.png','foreground-dark-medium.png',
+          'foreground-dark-small.png','foreground-dark-nano.png',
+          'foreground-large.png','foreground-medium.png','foreground-small.png','foreground-nano.png',
+          'foreground-dark.png','foreground.png',
+          'foreground-light-large.png','foreground-light-medium.png',
+          'foreground-light-small.png','foreground-light-nano.png','foreground-light.png'
         ];
+    return names.map(n=>b+n);
   }
+
+  function officialFiles(scene,type){
+    const b=OFFICIAL+scene+'/';
+    return [
+      b+type+'-dark-large.png',
+      b+type+'-dark-medium.png',
+      b+type+'-dark-small.png',
+      b+type+'-dark-nano.png'
+    ];
+  }
+
+  function files(scene,type){
+    // Usa primero tus archivos de GitHub.
+    // Si una carpeta quedó incompleta, usa el recurso oficial como respaldo.
+    return localFiles(scene,type).concat(officialFiles(scene,type));
+  }
+
   function load(img,list,callback){
     let n=0;
+    img.onload=null;
+    img.onerror=null;
+
     function next(){
-      if(n>=list.length){img.onerror=null;img.onload=null;if(callback)callback(false);return;}
-      img.onerror=function(){n++;next();};
-      img.onload=function(){img.onerror=null;img.onload=null;if(callback)callback(true);};
-      img.src=list[n];
+      if(n>=list.length){
+        img.onerror=null;
+        img.onload=null;
+        if(callback) callback(false);
+        return;
+      }
+      const candidate=list[n++];
+      img.onerror=next;
+      img.onload=function(){
+        img.onerror=null;
+        img.onload=null;
+        if(callback) callback(true);
+      };
+      img.src=candidate;
     }
     next();
   }
+
   function apply(scene){
-    if(!VALID.includes(scene))scene='none';
+    if(!VALID.includes(scene)) scene='none';
+
     const bg=document.getElementById('headerPixelArt');
     const fg=document.getElementById('headerLandscapeForeground');
     const select=document.getElementById('petLandscapeSelect');
-    if(select)select.value=scene;
+    if(select) select.value=scene;
 
     if(scene==='none'){
-      if(bg){bg.onerror=null;bg.src='pets/background-dark-small.png';bg.style.opacity='.92';}
-      if(fg){fg.onerror=null;fg.onload=null;fg.removeAttribute('src');fg.style.display='none';}
+      if(bg){
+        bg.onerror=null;
+        bg.onload=null;
+        bg.src='pets/background-dark-small.png';
+        bg.style.opacity='.92';
+      }
+      if(fg){
+        fg.onerror=null;
+        fg.onload=null;
+        fg.removeAttribute('src');
+        fg.style.display='none';
+      }
       return;
     }
+
     if(bg){
       bg.style.opacity='1';
       load(bg,files(scene,'background'),function(ok){
-        if(!ok){bg.src='pets/background-dark-small.png';bg.style.opacity='.92';}
+        if(!ok){
+          bg.onerror=null;
+          bg.src='pets/background-dark-small.png';
+          bg.style.opacity='.92';
+        }
       });
     }
+
     if(fg){
       fg.style.display='none';
-      load(fg,files(scene,'foreground'),function(ok){fg.style.display=ok?'block':'none';});
+      load(fg,files(scene,'foreground'),function(ok){
+        fg.style.display=ok?'block':'none';
+      });
     }
   }
+
   window.changePetLandscape=function(scene){
-    if(!VALID.includes(scene))scene='none';
+    if(!VALID.includes(scene)) scene='none';
     localStorage.setItem(KEY,scene);
     apply(scene);
   };
-  document.addEventListener('DOMContentLoaded',function(){apply(getScene());});
+
+  window.refreshPetLandscape=function(){
+    apply(getScene());
+  };
+
+  if(document.readyState==='loading'){
+    document.addEventListener('DOMContentLoaded',function(){apply(getScene());});
+  }else{
+    apply(getScene());
+  }
 })();
 </script>
 
