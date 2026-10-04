@@ -1,0 +1,1 @@
+Archivos GIF del panda.
