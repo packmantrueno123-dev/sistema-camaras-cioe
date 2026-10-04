@@ -182,6 +182,21 @@
 #themeModal button.bg-emerald-600{background:#059669!important}
 #themeModal button.bg-rose-600{background:#e11d48!important}
 
+
+/* ===== MASCOTAS: CÁPSULAS + SELECTOR PERRO ===== */
+#themeModal #dogPetBtn,#themeModal #foxPetBtn,#themeModal #pandaPetBtn,#themeModal #totoroPetBtn,
+#themeModal #catPetBtn,#themeModal #petMovementBtn,#themeModal #headerAnimationBtn,#themeModal #throwBallToggleBtn{
+ width:66px!important;min-width:66px!important;height:30px!important;padding:0 10px!important;
+ border-radius:9999px!important;display:inline-flex!important;align-items:center!important;
+ justify-content:center!important;gap:5px!important;font-size:10px!important;font-weight:900!important;
+ flex:0 0 66px!important;color:#fff!important;
+}
+#themeModal #dogPetBtn::before,#themeModal #foxPetBtn::before,#themeModal #pandaPetBtn::before,
+#themeModal #totoroPetBtn::before,#themeModal #catPetBtn::before,#themeModal #petMovementBtn::before,
+#themeModal #headerAnimationBtn::before,#themeModal #throwBallToggleBtn::before{content:"⏻";font-size:11px}
+#themeModal .pet-dog-type-option{grid-column:1/-1!important}
+#themeModal .pet-dog-type-option select{width:min(305px,72%)!important}
+
 </style>
 <style id="cioeThemeStyles">
 :root{--cioe-bg:#030712;--cioe-panel:#0a0f1d;--cioe-accent:#06b6d4;--cioe-border:#1e293b}
@@ -5702,5 +5717,47 @@ document.addEventListener('DOMContentLoaded', function(){
 })();
 </script>
 
+
+<script>
+(function(){
+ const DOG_KEY='cioe_dog_type_v1';
+ const valid=['akita','black','brown','red','white'];
+ function dogType(){const v=localStorage.getItem(DOG_KEY)||'akita';return valid.includes(v)?v:'akita'}
+ function dogFile(action){
+   const t=dogType();
+   const a=(action==='idle'||action==='walk'||action==='run'||action==='with_ball')?action:'walk';
+   return 'pets/dog/'+t+'_'+a+'_8fps.gif';
+ }
+ window.setDogType=function(type){
+   if(!valid.includes(type)) type='akita';
+   localStorage.setItem(DOG_KEY,type);
+   const sel=document.getElementById('dogTypeSelect'); if(sel) sel.value=type;
+   const dog=document.getElementById('headerDogPet');
+   if(dog) dog.src=dogFile('walk');
+ };
+ window.getSelectedDogPetFile=dogFile;
+ function initDog(){
+   const sel=document.getElementById('dogTypeSelect'); if(sel) sel.value=dogType();
+   const dog=document.getElementById('headerDogPet');
+   if(dog) dog.src=dogFile('walk');
+ }
+ if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',initDog); else initDog();
+})();
+</script>
+
 </body>
 </html>
+<div class="pet-option-box pet-dog-type-option">
+  <div>
+    <p class="text-xs font-black text-white"><span class="mr-2">🐶</span>TIPO DE PERRO</p>
+    <p class="text-[10px] text-slate-400 mt-1">Selecciona el color del perro.</p>
+  </div>
+  <select id="dogTypeSelect" onchange="setDogType(this.value)" class="pet-select-premium">
+    <option value="akita">🟠 Akita</option>
+    <option value="black">⚫ Negro</option>
+    <option value="brown">🟤 Marrón</option>
+    <option value="red">🟠 Rojo</option>
+    <option value="white">⚪ Blanco</option>
+  </select>
+</div>
+
