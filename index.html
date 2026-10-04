@@ -5012,14 +5012,25 @@ body.cioe-custom-theme #themeCustomizerBtn{background-color:var(--cioe-accent)!i
             <i class="fa-solid fa-power-off mr-1"></i><span id="themePowerText">ON</span>
           </button>
         </div>
-        <div class="bg-[#030712] border border-slate-700 rounded-xl p-4 flex items-center justify-between gap-4">
+        <div class="bg-[#030712] border border-slate-700 rounded-xl p-4 space-y-3">
           <div>
-            <p class="text-xs font-black text-white">ANIMACIÓN DEL ENCABEZADO</p>
-            <p class="text-[10px] text-slate-400 mt-1">Activa u oculta la escena pixel-art de la barra superior.</p>
+            <p class="text-xs font-black text-white"><i class="fa-solid fa-paw text-amber-400 mr-2"></i>MASCOTAS DEL ENCABEZADO</p>
+            <p class="text-[10px] text-slate-400 mt-1">Activa las mascotas que quieras mostrar en la franja superior.</p>
           </div>
-          <button id="headerAnimationBtn" type="button" onclick="toggleHeaderAnimation()" class="min-w-[82px] px-4 py-2 rounded-xl bg-emerald-600 text-white text-xs font-black transition">
-            <i class="fa-solid fa-film mr-1"></i><span id="headerAnimationText">ON</span>
-          </button>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            <div class="pet-control-row"><span class="text-xs font-bold">🐕 Akita</span><button id="petToggleAkita" type="button" onclick="toggleHeaderPet('akita')" class="pet-toggle bg-emerald-600">ON</button></div>
+            <div class="pet-control-row"><span class="text-xs font-bold">🦊 Zorro</span><button id="petToggleFox" type="button" onclick="toggleHeaderPet('fox')" class="pet-toggle bg-rose-600">OFF</button></div>
+            <div class="pet-control-row"><span class="text-xs font-bold">🐼 Panda</span><button id="petTogglePanda" type="button" onclick="toggleHeaderPet('panda')" class="pet-toggle bg-rose-600">OFF</button></div>
+            <div class="pet-control-row"><span class="text-xs font-bold">🐢 Tortuga</span><button id="petToggleTotoro" type="button" onclick="toggleHeaderPet('totoro')" class="pet-toggle bg-rose-600">OFF</button></div>
+          </div>
+          <div class="pet-control-row">
+            <div><p class="text-xs font-black text-white">MOVIMIENTO</p><p class="text-[10px] text-slate-400">ON: caminan, corren y descansan. OFF: se quedan quietos.</p></div>
+            <button id="petMovementBtn" type="button" onclick="togglePetMovement()" class="pet-toggle bg-emerald-600">ON</button>
+          </div>
+          <div class="pet-control-row">
+            <div><p class="text-xs font-black text-white">ESCENA DEL ENCABEZADO</p><p class="text-[10px] text-slate-400">Oculta o muestra toda la franja pixel-art.</p></div>
+            <button id="headerAnimationBtn" type="button" onclick="toggleHeaderAnimation()" class="pet-toggle bg-emerald-600"><span id="headerAnimationText">ON</span></button>
+          </div>
         </div>
         <div><p class="text-[10px] font-black text-slate-400 uppercase mb-2">Temas rápidos</p><div class="grid grid-cols-2 sm:grid-cols-5 gap-2">
           <button onclick="applyThemePreset('original')" class="theme-preset">Original</button><button onclick="applyThemePreset('blue')" class="theme-preset">Azul</button><button onclick="applyThemePreset('purple')" class="theme-preset">Morado</button><button onclick="applyThemePreset('green')" class="theme-preset">Verde</button><button onclick="applyThemePreset('red')" class="theme-preset">Rojo</button>
@@ -5110,71 +5121,130 @@ body.cioe-custom-theme #themeCustomizerBtn{background-color:var(--cioe-accent)!i
 })();
 </script>
 
-<script id="cioeDogHeaderFallback">
+<script id="cioeMultiPetHeader">
 document.addEventListener('DOMContentLoaded', function(){
-  const dog=document.getElementById('headerDogPet');
-  const bg=document.getElementById('headerPixelArt');
   const wrap=document.getElementById('headerPixelArtWrap');
-  if(!dog || !wrap) return;
+  const bg=document.getElementById('headerPixelArt');
+  const akita=document.getElementById('headerDogPet');
+  if(!wrap || !akita) return;
 
   if(bg) bg.addEventListener('error',function(){this.style.opacity='.15';});
-  dog.addEventListener('error',function(){this.style.display='none';});
 
-  const WALK='pets/akita_walk_8fps.gif';
-  const IDLE='pets/akita_idle_8fps.gif';
-  const RUN='pets/akita_run_8fps.gif';
+  const PETS={
+    akita:{el:akita, key:'akita', folder:'pets', prefix:'akita', defaultOn:true, x:18, dir:1, speed:52, phase:0},
+    fox:{key:'fox', folder:'pets/fox', prefix:'red', defaultOn:false, x:120, dir:1, speed:58, phase:1200},
+    panda:{key:'panda', folder:'pets/panda', prefix:'panda', defaultOn:false, x:230, dir:-1, speed:48, phase:2400},
+    totoro:{key:'totoro', folder:'pets/totoro', prefix:'gray', defaultOn:false, x:340, dir:-1, speed:44, phase:3600}
+  };
+  const MOVE_KEY='cioe_header_pets_movement_v1';
 
-  let x=18, dir=1, mode='walk', pauseUntil=0, last=performance.now();
-  let nextPause=performance.now()+4500;
-  let nextRun=performance.now()+8500;
-
-  function setGif(src){
-    if(!dog.src.endsWith(src)) dog.src=src;
+  function petStorageKey(key){return 'cioe_header_pet_'+key+'_v1'}
+  function petEnabled(p){
+    const v=localStorage.getItem(petStorageKey(p.key));
+    return v===null ? p.defaultOn : v==='1';
   }
+  function movementEnabled(){return localStorage.getItem(MOVE_KEY)!=='0'}
+  function path(p,mode){
+    if(mode==='run') return `${p.folder}/${p.prefix}_run_8fps.gif`;
+    if(mode==='idle') return `${p.folder}/${p.prefix}_idle_8fps.gif`;
+    return `${p.folder}/${p.prefix}_walk_8fps.gif`;
+  }
+  function setGif(p,mode){
+    const src=path(p,mode);
+    if(p.el && !p.el.src.endsWith(src)) p.el.src=src;
+  }
+  function makePet(p){
+    if(p.el) return;
+    const img=document.createElement('img');
+    img.className='header-extra-pet';
+    img.alt=p.key;
+    img.style.left=p.x+'px';
+    img.src=path(p,'walk');
+    img.addEventListener('error',function(){ this.style.display='none'; });
+    wrap.appendChild(img);
+    p.el=img;
+  }
+  Object.values(PETS).forEach(makePet);
 
+  const btnIds={akita:'petToggleAkita',fox:'petToggleFox',panda:'petTogglePanda',totoro:'petToggleTotoro'};
+  function paintBtn(btn,on){
+    if(!btn)return;
+    btn.textContent=on?'ON':'OFF';
+    btn.classList.toggle('bg-emerald-600',on);
+    btn.classList.toggle('bg-rose-600',!on);
+  }
+  function refreshPetUI(){
+    Object.values(PETS).forEach(p=>{
+      const on=petEnabled(p);
+      if(p.el) p.el.style.display=on?'':'none';
+      paintBtn(document.getElementById(btnIds[p.key]),on);
+    });
+    paintBtn(document.getElementById('petMovementBtn'),movementEnabled());
+  }
+  window.toggleHeaderPet=function(key){
+    const p=PETS[key]; if(!p)return;
+    localStorage.setItem(petStorageKey(key),petEnabled(p)?'0':'1');
+    refreshPetUI();
+  };
+  window.togglePetMovement=function(){
+    localStorage.setItem(MOVE_KEY,movementEnabled()?'0':'1');
+    refreshPetUI();
+  };
+
+  Object.values(PETS).forEach(p=>{
+    p.nextPause=performance.now()+4200+p.phase;
+    p.pauseUntil=0;
+    p.nextRun=performance.now()+7600+p.phase;
+    p.mode='walk';
+  });
+
+  let last=performance.now();
   function frame(now){
-    const enabled=localStorage.getItem('cioe_header_animation_enabled_v1')!=='0';
-    if(!enabled){
-      last=now;
-      requestAnimationFrame(frame);
-      return;
+    const sceneOn=localStorage.getItem('cioe_header_animation_enabled_v1')!=='0';
+    const moving=movementEnabled();
+    const dt=Math.min((now-last)/1000,.05); last=now;
+
+    if(sceneOn){
+      Object.values(PETS).forEach(p=>{
+        if(!p.el || !petEnabled(p)) return;
+        const max=Math.max(18,wrap.clientWidth-p.el.offsetWidth-18);
+
+        if(!moving){
+          p.mode='idle'; setGif(p,'idle');
+        } else if(now<p.pauseUntil){
+          p.mode='idle'; setGif(p,'idle');
+        } else {
+          if(p.mode==='idle') p.mode='walk';
+          if(now>=p.nextRun){
+            p.mode='run';
+            p.nextRun=now+9000+Math.random()*5000;
+            setTimeout(()=>{if(p.mode==='run')p.mode='walk'},1500+Math.random()*800);
+          }
+          if(now>=p.nextPause && p.mode!=='run'){
+            p.pauseUntil=now+1200+Math.random()*1800;
+            p.nextPause=now+5500+Math.random()*5000;
+            p.mode='idle';
+          }
+          if(p.mode!=='idle'){
+            setGif(p,p.mode==='run'?'run':'walk');
+            p.x+=p.dir*(p.mode==='run'?p.speed*1.9:p.speed)*dt;
+            if(p.x>=max){p.x=max;p.dir=-1}
+            if(p.x<=18){p.x=18;p.dir=1}
+          }
+        }
+        p.el.style.left=p.x+'px';
+        if(p.key==='akita'){
+          p.el.classList.toggle('dog-moving-right',p.dir===1);
+          p.el.classList.toggle('dog-moving-left',p.dir===-1);
+        }else{
+          p.el.classList.toggle('pet-moving-right',p.dir===1);
+          p.el.classList.toggle('pet-moving-left',p.dir===-1);
+        }
+      });
     }
-
-    const dt=Math.min((now-last)/1000,0.05);
-    last=now;
-    const max=Math.max(18,wrap.clientWidth-dog.offsetWidth-18);
-
-    if(now < pauseUntil){
-      mode='idle';
-      setGif(IDLE);
-    } else {
-      if(mode==='idle') mode='walk';
-
-      if(now>=nextRun){
-        mode='run';
-        nextRun=now+9000+Math.random()*5000;
-        setTimeout(function(){ if(mode==='run') mode='walk'; },1800);
-      }
-      if(now>=nextPause && mode!=='run'){
-        pauseUntil=now+1400+Math.random()*1400;
-        nextPause=now+6000+Math.random()*5000;
-        mode='idle';
-      }
-
-      if(mode!=='idle'){
-        setGif(mode==='run'?RUN:WALK);
-        x += dir*(mode==='run'?105:52)*dt;
-        if(x>=max){x=max;dir=-1;}
-        if(x<=18){x=18;dir=1;}
-      }
-    }
-
-    dog.style.left=x+'px';
-    dog.classList.toggle('dog-moving-right',dir===1);
-    dog.classList.toggle('dog-moving-left',dir===-1);
     requestAnimationFrame(frame);
   }
-
+  refreshPetUI();
   requestAnimationFrame(frame);
 });
 </script>
