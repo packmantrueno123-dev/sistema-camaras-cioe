@@ -644,6 +644,152 @@ body.cioe-custom-theme #themeCustomizerBtn{background-color:var(--cioe-accent)!i
 }
 </style>
 
+
+<style id="cioeThemeRedesign2026">
+/* Solo presentación del personalizador. No modifica lógica ni otros módulos. */
+#themeCustomizerModal{padding:14px!important}
+#themeCustomizerModal .theme-redesign-shell{
+  width:min(1180px,calc(100vw - 28px));max-height:calc(100vh - 28px);overflow:auto;
+  background:linear-gradient(180deg,#07111f 0%,#050b16 100%);
+  border:1px solid rgba(14,165,233,.78);border-radius:24px;
+  box-shadow:0 30px 90px rgba(0,0,0,.62),0 0 28px rgba(14,165,233,.12),inset 0 1px 0 rgba(255,255,255,.035);
+  color:#e5edf8;scrollbar-width:thin;
+}
+#themeCustomizerModal .theme-redesign-header{
+  min-height:88px;padding:16px 24px;display:flex;align-items:center;justify-content:space-between;
+  border-bottom:1px solid #1c2b40;background:linear-gradient(180deg,rgba(10,24,43,.96),rgba(7,17,31,.96));
+  position:sticky;top:0;z-index:5;
+}
+#themeCustomizerModal .theme-redesign-title{display:flex;align-items:center;gap:15px}
+#themeCustomizerModal .theme-redesign-logo{
+  width:48px;height:48px;border-radius:50%;display:grid;place-items:center;font-size:22px;
+  color:#07111f;background:#19c4e7;box-shadow:0 0 22px rgba(25,196,231,.20)
+}
+#themeCustomizerModal .theme-redesign-title h2{margin:0;font-size:24px;line-height:1;font-weight:950;letter-spacing:.02em;color:#f8fafc}
+#themeCustomizerModal .theme-redesign-title h2 span{color:#22c7ed}
+#themeCustomizerModal .theme-redesign-title p{margin:8px 0 0;color:#a8b6ca;font-size:12px}
+#themeCustomizerModal .theme-redesign-close{
+  width:44px;height:44px;border-radius:50%!important;display:grid;place-items:center;
+  color:#d8e1ed;background:#111d30;border:1px solid #34455e;font-size:20px;
+}
+#themeCustomizerModal .theme-redesign-close:hover{border-color:#22c7ed;color:white;background:#17263c}
+
+#themeCustomizerModal .theme-redesign-body{padding:18px 24px 12px;display:grid;gap:16px}
+#themeCustomizerModal .theme-redesign-section{
+  background:linear-gradient(145deg,rgba(5,13,25,.98),rgba(7,18,33,.98));
+  border:1px solid #24405f;border-radius:19px;padding:16px;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.025)
+}
+#themeCustomizerModal .theme-redesign-power,#themeCustomizerModal .theme-pets-heading{
+  display:flex;align-items:center;justify-content:space-between;gap:16px
+}
+#themeCustomizerModal .theme-section-heading{display:flex;align-items:center;gap:12px;min-width:0}
+#themeCustomizerModal .theme-section-icon{width:38px;height:38px;border-radius:50%;display:grid;place-items:center;background:#101c2d;border:1px solid #30435e}
+#themeCustomizerModal .theme-section-icon.amber{color:#f6a928}
+#themeCustomizerModal .theme-section-icon.yellow{color:#facc15}
+#themeCustomizerModal .theme-section-heading h3{margin:0;font-size:14px;font-weight:950;color:#f8fafc;letter-spacing:.01em}
+#themeCustomizerModal .theme-section-heading p{margin:4px 0 0;font-size:10px;color:#93a4bb}
+#themeCustomizerModal .theme-switch-button{
+  min-width:118px!important;height:44px!important;border-radius:9999px!important;display:flex!important;
+  align-items:center!important;justify-content:center!important;gap:8px!important;font-size:14px!important;font-weight:950!important;
+  border:1px solid rgba(255,255,255,.14)!important;box-shadow:0 8px 22px rgba(0,0,0,.22)!important
+}
+
+#themeCustomizerModal .theme-quick-title,#themeCustomizerModal .theme-behavior-title{
+  margin:15px 0 9px;font-size:10px;font-weight:950;color:#d9e4f2;letter-spacing:.035em
+}
+#themeCustomizerModal .theme-quick-title i,#themeCustomizerModal .theme-behavior-title i{color:#1fc8ec;margin-right:6px}
+#themeCustomizerModal .theme-quick-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px}
+#themeCustomizerModal .theme-preset-rich{
+  height:48px!important;display:flex!important;align-items:center!important;justify-content:center!important;gap:9px!important;
+  border-radius:12px!important;background:#0d182a!important;border:1px solid #344963!important;color:#eef5ff!important;
+  font-size:11px!important;font-weight:900!important;box-shadow:none!important
+}
+#themeCustomizerModal .theme-preset-rich:hover{border-color:#22c7ed!important;background:#112036!important}
+#themeCustomizerModal .theme-preset-rich:first-child{border-color:#16c7e9!important;box-shadow:inset 0 0 0 1px rgba(22,199,233,.22)!important}
+#themeCustomizerModal .theme-color-grid-rich{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin-top:13px}
+#themeCustomizerModal .theme-color-box-rich{
+  min-height:76px!important;border-radius:14px!important;background:#0b1627!important;border:1px solid #30465f!important;
+  padding:11px 14px!important;display:grid!important;grid-template-columns:54px 1fr auto!important;align-items:center!important;gap:12px!important
+}
+#themeCustomizerModal .theme-color-preview{width:46px;height:46px;border-radius:50%;display:grid;place-items:center;background:#050b16;border:1px solid #50627b;overflow:hidden}
+#themeCustomizerModal .theme-color-preview input[type="color"]{width:46px!important;height:46px!important;min-width:46px!important;border:0!important;border-radius:50%!important}
+#themeCustomizerModal .theme-color-box-rich b{display:block;color:#f4f7fb;font-size:11px}
+#themeCustomizerModal .theme-color-box-rich small{display:block;color:#8091a9;font-size:9px;margin-top:4px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
+#themeCustomizerModal .theme-color-box-rich>i{color:#a6b6ca;font-size:10px}
+
+#themeCustomizerModal .pet-status-badge{padding:8px 12px!important;color:#36d6f4!important;background:#071d2a!important;border-color:#15546a!important}
+#themeCustomizerModal .theme-pet-five{grid-template-columns:repeat(5,minmax(0,1fr))!important;gap:10px!important;margin-top:14px}
+#themeCustomizerModal .theme-pet-five .pet-choice{grid-template-columns:40px 1fr auto!important;min-height:76px!important;padding:10px!important;border-radius:13px!important;background:#0b1627!important;border-color:#2d415c!important}
+#themeCustomizerModal .theme-pet-five .pet-choice-cat{grid-column:auto!important;background:#0b1627!important;border-color:#2d415c!important}
+#themeCustomizerModal .theme-pet-five .pet-choice-icon{width:40px!important;height:40px!important;border-radius:10px!important;font-size:22px!important;background:#101c2f!important}
+#themeCustomizerModal .theme-pet-five .pet-choice b{font-size:11px!important}
+#themeCustomizerModal .theme-pet-five .pet-choice small{font-size:9px!important;color:#8da0b9!important}
+#themeCustomizerModal .pet-toggle{
+  width:58px!important;min-width:58px!important;max-width:58px!important;height:29px!important;min-height:29px!important;
+  border-radius:9999px!important;font-size:10px!important;font-weight:950!important;padding:0!important
+}
+
+#themeCustomizerModal .theme-variant-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px}
+#themeCustomizerModal .dog-config-box,#themeCustomizerModal .cat-config-box{
+  margin:0!important;display:grid!important;grid-template-columns:180px minmax(0,1fr)!important;gap:12px!important;
+  align-items:center!important;padding:12px!important;border-radius:14px!important;background:#091525!important;border:1px solid #29435e!important
+}
+#themeCustomizerModal .dog-config-title,#themeCustomizerModal .cat-config-title{display:flex!important;align-items:center!important;gap:9px!important}
+#themeCustomizerModal .dog-config-title>span,#themeCustomizerModal .cat-config-title>span{font-size:24px!important}
+#themeCustomizerModal .dog-config-title b,#themeCustomizerModal .cat-config-title b{display:block!important;color:#eef5ff!important;font-size:10px!important}
+#themeCustomizerModal .dog-config-title small,#themeCustomizerModal .cat-config-title small{display:block!important;color:#7f92aa!important;font-size:8px!important;margin-top:3px!important}
+#themeCustomizerModal .cat-select{
+  width:100%!important;height:38px!important;border-radius:10px!important;background:#07111f!important;border:1px solid #344a65!important;
+  color:#e9f0f8!important;padding:0 12px!important;font-size:10px!important;font-weight:850!important
+}
+#themeCustomizerModal .theme-actions-three{grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:12px!important;margin-top:0!important}
+#themeCustomizerModal .theme-actions-three .pet-option-box{
+  min-height:66px!important;border-radius:13px!important;background:#0b1627!important;border:1px solid #2d415c!important;padding:10px 12px!important
+}
+#themeCustomizerModal .theme-actions-three .pet-option-box p{margin:0!important;color:#f4f7fb!important;font-size:10px!important;font-weight:950!important}
+#themeCustomizerModal .theme-actions-three .pet-option-box small{display:block;color:#8496ae;font-size:8px;margin-top:4px}
+#themeCustomizerModal .theme-actions-three .pet-ball-option{grid-column:auto!important}
+#themeCustomizerModal .theme-redesign-message{min-height:17px;margin:0 4px;color:#34d399;font-size:10px;font-weight:800}
+
+#themeCustomizerModal .theme-redesign-footer{
+  padding:14px 24px 18px;display:grid;grid-template-columns:1fr 1.25fr;gap:12px;border-top:1px solid #1c2b40;
+  background:#06101d;position:sticky;bottom:0;z-index:5
+}
+#themeCustomizerModal .theme-footer-reset,#themeCustomizerModal .theme-footer-save{
+  min-height:58px;border-radius:14px!important;display:flex!important;align-items:center!important;justify-content:center!important;gap:12px!important;
+  text-align:left!important;padding:9px 18px!important
+}
+#themeCustomizerModal .theme-footer-reset{background:#122038!important;border:1px solid #46617f!important;color:#edf4fc!important}
+#themeCustomizerModal .theme-footer-save{background:linear-gradient(135deg,#18c8e8,#079fc8)!important;border:1px solid #43d9f4!important;color:white!important;box-shadow:0 8px 24px rgba(8,174,214,.20)!important}
+#themeCustomizerModal .theme-redesign-footer .footer-icon{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;border:1px solid rgba(255,255,255,.28);background:rgba(4,14,25,.28)}
+#themeCustomizerModal .theme-redesign-footer b{display:block;font-size:11px;font-weight:950}
+#themeCustomizerModal .theme-redesign-footer small{display:block;font-size:8px;opacity:.72;margin-top:3px}
+
+@media(max-width:950px){
+  #themeCustomizerModal .theme-pet-five{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+  #themeCustomizerModal .theme-pet-five .pet-choice-cat{grid-column:1/-1!important}
+  #themeCustomizerModal .theme-variant-grid{grid-template-columns:1fr}
+  #themeCustomizerModal .theme-actions-three{grid-template-columns:1fr 1fr!important}
+  #themeCustomizerModal .theme-color-grid-rich{grid-template-columns:1fr}
+}
+@media(max-width:640px){
+  #themeCustomizerModal{padding:6px!important}
+  #themeCustomizerModal .theme-redesign-shell{width:calc(100vw - 12px);max-height:calc(100vh - 12px);border-radius:18px}
+  #themeCustomizerModal .theme-redesign-header{padding:12px 14px;min-height:72px}
+  #themeCustomizerModal .theme-redesign-title h2{font-size:17px}
+  #themeCustomizerModal .theme-redesign-logo{width:38px;height:38px;font-size:17px}
+  #themeCustomizerModal .theme-redesign-body{padding:12px}
+  #themeCustomizerModal .theme-redesign-section{padding:12px}
+  #themeCustomizerModal .theme-quick-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  #themeCustomizerModal .theme-pet-five{grid-template-columns:1fr!important}
+  #themeCustomizerModal .theme-pet-five .pet-choice-cat{grid-column:auto!important}
+  #themeCustomizerModal .dog-config-box,#themeCustomizerModal .cat-config-box{grid-template-columns:1fr!important}
+  #themeCustomizerModal .theme-actions-three{grid-template-columns:1fr!important}
+  #themeCustomizerModal .theme-redesign-footer{padding:10px 12px;grid-template-columns:1fr}
+}
+</style>
+
 </head>
 <body class="min-h-screen flex flex-col p-3 md:p-5 space-y-4 w-full">
 
@@ -5624,74 +5770,126 @@ body.cioe-custom-theme #themeCustomizerBtn{background-color:var(--cioe-accent)!i
 </script>
 
   <!-- ==================== PERSONALIZADOR DE COLORES ==================== -->
-  <div id="themeCustomizerModal" class="hidden fixed inset-0 z-[120] bg-black/75 backdrop-blur-sm items-center justify-center p-4">
-    <div class="w-full max-w-2xl bg-[#0a0f1d] border border-cyan-500/40 rounded-2xl shadow-2xl overflow-hidden">
-      <div class="p-5 border-b border-slate-800 flex items-center justify-between">
-        <div><h2 class="font-black text-white"><i class="fa-solid fa-palette text-cyan-400 mr-2"></i>PERSONALIZAR COLORES</h2><p class="text-xs text-slate-400 mt-1">Cambia la apariencia del Centro de Control.</p></div>
-        <button onclick="closeThemeCustomizer()" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
-      </div>
-      <div class="p-5 space-y-5">
-        <div class="bg-[#030712] border border-slate-700 rounded-xl p-4 flex items-center justify-between gap-4">
+  <div id="themeCustomizerModal" class="hidden fixed inset-0 z-[120] bg-black/80 backdrop-blur-md items-center justify-center p-4">
+    <div class="theme-redesign-shell">
+      <div class="theme-redesign-header">
+        <div class="theme-redesign-title">
+          <div class="theme-redesign-logo"><i class="fa-solid fa-palette"></i></div>
           <div>
-            <p class="text-xs font-black text-white">DISEÑO DE COLORES</p>
-            <p class="text-[10px] text-slate-400 mt-1">ON aplica el tema elegido. OFF vuelve al diseño oscuro original.</p>
+            <h2>PERSONALIZAR <span>COLORES</span></h2>
+            <p>Cambia la apariencia del Centro de Control.</p>
           </div>
-          <button id="themePowerBtn" type="button" onclick="toggleThemePower()" class="min-w-[82px] px-4 py-2 rounded-xl bg-emerald-600 text-white text-xs font-black transition">
-            <i class="fa-solid fa-power-off mr-1"></i><span id="themePowerText">ON</span>
-          </button>
         </div>
-        <div class="pet-settings-card">
-          <div class="flex items-center justify-between gap-3 mb-3">
-            <div>
-              <p class="text-xs font-black text-white"><i class="fa-solid fa-paw text-amber-400 mr-2"></i>MASCOTAS DEL ENCABEZADO</p>
-              <p class="text-[10px] text-slate-400 mt-1">Elige qué mascotas aparecen y cómo se mueven en la franja superior.</p>
+        <button type="button" onclick="closeThemeCustomizer()" class="theme-redesign-close" title="Cerrar">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <div class="theme-redesign-body">
+
+        <!-- DISEÑO DE COLORES -->
+        <section class="theme-redesign-section theme-colors-section">
+          <div class="theme-redesign-power">
+            <div class="theme-section-heading">
+              <div class="theme-section-icon amber"><i class="fa-solid fa-palette"></i></div>
+              <div>
+                <h3>DISEÑO DE COLORES</h3>
+                <p>ON aplica el tema elegido. OFF vuelve al diseño oscuro original.</p>
+              </div>
             </div>
-            <span class="pet-status-badge"><i class="fa-solid fa-sparkles mr-1"></i>PIXEL PETS</span>
+            <button id="themePowerBtn" type="button" onclick="toggleThemePower()" class="theme-switch-button bg-emerald-600">
+              <i class="fa-solid fa-power-off"></i><span id="themePowerText">ON</span>
+            </button>
           </div>
-          <div class="pet-choice-grid">
+
+          <div class="theme-quick-title"><i class="fa-solid fa-palette"></i> TEMAS RÁPIDOS</div>
+          <div class="theme-quick-grid">
+            <button onclick="applyThemePreset('original')" class="theme-preset theme-preset-rich"><i class="fa-solid fa-gear"></i><span>Original</span></button>
+            <button onclick="applyThemePreset('blue')" class="theme-preset theme-preset-rich"><i class="fa-solid fa-circle text-blue-500"></i><span>Azul</span></button>
+            <button onclick="applyThemePreset('purple')" class="theme-preset theme-preset-rich"><i class="fa-solid fa-circle text-violet-500"></i><span>Morado</span></button>
+            <button onclick="applyThemePreset('green')" class="theme-preset theme-preset-rich"><i class="fa-solid fa-circle text-emerald-500"></i><span>Verde</span></button>
+            <button onclick="applyThemePreset('red')" class="theme-preset theme-preset-rich"><i class="fa-solid fa-circle text-red-500"></i><span>Rojo</span></button>
+          </div>
+
+          <div class="theme-color-grid-rich">
+            <label class="theme-color-box theme-color-box-rich">
+              <div class="theme-color-preview"><input id="themeBgColor" type="color" value="#030712" oninput="previewCustomTheme()"></div>
+              <div><b>Fondo</b><small>#030712</small></div>
+              <i class="fa-solid fa-chevron-down"></i>
+            </label>
+            <label class="theme-color-box theme-color-box-rich">
+              <div class="theme-color-preview"><input id="themePanelColor" type="color" value="#0a0f1d" oninput="previewCustomTheme()"></div>
+              <div><b>Paneles</b><small>#0a0f1d</small></div>
+              <i class="fa-solid fa-chevron-down"></i>
+            </label>
+            <label class="theme-color-box theme-color-box-rich">
+              <div class="theme-color-preview"><input id="themeAccentColor" type="color" value="#06b6d4" oninput="previewCustomTheme()"></div>
+              <div><b>Acento</b><small>#06b6d4</small></div>
+              <i class="fa-solid fa-chevron-down"></i>
+            </label>
+          </div>
+        </section>
+
+        <!-- MASCOTAS -->
+        <section class="theme-redesign-section">
+          <div class="theme-pets-heading">
+            <div class="theme-section-heading">
+              <div class="theme-section-icon yellow"><i class="fa-solid fa-paw"></i></div>
+              <div>
+                <h3>MASCOTAS DEL ENCABEZADO</h3>
+                <p>Elige qué mascotas aparecen y cómo se mueven en la franja superior.</p>
+              </div>
+            </div>
+            <span class="pet-status-badge"><i class="fa-solid fa-gamepad"></i> PIXEL PETS</span>
+          </div>
+
+          <div class="pet-choice-grid theme-pet-five">
             <div class="pet-choice"><span class="pet-choice-icon">🐕</span><div><b>Akita</b><small>Perro</small></div><button id="petToggleAkita" type="button" onclick="toggleHeaderPet('akita')" class="pet-toggle bg-emerald-600">ON</button></div>
             <div class="pet-choice"><span class="pet-choice-icon">🦊</span><div><b>Zorro</b><small>Rojo</small></div><button id="petToggleFox" type="button" onclick="toggleHeaderPet('fox')" class="pet-toggle bg-rose-600">OFF</button></div>
             <div class="pet-choice"><span class="pet-choice-icon">🐼</span><div><b>Panda</b><small>Negro</small></div><button id="petTogglePanda" type="button" onclick="toggleHeaderPet('panda')" class="pet-toggle bg-rose-600">OFF</button></div>
             <div class="pet-choice"><span class="pet-choice-icon">🐢</span><div><b>Tortuga</b><small>Totoro</small></div><button id="petToggleTotoro" type="button" onclick="toggleHeaderPet('totoro')" class="pet-toggle bg-rose-600">OFF</button></div>
             <div class="pet-choice pet-choice-cat"><span class="pet-choice-icon">🐱</span><div><b>Gato</b><small>Color seleccionable</small></div><button id="petToggleCat" type="button" onclick="toggleHeaderPet('cat')" class="pet-toggle bg-rose-600">OFF</button></div>
           </div>
-          <div class="dog-config-box">
-            <div class="dog-config-title"><span>🐶</span><div><b>TIPO DE PERRO</b><small>Selecciona el color del perro</small></div></div>
-            <select id="dogTypeSelect" class="cat-select" onchange="changeDogVariant(this.value)">
-              <option value="akita">🟠 Akita</option>
-              <option value="black">⚫ Negro</option>
-              <option value="brown">🟤 Marrón</option>
-              <option value="red">🔴 Rojo</option>
-              <option value="white">⚪ Blanco</option>
-            </select>
+
+          <div class="theme-variant-grid">
+            <div class="dog-config-box">
+              <div class="dog-config-title"><span>🐶</span><div><b>TIPO DE PERRO</b><small>Selecciona el color del perro</small></div></div>
+              <select id="dogTypeSelect" class="cat-select" onchange="changeDogVariant(this.value)">
+                <option value="akita">🟠 Akita</option>
+                <option value="black">⚫ Negro</option>
+                <option value="brown">🟤 Marrón</option>
+                <option value="red">🔴 Rojo</option>
+                <option value="white">⚪ Blanco</option>
+              </select>
+            </div>
+            <div class="cat-config-box">
+              <div class="cat-config-title"><span>🐱</span><div><b>TIPO DE GATO</b><small>Selecciona el color y los ojos</small></div></div>
+              <select id="catVariantSelect" class="cat-select" onchange="changeCatVariant(this.value)">
+                <option value="blanco_negro_ojos_dorados">⚫⚪ Blanco + negro · ojos dorados</option>
+                <option value="blanco_ojos_celestes">⚪ Blanco · ojos celestes</option>
+                <option value="gris_ojos_azules">🩶 Gris · ojos azules</option>
+                <option value="marron_ojos_ambar">🟤 Marrón · ojos ámbar</option>
+                <option value="naranja_ojos_verdes">🟠 Naranja · ojos verdes</option>
+                <option value="negro_ojos_amarillos">⚫ Negro · ojos amarillos</option>
+              </select>
+            </div>
           </div>
-          <div class="cat-config-box">
-            <div class="cat-config-title"><span>🐱</span><div><b>TIPO DE GATO</b><small>Selecciona el color y los ojos</small></div></div>
-            <select id="catVariantSelect" class="cat-select" onchange="changeCatVariant(this.value)">
-              <option value="blanco_negro_ojos_dorados">⚫⚪ Blanco + negro · ojos dorados</option>
-              <option value="blanco_ojos_celestes">⚪ Blanco · ojos celestes</option>
-              <option value="gris_ojos_azules">🩶 Gris · ojos azules</option>
-              <option value="marron_ojos_ambar">🟤 Marrón · ojos ámbar</option>
-              <option value="naranja_ojos_verdes">🟠 Naranja · ojos verdes</option>
-              <option value="negro_ojos_amarillos">⚫ Negro · ojos amarillos</option>
-            </select>
+
+          <div class="theme-behavior-title"><i class="fa-solid fa-gear"></i> COMPORTAMIENTO</div>
+          <div class="pet-actions-grid theme-actions-three">
+            <div class="pet-option-box"><div><p><i class="fa-solid fa-person-running text-cyan-400"></i> MOVIMIENTO</p><small>Caminar, correr y descansar.</small></div><button id="petMovementBtn" type="button" onclick="togglePetMovement()" class="pet-toggle bg-emerald-600">ON</button></div>
+            <div class="pet-option-box"><div><p><i class="fa-solid fa-panorama text-violet-400"></i> ESCENA</p><small>Mostrar la franja pixel-art.</small></div><button id="headerAnimationBtn" type="button" onclick="toggleHeaderAnimation()" class="pet-toggle bg-emerald-600"><span id="headerAnimationText">ON</span></button></div>
+            <div class="pet-option-box pet-ball-option"><div><p>⚾ TIRAR PELOTA</p><small>Mostrar u ocultar el botón.</small></div><button id="throwBallToggleBtn" type="button" onclick="toggleThrowBallButton(event)" class="pet-toggle bg-emerald-600"><span id="throwBallToggleText">ON</span></button></div>
           </div>
-          <div class="pet-actions-grid">
-            <div class="pet-option-box"><div><p class="text-xs font-black text-white"><i class="fa-solid fa-person-running text-cyan-400 mr-2"></i>MOVIMIENTO</p><p class="text-[10px] text-slate-400 mt-1">Caminar, correr y descansar.</p></div><button id="petMovementBtn" type="button" onclick="togglePetMovement()" class="pet-toggle bg-emerald-600">ON</button></div>
-            <div class="pet-option-box"><div><p class="text-xs font-black text-white"><i class="fa-solid fa-panorama text-violet-400 mr-2"></i>ESCENA</p><p class="text-[10px] text-slate-400 mt-1">Mostrar la franja pixel-art.</p></div><button id="headerAnimationBtn" type="button" onclick="toggleHeaderAnimation()" class="pet-toggle bg-emerald-600"><span id="headerAnimationText">ON</span></button></div><div class="pet-option-box pet-ball-option"><div><p class="text-xs font-black text-white"><span class="mr-2">⚾</span>TIRAR PELOTA</p><p class="text-[10px] text-slate-400 mt-1">Mostrar u ocultar el botón de la pelota.</p></div><button id="throwBallToggleBtn" type="button" onclick="toggleThrowBallButton(event)" class="pet-toggle bg-emerald-600"><span id="throwBallToggleText">ON</span></button></div>
-          </div>
-        </div>
-        <div><p class="text-[10px] font-black text-slate-400 uppercase mb-2">Temas rápidos</p><div class="grid grid-cols-2 sm:grid-cols-5 gap-2">
-          <button onclick="applyThemePreset('original')" class="theme-preset">Original</button><button onclick="applyThemePreset('blue')" class="theme-preset">Azul</button><button onclick="applyThemePreset('purple')" class="theme-preset">Morado</button><button onclick="applyThemePreset('green')" class="theme-preset">Verde</button><button onclick="applyThemePreset('red')" class="theme-preset">Rojo</button>
-        </div></div>
-        <div class="grid sm:grid-cols-3 gap-3">
-          <label class="theme-color-box">Fondo<input id="themeBgColor" type="color" value="#030712" oninput="previewCustomTheme()"></label>
-          <label class="theme-color-box">Paneles<input id="themePanelColor" type="color" value="#0a0f1d" oninput="previewCustomTheme()"></label>
-          <label class="theme-color-box">Acento<input id="themeAccentColor" type="color" value="#06b6d4" oninput="previewCustomTheme()"></label>
-        </div>
-        <p id="themeMessage" class="text-xs text-emerald-400 font-bold min-h-4"></p>
+        </section>
+
+        <p id="themeMessage" class="theme-redesign-message"></p>
       </div>
-      <div class="p-4 border-t border-slate-800 flex justify-end gap-2"><button onclick="resetTheme()" class="bg-slate-800 border border-slate-700 px-4 py-2 rounded-xl text-xs font-bold">Restablecer</button><button onclick="saveTheme()" class="bg-cyan-600 hover:bg-cyan-500 px-4 py-2 rounded-xl text-xs font-black"><i class="fa-solid fa-floppy-disk mr-1"></i> Guardar tema</button></div>
+
+      <div class="theme-redesign-footer">
+        <button onclick="resetTheme()" class="theme-footer-reset"><span class="footer-icon"><i class="fa-solid fa-rotate-left"></i></span><span><b>RESTABLECER</b><small>Volver a los valores originales</small></span></button>
+        <button onclick="saveTheme()" class="theme-footer-save"><span class="footer-icon"><i class="fa-solid fa-floppy-disk"></i></span><span><b>GUARDAR CAMBIOS</b><small>Aplicar la configuración</small></span></button>
+      </div>
     </div>
   </div>
 
