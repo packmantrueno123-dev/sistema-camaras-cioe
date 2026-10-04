@@ -921,6 +921,20 @@ body.cioe-custom-theme #themeCustomizerBtn{background-color:var(--cioe-accent)!i
 #headerPixelArtWrap.autumn-scene .header-extra-pet{z-index:10!important}
 </style>
 
+
+<style id="cioeWinterMountainBackgroundFix">
+#headerPixelArtWrap.winter-scene #headerPixelArt{
+  position:absolute!important;
+  inset:0!important;
+  width:100%!important;
+  height:100%!important;
+  object-fit:fill!important;
+  object-position:center center!important;
+  image-rendering:pixelated!important;
+  z-index:0!important;
+}
+</style>
+
 </head>
 <body class="min-h-screen flex flex-col p-3 md:p-5 space-y-4 w-full">
 
@@ -6717,6 +6731,15 @@ document.addEventListener('DOMContentLoaded', function(){
   }
 
   function files(scene,type){
+    // Winter: usa la imagen de montañas enviada como fondo y conserva su foreground actual.
+    if(scene==='winter' && type==='background'){
+      return [
+        'pets/backgrounds/winter/winter-background-mountains.png',
+        ...localFiles(scene,type),
+        ...officialFiles(scene,type)
+      ];
+    }
+
     // Autumn necesita priorizar la variante SMALL para mantener la escala correcta.
     // Los demás paisajes conservan exactamente el comportamiento anterior.
     if(scene==='autumn'){
@@ -6772,7 +6795,10 @@ document.addEventListener('DOMContentLoaded', function(){
     const fg=document.getElementById('headerLandscapeForeground');
     const wrap=document.getElementById('headerPixelArtWrap');
     const select=document.getElementById('petLandscapeSelect');
-    if(wrap) wrap.classList.toggle('autumn-scene', scene==='autumn');
+    if(wrap){
+      wrap.classList.toggle('autumn-scene', scene==='autumn');
+      wrap.classList.toggle('winter-scene', scene==='winter');
+    }
     if(select) select.value=scene;
 
     if(scene==='none'){
