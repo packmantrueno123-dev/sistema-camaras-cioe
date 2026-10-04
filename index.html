@@ -197,8 +197,50 @@ body.cioe-rgb-background .theme-premium-modal{
 }
 </style>
 
+
+<style id="cioeRgbSafeRepair">
+/* REPARACIÓN RGB: nunca pintar ni filtrar BODY/HTML completos */
+html.cioe-rgb-html,
+body.cioe-rgb-background{
+  background:#030712 !important;
+  background-color:#030712 !important;
+  background-image:none !important;
+  animation:none !important;
+  filter:none !important;
+}
+
+/* Capa RGB independiente, detrás de la aplicación */
+#cioeRgbBackdrop{
+  position:fixed;
+  inset:0;
+  z-index:-2;
+  display:none;
+  pointer-events:none;
+  background:linear-gradient(120deg,#ff1744,#ff9100,#ffee00,#00e676,#00b0ff,#651fff,#d500f9,#ff1744);
+  background-size:600% 600%;
+  animation:cioeRgbShift var(--cioe-rgb-speed,12s) linear infinite;
+  filter:saturate(var(--cioe-rgb-saturation,100%)) brightness(var(--cioe-rgb-brightness,72%));
+}
+body.cioe-rgb-background #cioeRgbBackdrop{display:block}
+
+/* El sistema queda por encima y conserva legibilidad */
+body.cioe-rgb-background #app,
+body.cioe-rgb-background main,
+body.cioe-rgb-background header{
+  position:relative;
+  z-index:1;
+}
+
+/* El login SIEMPRE conserva su fondo oscuro */
+#loginOverlay,#loginModal,.login-overlay,.login-screen{
+  filter:none !important;
+}
+</style>
+
 </head>
 <body class="min-h-screen flex flex-col p-3 md:p-5 space-y-4 w-full">
+<div id="cioeRgbBackdrop" aria-hidden="true"></div>
+
 
   <!-- ==================== VISTA 0: PANTALLA DE LOGIN ==================== -->
   <div id="loginView" class="fixed inset-0 bg-[#030712] z-50 flex items-center justify-center p-4">
@@ -5491,6 +5533,47 @@ document.addEventListener('DOMContentLoaded', function(){
     }
   });
   setInterval(fitHeaderPets,1200);
+})();
+</script>
+
+
+<script id="cioeRgbSafeRuntime">
+(function(){
+ const KEY='cioe_rgb_background_v1', SETTINGS='cioe_rgb_settings_v1';
+ function settings(){
+   try{return Object.assign({speed:12,brightness:72,saturation:100},JSON.parse(localStorage.getItem(SETTINGS)||'{}'))}
+   catch(e){return {speed:12,brightness:72,saturation:100}}
+ }
+ function apply(){
+   const on=localStorage.getItem(KEY)==='1';
+   const st=settings();
+   document.body.classList.toggle('cioe-rgb-background',on);
+   document.documentElement.classList.remove('cioe-rgb-html');
+   document.body.style.filter='';
+   document.documentElement.style.setProperty('--cioe-rgb-speed',Math.max(2,Number(st.speed)||12)+'s');
+   document.documentElement.style.setProperty('--cioe-rgb-brightness',Math.max(20,Math.min(140,Number(st.brightness)||72))+'%');
+   document.documentElement.style.setProperty('--cioe-rgb-saturation',Math.max(0,Math.min(200,Number(st.saturation)||100))+'%');
+ }
+ const oldEnable=window.enableRgbBackground;
+ window.enableRgbBackground=function(){
+   localStorage.setItem(KEY,'1');
+   localStorage.setItem('cioe_theme_enabled_v1','1');
+   document.body.style.filter='';
+   apply();
+   if(typeof window.refreshRgbBackgroundUI==='function') window.refreshRgbBackgroundUI();
+ };
+ const oldDisable=window.disableRgbBackground;
+ window.disableRgbBackground=function(){
+   localStorage.setItem(KEY,'0');
+   document.body.classList.remove('cioe-rgb-background');
+   document.documentElement.classList.remove('cioe-rgb-html');
+   document.body.style.filter='';
+   apply();
+   if(typeof window.refreshRgbBackgroundUI==='function') window.refreshRgbBackgroundUI();
+ };
+ document.addEventListener('DOMContentLoaded',apply);
+ window.addEventListener('storage',apply);
+ setTimeout(apply,0);
 })();
 </script>
 
