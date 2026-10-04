@@ -4050,6 +4050,7 @@ body.cioe-custom-theme #themeCustomizerBtn{background-color:var(--cioe-accent)!i
     let lastServerUpdatedAt = null;
     let syncTimer = null;
     let applyingServerState = false;
+    let sessionHeartbeatTimer = null;
 
     function getApiToken() {
       return sessionStorage.getItem(CIOE_TOKEN_KEY) || "";
@@ -4410,13 +4411,15 @@ body.cioe-custom-theme #themeCustomizerBtn{background-color:var(--cioe-accent)!i
         document.getElementById("mainDashboardView").classList.remove("hidden");
         applyUserPermissions();
         renderTable();
+        startSessionHeartbeat();
         // Sin polling automático: otros dispositivos actualizan al presionar F5.
       } catch (e) {
         console.error(e);
+        error.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i> ${e.message || "No se pudo iniciar sesión"}`;
         error.classList.remove("hidden");
         document.getElementById("loginPass").value = "";
         document.getElementById("loginPass").focus();
-        loadingText.textContent = "No se pudo iniciar sesión";
+        loadingText.textContent = e.status === 409 ? "Límite de sesiones alcanzado" : "No se pudo iniciar sesión";
         loadingBar.style.width = "0%";
       } finally {
         submitBtn.disabled = false;
@@ -4450,6 +4453,7 @@ body.cioe-custom-theme #themeCustomizerBtn{background-color:var(--cioe-accent)!i
         document.getElementById("mainDashboardView").classList.remove("hidden");
         applyUserPermissions();
         renderTable();
+        startSessionHeartbeat();
         // Sin polling automático: otros dispositivos actualizan al presionar F5.
       } catch (e) {
         sessionStorage.removeItem(CIOE_TOKEN_KEY);
@@ -4457,6 +4461,39 @@ body.cioe-custom-theme #themeCustomizerBtn{background-color:var(--cioe-accent)!i
         currentSystemUser = null;
         applyUserPermissions();
       }
+    }
+
+    function stopSessionHeartbeat() {
+      if (sessionHeartbeatTimer) {
+        clearInterval(sessionHeartbeatTimer);
+        sessionHeartbeatTimer = null;
+      }
+    }
+
+    function startSessionHeartbeat() {
+      stopSessionHeartbeat();
+
+      // Admin no necesita ocupar/controlar cupos.
+      if (!getApiToken() || isAdminUser()) return;
+
+      sessionHeartbeatTimer = setInterval(async () => {
+        if (!getApiToken()) return;
+
+        try {
+          await apiRequest("/api/session/heartbeat", {
+            method: "POST"
+          });
+        } catch (e) {
+          if (e.status === 401) {
+            stopSessionHeartbeat();
+            sessionStorage.removeItem(CIOE_TOKEN_KEY);
+            sessionStorage.removeItem(CIOE_USER_KEY);
+            currentSystemUser = null;
+            alert(e.message || "Tu sesión terminó. Inicia sesión nuevamente.");
+            location.reload();
+          }
+        }
+      }, 60000);
     }
 
     function startServerPolling() {
@@ -4768,7 +4805,18 @@ body.cioe-custom-theme #themeCustomizerBtn{background-color:var(--cioe-accent)!i
     // Todos los usuarios autenticados pueden editar los datos compartidos.
     // La administración de usuarios continúa siendo exclusiva del rol admin.
 
-    function cerrarSesion() {
+    async function cerrarSesion() {
+      stopSessionHeartbeat();
+
+      // Libera inmediatamente el cupo de esta pestaña en el servidor.
+      if (getApiToken()) {
+        try {
+          await apiRequest("/api/logout", { method: "POST" });
+        } catch (e) {
+          console.warn("No se pudo notificar el cierre de sesión:", e);
+        }
+      }
+
       sessionStorage.removeItem(CIOE_TOKEN_KEY);
       sessionStorage.removeItem(CIOE_USER_KEY);
       currentSystemUser = null;
