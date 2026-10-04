@@ -51,7 +51,9 @@
   /* Escena pixel-art: bosque + perro Akita animado */
   #headerPixelArtWrap{position:relative;width:520px;height:62px;overflow:hidden;border-radius:12px;border:1px solid rgba(71,85,105,.65);background:#030712;box-shadow:inset 0 0 18px rgba(0,0,0,.45);flex-shrink:0}
   #headerPixelArt{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;image-rendering:pixelated;opacity:.92;z-index:0}
-  #headerDogPet{position:absolute;left:24px;bottom:3px;height:44px;width:auto;image-rendering:pixelated;z-index:1;filter:drop-shadow(0 2px 2px rgba(0,0,0,.65))}
+  #headerDogPet{position:absolute;left:18px;bottom:3px;height:44px;width:auto;image-rendering:pixelated;z-index:1;filter:drop-shadow(0 2px 2px rgba(0,0,0,.65));will-change:left,transform}
+  #headerDogPet.dog-moving-right{transform:scaleX(1)}
+  #headerDogPet.dog-moving-left{transform:scaleX(-1)}
   #headerPixelArtWrap:before,#headerPixelArtWrap:after{content:"";position:absolute;top:0;bottom:0;width:42px;z-index:2;pointer-events:none}
   #headerPixelArtWrap:before{left:0;background:linear-gradient(90deg,#0a0f1d,transparent)}
   #headerPixelArtWrap:after{right:0;background:linear-gradient(270deg,#0a0f1d,transparent)}
@@ -5112,8 +5114,68 @@ body.cioe-custom-theme #themeCustomizerBtn{background-color:var(--cioe-accent)!i
 document.addEventListener('DOMContentLoaded', function(){
   const dog=document.getElementById('headerDogPet');
   const bg=document.getElementById('headerPixelArt');
-  if(dog) dog.addEventListener('error',function(){this.style.display='none';});
+  const wrap=document.getElementById('headerPixelArtWrap');
+  if(!dog || !wrap) return;
+
   if(bg) bg.addEventListener('error',function(){this.style.opacity='.15';});
+  dog.addEventListener('error',function(){this.style.display='none';});
+
+  const WALK='pets/akita_walk_8fps.gif';
+  const IDLE='pets/akita_idle_8fps.gif';
+  const RUN='pets/akita_run_8fps.gif';
+
+  let x=18, dir=1, mode='walk', pauseUntil=0, last=performance.now();
+  let nextPause=performance.now()+4500;
+  let nextRun=performance.now()+8500;
+
+  function setGif(src){
+    if(!dog.src.endsWith(src)) dog.src=src;
+  }
+
+  function frame(now){
+    const enabled=localStorage.getItem('cioe_header_animation_enabled_v1')!=='0';
+    if(!enabled){
+      last=now;
+      requestAnimationFrame(frame);
+      return;
+    }
+
+    const dt=Math.min((now-last)/1000,0.05);
+    last=now;
+    const max=Math.max(18,wrap.clientWidth-dog.offsetWidth-18);
+
+    if(now < pauseUntil){
+      mode='idle';
+      setGif(IDLE);
+    } else {
+      if(mode==='idle') mode='walk';
+
+      if(now>=nextRun){
+        mode='run';
+        nextRun=now+9000+Math.random()*5000;
+        setTimeout(function(){ if(mode==='run') mode='walk'; },1800);
+      }
+      if(now>=nextPause && mode!=='run'){
+        pauseUntil=now+1400+Math.random()*1400;
+        nextPause=now+6000+Math.random()*5000;
+        mode='idle';
+      }
+
+      if(mode!=='idle'){
+        setGif(mode==='run'?RUN:WALK);
+        x += dir*(mode==='run'?105:52)*dt;
+        if(x>=max){x=max;dir=-1;}
+        if(x<=18){x=18;dir=1;}
+      }
+    }
+
+    dog.style.left=x+'px';
+    dog.classList.toggle('dog-moving-right',dir===1);
+    dog.classList.toggle('dog-moving-left',dir===-1);
+    requestAnimationFrame(frame);
+  }
+
+  requestAnimationFrame(frame);
 });
 </script>
 </body>
