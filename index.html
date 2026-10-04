@@ -179,9 +179,15 @@ body.cioe-custom-theme #themeCustomizerBtn{background-color:var(--cioe-accent)!i
         </div>
       </div>
 
-      <div id="headerPixelArtWrap" title="Bosque con Akita animado">
-        <img id="headerPixelArt" src="pets/background-dark-small.png" alt="Bosque pixel art">
-        <img id="headerDogPet" src="pets/akita_walk_8fps.gif" alt="Akita animado">
+      <div class="header-pets-area">
+        <div id="headerPixelArtWrap" title="Mascotas animadas">
+          <img id="headerPixelArt" src="pets/background-dark-small.png" alt="Bosque pixel art">
+          <img id="headerDogPet" src="pets/akita_walk_8fps.gif" alt="Akita animado">
+        </div>
+        <button id="headerThrowBallBtn" type="button" onclick="throwPetBall()" class="header-throw-ball" title="Tirar pelota">
+          <span class="header-ball-icon">⚾</span>
+          <span>Tirar pelota</span>
+        </button>
       </div>
 
       <div class="flex flex-wrap items-center gap-2.5 w-full lg:w-auto justify-end">
@@ -5078,7 +5084,6 @@ body.cioe-custom-theme #themeCustomizerBtn{background-color:var(--cioe-accent)!i
             <div class="pet-option-box"><div><p class="text-xs font-black text-white"><i class="fa-solid fa-person-running text-cyan-400 mr-2"></i>MOVIMIENTO</p><p class="text-[10px] text-slate-400 mt-1">Caminar, correr y descansar.</p></div><button id="petMovementBtn" type="button" onclick="togglePetMovement()" class="pet-toggle bg-emerald-600">ON</button></div>
             <div class="pet-option-box"><div><p class="text-xs font-black text-white"><i class="fa-solid fa-panorama text-violet-400 mr-2"></i>ESCENA</p><p class="text-[10px] text-slate-400 mt-1">Mostrar la franja pixel-art.</p></div><button id="headerAnimationBtn" type="button" onclick="toggleHeaderAnimation()" class="pet-toggle bg-emerald-600"><span id="headerAnimationText">ON</span></button></div>
           </div>
-          <button id="throwBallBtn" type="button" onclick="throwPetBall()" class="throw-ball-premium"><span class="ball-mini">⚾</span><span><b>TIRAR PELOTA</b><small>Las mascotas activas correrán a buscarla</small></span><i class="fa-solid fa-chevron-right"></i></button>
         </div>
         <div><p class="text-[10px] font-black text-slate-400 uppercase mb-2">Temas rápidos</p><div class="grid grid-cols-2 sm:grid-cols-5 gap-2">
           <button onclick="applyThemePreset('original')" class="theme-preset">Original</button><button onclick="applyThemePreset('blue')" class="theme-preset">Azul</button><button onclick="applyThemePreset('purple')" class="theme-preset">Morado</button><button onclick="applyThemePreset('green')" class="theme-preset">Verde</button><button onclick="applyThemePreset('red')" class="theme-preset">Rojo</button>
@@ -5195,6 +5200,13 @@ body.cioe-custom-theme #themeCustomizerBtn{background-color:var(--cioe-accent)!i
 #headerPixelArtWrap .header-extra-pet[alt="totoro"]{height:48px!important;filter:brightness(1.35) contrast(1.12) drop-shadow(0 2px 2px rgba(0,0,0,.65))!important;}
 #headerPixelArtWrap .header-extra-pet[alt="cat"]{height:42px!important;width:auto!important;bottom:4px!important;object-fit:contain!important;filter:brightness(1.10) contrast(1.10) saturate(1.08) drop-shadow(0 2px 2px rgba(0,0,0,.65))!important;}
 #headerPetBall{position:absolute;left:500px;bottom:7px;width:14px;height:14px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#fff 0 12%,#fbbf24 14% 48%,#f97316 50% 100%);border:1px solid rgba(0,0,0,.55);z-index:6;display:none;pointer-events:none;box-shadow:0 2px 3px rgba(0,0,0,.5);will-change:left,bottom;}
+
+.header-pets-area{display:flex;align-items:center;gap:9px;flex-shrink:0}
+.header-throw-ball{height:42px;display:flex;align-items:center;justify-content:center;gap:7px;padding:0 12px;border-radius:11px;border:1px solid rgba(245,158,11,.60);background:linear-gradient(135deg,#fbbf24,#f59e0b);color:#111827;font-size:10px;font-weight:900;white-space:nowrap;box-shadow:0 6px 18px rgba(245,158,11,.16);transition:transform .16s ease,filter .16s ease,box-shadow .16s ease}
+.header-throw-ball:hover{transform:translateY(-1px);filter:brightness(1.06);box-shadow:0 8px 22px rgba(245,158,11,.24)}
+.header-throw-ball:active{transform:scale(.97)}
+.header-ball-icon{font-size:16px;line-height:1}
+@media(max-width:1350px){.header-pets-area{display:none!important}}
 .cat-select{width:100%;background:#0a0f1d;border:1px solid #334155;border-radius:9px;padding:7px 9px;color:#e5e7eb;font-size:11px;font-weight:800;outline:none}.cat-select:focus{border-color:#22d3ee}
 #headerPixelArtWrap .header-extra-pet.pet-moving-right{transform:scaleX(1)!important;}
 #headerPixelArtWrap .header-extra-pet.pet-moving-left{transform:scaleX(-1)!important;}
@@ -5376,6 +5388,11 @@ document.addEventListener('DOMContentLoaded', function(){
         if(p.key==='akita'){
           p.el.classList.toggle('dog-moving-right',p.dir===1);
           p.el.classList.toggle('dog-moving-left',p.dir===-1);
+        }else if(p.key==='cat'){
+          // Los GIF del gato miran originalmente hacia la izquierda.
+          // Se invierte únicamente cuando el gato se desplaza hacia la derecha.
+          p.el.classList.toggle('pet-moving-right',p.dir===-1);
+          p.el.classList.toggle('pet-moving-left',p.dir===1);
         }else{
           p.el.classList.toggle('pet-moving-right',p.dir===1);
           p.el.classList.toggle('pet-moving-left',p.dir===-1);
