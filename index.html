@@ -793,9 +793,9 @@ body.cioe-custom-theme #themeCustomizerBtn{background-color:var(--cioe-accent)!i
 
 <style id="cioePetLandscapeStyles">
 #headerPixelArtWrap #headerPixelArt{position:absolute!important;inset:0!important;width:100%!important;height:100%!important;object-fit:cover!important;object-position:center bottom!important;image-rendering:pixelated!important;z-index:0!important}
-#headerLandscapeForeground{position:absolute!important;inset:0!important;width:100%!important;height:100%!important;object-fit:cover!important;object-position:center bottom!important;image-rendering:pixelated!important;z-index:6!important;pointer-events:none!important;display:none}
-#headerPixelArtWrap .header-extra-pet,#headerDogPet{z-index:5!important}
-#headerPetBall{z-index:7!important}
+#headerLandscapeForeground{position:absolute!important;inset:0!important;width:100%!important;height:100%!important;object-fit:cover!important;object-position:center bottom!important;image-rendering:pixelated!important;z-index:1!important;pointer-events:none!important;display:none}
+#headerPixelArtWrap .header-extra-pet,#headerDogPet{z-index:10!important}
+#headerPetBall{z-index:12!important}
 #themeCustomizerModal .theme-landscape-box{margin-top:12px;display:grid;grid-template-columns:220px minmax(0,1fr);gap:14px;align-items:center;padding:12px;border-radius:14px;background:#091525;border:1px solid #29435e}
 #themeCustomizerModal .theme-landscape-title{display:flex;align-items:center;gap:9px;min-width:0}
 #themeCustomizerModal .theme-landscape-title>span{font-size:24px}
@@ -890,6 +890,17 @@ body.cioe-custom-theme #themeCustomizerBtn{background-color:var(--cioe-accent)!i
   #themeCustomizerModal .theme-landscape-box{grid-template-columns:1fr!important}
   #themeCustomizerModal .theme-redesign-title h2{font-size:17px!important}
 }
+</style>
+
+
+<style id="cioeLandscapeLayerFix2026">
+/* Capas correctas: fondo -> foreground -> mascotas -> pelota */
+#headerPixelArtWrap{isolation:isolate!important}
+#headerPixelArt{z-index:0!important}
+#headerLandscapeForeground{z-index:1!important;pointer-events:none!important}
+#headerDogPet,
+#headerPixelArtWrap .header-extra-pet{z-index:10!important}
+#headerPetBall{z-index:12!important}
 </style>
 
 </head>
