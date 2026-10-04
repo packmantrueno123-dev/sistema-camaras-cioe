@@ -5202,6 +5202,10 @@ body.cioe-custom-theme #themeCustomizerBtn{background-color:var(--cioe-accent)!i
 #headerPixelArtWrap .header-extra-pet.pet-moving-left{transform:scaleX(-1)!important;}
 /* El Akita queda exactamente con su configuración original */
 #headerDogPet{z-index:5!important;}
+/* Gato sin el fondo morado del GIF: se dibuja en canvas con chroma-key. */
+#headerCatCanvas{position:absolute!important;bottom:3px!important;height:46px!important;width:auto!important;image-rendering:pixelated!important;z-index:5!important;pointer-events:none;transform-origin:center bottom!important;filter:brightness(1.12) contrast(1.12) saturate(1.08) drop-shadow(0 2px 2px rgba(0,0,0,.65));}
+#throwBallBtn{box-shadow:0 0 0 1px rgba(251,191,36,.35),0 5px 14px rgba(245,158,11,.18);}
+#throwBallBtn:active{transform:scale(.97);}
 </style>
 
 <script id="cioeMultiPetHeader">
@@ -5259,6 +5263,37 @@ document.addEventListener('DOMContentLoaded', function(){
   }
   Object.values(PETS).forEach(makePet);
 
+  // Render especial del gato: elimina automáticamente el fondo morado de los GIF.
+  const catSource=PETS.cat.el;
+  let catCanvas=null, catCtx=null;
+  if(catSource){
+    catSource.style.opacity='0';
+    catSource.style.pointerEvents='none';
+    catCanvas=document.createElement('canvas');
+    catCanvas.id='headerCatCanvas';
+    catCanvas.width=128; catCanvas.height=96;
+    catCanvas.style.left=PETS.cat.x+'px';
+    wrap.appendChild(catCanvas);
+    catCtx=catCanvas.getContext('2d',{willReadFrequently:true});
+  }
+  function drawCatFrame(){
+    if(catSource && catCanvas && catCtx && petEnabled(PETS.cat) && catSource.complete && catSource.naturalWidth){
+      const w=catSource.naturalWidth, h=catSource.naturalHeight;
+      if(catCanvas.width!==w||catCanvas.height!==h){catCanvas.width=w;catCanvas.height=h;}
+      catCtx.clearRect(0,0,w,h);
+      catCtx.drawImage(catSource,0,0,w,h);
+      try{
+        const im=catCtx.getImageData(0,0,w,h), d=im.data;
+        for(let i=0;i<d.length;i+=4){
+          const r=d[i],g=d[i+1],b=d[i+2];
+          // Fondo original aproximado #a56fa5 / tonos morados cercanos.
+          if(r>105 && b>95 && r>g*1.18 && b>g*1.12 && Math.abs(r-b)<55){d[i+3]=0;}
+        }
+        catCtx.putImageData(im,0,0);
+      }catch(e){}
+    }
+  }
+
   const btnIds={akita:'petToggleAkita',fox:'petToggleFox',panda:'petTogglePanda',totoro:'petToggleTotoro',cat:'petToggleCat'};
   function paintBtn(btn,on){
     if(!btn)return;
@@ -5269,7 +5304,9 @@ document.addEventListener('DOMContentLoaded', function(){
   function refreshPetUI(){
     Object.values(PETS).forEach(p=>{
       const on=petEnabled(p);
-      if(p.el) p.el.style.display=on?'':'none';
+      if(p.el) p.el.style.display=(p.key==='cat'?'':(on?'':'none'));
+      if(p.key==='cat' && p.el) p.el.style.opacity='0';
+      if(p.key==='cat' && catCanvas) catCanvas.style.display=on?'':'none';
       paintBtn(document.getElementById(btnIds[p.key]),on);
     });
     paintBtn(document.getElementById('petMovementBtn'),movementEnabled());
@@ -5288,6 +5325,7 @@ document.addEventListener('DOMContentLoaded', function(){
     localStorage.setItem(CAT_VARIANT_KEY,v);
     PETS.cat.prefix='cat_'+v;
     setGif(PETS.cat,PETS.cat.mode==='run'?'run':'walk');
+    if(catSource) catSource.style.opacity='0';
   };
   function ensureBall(){
     if(ball) return ball;
@@ -5300,7 +5338,13 @@ document.addEventListener('DOMContentLoaded', function(){
     const b=ensureBall();
     const max=Math.max(80,wrap.clientWidth-32);
     ballX=70+Math.random()*(max-70);
-    b.style.left=ballX+'px'; b.style.bottom='8px'; b.style.display='block';
+    b.style.left='24px'; b.style.bottom='28px'; b.style.display='block';
+    b.animate([
+      {left:'24px',bottom:'28px',transform:'rotate(0deg)'},
+      {left:(ballX*.52)+'px',bottom:'46px',transform:'rotate(300deg)'},
+      {left:ballX+'px',bottom:'8px',transform:'rotate(720deg)'}
+    ],{duration:650,easing:'cubic-bezier(.25,.8,.35,1)',fill:'forwards'});
+    setTimeout(()=>{b.style.left=ballX+'px';b.style.bottom='8px';},650);
     ballActive=true; ballEnd=performance.now()+2600;
     active.forEach(p=>{p.mode='run';p.pauseUntil=0;p.dir=(ballX>=p.x)?1:-1;setGif(p,'run')});
   };
@@ -5361,6 +5405,11 @@ document.addEventListener('DOMContentLoaded', function(){
         }else{
           p.el.classList.toggle('pet-moving-right',p.dir===1);
           p.el.classList.toggle('pet-moving-left',p.dir===-1);
+        }
+        if(p.key==='cat' && catCanvas){
+          catCanvas.style.left=p.x+'px';
+          catCanvas.style.transform=p.dir===-1?'scaleX(-1)':'scaleX(1)';
+          drawCatFrame();
         }
       });
     }
