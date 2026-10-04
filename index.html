@@ -48,10 +48,11 @@
     .fixed-list-table input.row-detail-input:focus { border-color:#f59e0b; }
     .fixed-list-titlebar { background:#111827 !important; color:#f3f4f6 !important; border:1px solid #1e293b !important; }
 
-  /* Franja pixel-art decorativa del encabezado */
-  #headerPixelArtWrap{position:relative;width:330px;height:54px;overflow:hidden;border-radius:12px;border:1px solid rgba(71,85,105,.65);background:#030712;box-shadow:inset 0 0 18px rgba(0,0,0,.45);flex-shrink:0}
-  #headerPixelArt{width:100%;height:100%;object-fit:cover;image-rendering:pixelated;opacity:.9}
-  #headerPixelArtWrap:before,#headerPixelArtWrap:after{content:"";position:absolute;top:0;bottom:0;width:55px;z-index:2;pointer-events:none}
+  /* Escena pixel-art: bosque + perro Akita animado */
+  #headerPixelArtWrap{position:relative;width:330px;height:62px;overflow:hidden;border-radius:12px;border:1px solid rgba(71,85,105,.65);background:#030712;box-shadow:inset 0 0 18px rgba(0,0,0,.45);flex-shrink:0}
+  #headerPixelArt{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;image-rendering:pixelated;opacity:.92;z-index:0}
+  #headerDogPet{position:absolute;left:24px;bottom:3px;height:44px;width:auto;image-rendering:pixelated;z-index:1;filter:drop-shadow(0 2px 2px rgba(0,0,0,.65))}
+  #headerPixelArtWrap:before,#headerPixelArtWrap:after{content:"";position:absolute;top:0;bottom:0;width:42px;z-index:2;pointer-events:none}
   #headerPixelArtWrap:before{left:0;background:linear-gradient(90deg,#0a0f1d,transparent)}
   #headerPixelArtWrap:after{right:0;background:linear-gradient(270deg,#0a0f1d,transparent)}
   @media(max-width:1350px){#headerPixelArtWrap{display:none!important}}
@@ -140,8 +141,9 @@ body.cioe-custom-theme #themeCustomizerBtn{background-color:var(--cioe-accent)!i
         </div>
       </div>
 
-      <div id="headerPixelArtWrap" title="Animación visual">
-        <img id="headerPixelArt" src="pixel-header.gif" alt="Animación pixel art" onerror="this.parentElement.style.display='none'">
+      <div id="headerPixelArtWrap" title="Bosque con Akita animado">
+        <img id="headerPixelArt" src="pets/background-dark-small.png" alt="Bosque pixel art">
+        <img id="headerDogPet" src="pets/akita_walk_8fps.gif" alt="Akita animado">
       </div>
 
       <div class="flex flex-wrap items-center gap-2.5 w-full lg:w-auto justify-end">
@@ -5106,5 +5108,13 @@ body.cioe-custom-theme #themeCustomizerBtn{background-color:var(--cioe-accent)!i
 })();
 </script>
 
+<script id="cioeDogHeaderFallback">
+document.addEventListener('DOMContentLoaded', function(){
+  const dog=document.getElementById('headerDogPet');
+  const bg=document.getElementById('headerPixelArt');
+  if(dog) dog.addEventListener('error',function(){this.style.display='none';});
+  if(bg) bg.addEventListener('error',function(){this.style.opacity='.15';});
+});
+</script>
 </body>
 </html>
