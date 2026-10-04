@@ -790,6 +790,40 @@ body.cioe-custom-theme #themeCustomizerBtn{background-color:var(--cioe-accent)!i
 }
 </style>
 
+
+<style id="cioePetLandscapeStyles">
+/* ===== PAISAJES DE MASCOTAS: background -> mascotas -> foreground ===== */
+#headerPixelArtWrap #headerPixelArt{
+  position:absolute!important;inset:0!important;width:100%!important;height:100%!important;
+  object-fit:cover!important;image-rendering:pixelated!important;z-index:0!important;
+}
+#headerLandscapeForeground{
+  position:absolute!important;inset:0!important;width:100%!important;height:100%!important;
+  object-fit:cover!important;image-rendering:pixelated!important;z-index:6!important;
+  pointer-events:none!important;display:none;
+}
+#headerPixelArtWrap .header-extra-pet,#headerDogPet{z-index:5!important}
+#headerPetBall{z-index:7!important}
+
+#themeCustomizerModal .theme-landscape-box{
+  margin-top:12px;display:grid;grid-template-columns:220px minmax(0,1fr);gap:14px;
+  align-items:center;padding:12px;border-radius:14px;background:#091525;
+  border:1px solid #29435e;
+}
+#themeCustomizerModal .theme-landscape-title{display:flex;align-items:center;gap:9px;min-width:0}
+#themeCustomizerModal .theme-landscape-title>span{font-size:24px}
+#themeCustomizerModal .theme-landscape-title b{display:block;color:#eef5ff;font-size:10px}
+#themeCustomizerModal .theme-landscape-title small{display:block;color:#7f92aa;font-size:8px;margin-top:3px}
+#themeCustomizerModal #petLandscapeSelect{
+  width:100%!important;height:38px!important;border-radius:10px!important;
+  background:#07111f!important;border:1px solid #344a65!important;color:#e9f0f8!important;
+  padding:0 12px!important;font-size:10px!important;font-weight:850!important;
+}
+@media(max-width:640px){
+  #themeCustomizerModal .theme-landscape-box{grid-template-columns:1fr!important}
+}
+</style>
+
 </head>
 <body class="min-h-screen flex flex-col p-3 md:p-5 space-y-4 w-full">
 
@@ -865,7 +899,8 @@ body.cioe-custom-theme #themeCustomizerBtn{background-color:var(--cioe-accent)!i
 
       <div class="header-pets-area">
         <div id="headerPixelArtWrap" title="Mascotas animadas">
-          <img id="headerPixelArt" src="pets/background-dark-small.png" alt="Bosque pixel art">
+          <img id="headerPixelArt" src="pets/background-dark-small.png" alt="Escenario pixel art">
+          <img id="headerLandscapeForeground" src="" alt="" aria-hidden="true">
           <img id="headerDogPet" src="pets/dog/akita_walk_8fps.gif" alt="Akita animado">
         </div>
         <button id="headerThrowBallBtn" type="button" onclick="throwPetBall()" class="header-throw-ball" title="Tirar pelota">
@@ -4691,7 +4726,116 @@ body.cioe-custom-theme #themeCustomizerBtn{background-color:var(--cioe-accent)!i
         'xmlns:x="urn:schemas-microsoft-com:office:excel" ' +
         'xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="UTF-8"></head><body>' +
         tableHtml +
-        '</body></html>';
+        '
+<script id="cioePetLandscapeScript">
+(function(){
+  'use strict';
+  const KEY='cioe_header_pet_landscape_v1';
+  const VALID=['none','autumn','beach','castle','forest','winter'];
+
+  function selected(){
+    const v=localStorage.getItem(KEY)||'none';
+    return VALID.includes(v)?v:'none';
+  }
+
+  function setWithFallback(img, candidates, done){
+    if(!img){ if(done) done(false); return; }
+    let i=0;
+    img.onerror=function(){
+      i++;
+      if(i<candidates.length){ img.src=candidates[i]; }
+      else{
+        img.onerror=null;
+        img.removeAttribute('src');
+        if(done) done(false);
+      }
+    };
+    img.onload=function(){
+      img.onerror=null;
+      img.onload=null;
+      if(done) done(true);
+    };
+    img.src=candidates[0];
+  }
+
+  function candidates(scene, kind){
+    const base='pets/backgrounds/'+scene+'/';
+    if(kind==='background'){
+      return [
+        base+'background-dark-small.png',
+        base+'background-small.png',
+        base+'background-dark-medium.png',
+        base+'background.png',
+        base+'background-dark.png'
+      ];
+    }
+    return [
+      base+'foreground-dark-small.png',
+      base+'foreground-small.png',
+      base+'foreground-dark-medium.png',
+      base+'foreground.png',
+      base+'foreground-dark.png'
+    ];
+  }
+
+  function apply(scene){
+    if(!VALID.includes(scene)) scene='none';
+    const bg=document.getElementById('headerPixelArt');
+    const fg=document.getElementById('headerLandscapeForeground');
+    const sel=document.getElementById('petLandscapeSelect');
+    if(sel) sel.value=scene;
+
+    if(scene==='none'){
+      if(bg){
+        bg.onerror=null;
+        bg.src='pets/background-dark-small.png';
+        bg.style.display='';
+        bg.style.opacity='.92';
+      }
+      if(fg){
+        fg.onerror=null; fg.onload=null;
+        fg.removeAttribute('src');
+        fg.style.display='none';
+      }
+      return;
+    }
+
+    if(bg){
+      bg.style.display='';
+      bg.style.opacity='1';
+      setWithFallback(bg,candidates(scene,'background'),function(ok){
+        if(!ok){
+          bg.src='pets/background-dark-small.png';
+          bg.style.opacity='.92';
+        }
+      });
+    }
+
+    if(fg){
+      fg.style.display='none';
+      setWithFallback(fg,candidates(scene,'foreground'),function(ok){
+        fg.style.display=ok?'block':'none';
+      });
+    }
+  }
+
+  window.changePetLandscape=function(scene){
+    if(!VALID.includes(scene)) scene='none';
+    localStorage.setItem(KEY,scene);
+    apply(scene);
+    const msg=document.getElementById('themeMessage');
+    if(msg) msg.textContent=scene==='none'?'Paisaje original aplicado.':'Paisaje '+scene+' aplicado.';
+  };
+
+  window.refreshPetLandscape=function(){ apply(selected()); };
+
+  document.addEventListener('DOMContentLoaded',function(){
+    apply(selected());
+  });
+})();
+</script>
+
+</body></html>';
 
       const blob = new Blob(['\ufeff', excelHtml], { type: 'application/vnd.ms-excel;charset=utf-8;' });
       const url = URL.createObjectURL(blob);
@@ -6017,6 +6161,21 @@ body.cioe-custom-theme #themeCustomizerBtn{background-color:var(--cioe-accent)!i
                 <option value="negro_ojos_amarillos">⚫ Negro · ojos amarillos</option>
               </select>
             </div>
+          </div>
+
+          <div class="theme-landscape-box">
+            <div class="theme-landscape-title">
+              <span>🌄</span>
+              <div><b>PAISAJE DE MASCOTAS</b><small>Selecciona el escenario de la franja superior</small></div>
+            </div>
+            <select id="petLandscapeSelect" class="cat-select" onchange="changePetLandscape(this.value)">
+              <option value="none">🌑 Sin paisaje</option>
+              <option value="autumn">🍂 Autumn</option>
+              <option value="beach">🏖️ Beach</option>
+              <option value="castle">🏰 Castle</option>
+              <option value="forest">🌳 Forest</option>
+              <option value="winter">❄️ Winter</option>
+            </select>
           </div>
 
           <div class="theme-behavior-title"><i class="fa-solid fa-gear"></i> COMPORTAMIENTO</div>
