@@ -144,6 +144,44 @@
   align-items:stretch!important;
 }
 
+
+/* ===== FIX DEFINITIVO: ON/OFF EN CÁPSULA ===== */
+#themeModal button[id$="PetBtn"],
+#themeModal #petMovementBtn,
+#themeModal #headerAnimationBtn,
+#themeModal #throwBallToggleBtn,
+#themeModal button[onclick*="toggleHeaderPet"],
+#themeModal button[onclick*="togglePetMovement"],
+#themeModal button[onclick*="toggleHeaderAnimation"],
+#themeModal button[onclick*="toggleThrowBallButton"]{
+  width:64px!important;
+  min-width:64px!important;
+  height:29px!important;
+  min-height:29px!important;
+  padding:0 10px!important;
+  border-radius:9999px!important;
+  display:inline-flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  gap:4px!important;
+  font-size:10px!important;
+  font-weight:900!important;
+  line-height:1!important;
+  flex:0 0 64px!important;
+  color:#fff!important;
+  border:1px solid rgba(255,255,255,.12)!important;
+}
+#themeModal button[id$="PetBtn"]::before,
+#themeModal #petMovementBtn::before,
+#themeModal #headerAnimationBtn::before,
+#themeModal #throwBallToggleBtn::before{
+  content:"⏻";
+  font-size:11px;
+  font-weight:900;
+}
+#themeModal button.bg-emerald-600{background:#059669!important}
+#themeModal button.bg-rose-600{background:#e11d48!important}
+
 </style>
 <style id="cioeThemeStyles">
 :root{--cioe-bg:#030712;--cioe-panel:#0a0f1d;--cioe-accent:#06b6d4;--cioe-border:#1e293b}
@@ -5630,6 +5668,37 @@ document.addEventListener('DOMContentLoaded', function(){
   };
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',window.applyThrowBallButtonSetting);
   else window.applyThrowBallButtonSetting();
+})();
+</script>
+
+
+<script>
+(function(){
+  function capsuleControls(){
+    const selectors=[
+      '#themeModal button[id$="PetBtn"]',
+      '#themeModal #petMovementBtn',
+      '#themeModal #headerAnimationBtn',
+      '#themeModal #throwBallToggleBtn',
+      '#themeModal button[onclick*="toggleHeaderPet"]'
+    ];
+    document.querySelectorAll(selectors.join(',')).forEach(function(b){
+      b.style.setProperty('width','64px','important');
+      b.style.setProperty('min-width','64px','important');
+      b.style.setProperty('height','29px','important');
+      b.style.setProperty('border-radius','9999px','important');
+      b.style.setProperty('display','inline-flex','important');
+      b.style.setProperty('align-items','center','important');
+      b.style.setProperty('justify-content','center','important');
+      b.style.setProperty('padding','0 10px','important');
+      b.style.setProperty('flex','0 0 64px','important');
+    });
+  }
+  window.addEventListener('load',capsuleControls);
+  document.addEventListener('click',function(e){
+    if(e.target.closest && e.target.closest('#themeModal')) setTimeout(capsuleControls,0);
+  });
+  new MutationObserver(capsuleControls).observe(document.documentElement,{subtree:true,childList:true});
 })();
 </script>
 
