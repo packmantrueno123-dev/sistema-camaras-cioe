@@ -49,7 +49,7 @@
     .fixed-list-titlebar { background:#111827 !important; color:#f3f4f6 !important; border:1px solid #1e293b !important; }
 
   /* Escena pixel-art: bosque + perro Akita animado */
-  #headerPixelArtWrap{position:relative;width:600px;height:76px;overflow:hidden;border-radius:12px;border:1px solid rgba(71,85,105,.65);background:#030712;box-shadow:inset 0 0 18px rgba(0,0,0,.45);flex-shrink:0}
+  #headerPixelArtWrap{position:relative;width:820px;height:104px;overflow:hidden;border-radius:12px;border:1px solid rgba(71,85,105,.65);background:#030712;box-shadow:inset 0 0 18px rgba(0,0,0,.45);flex-shrink:0}
   #headerPixelArt{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;image-rendering:pixelated;opacity:.92;z-index:0}
   #headerDogPet{position:absolute;left:18px;bottom:3px;height:44px;width:auto;image-rendering:pixelated;z-index:1;filter:drop-shadow(0 2px 2px rgba(0,0,0,.65));will-change:left,transform}
   #headerDogPet.dog-moving-right{transform:scaleX(1)}
@@ -57,7 +57,7 @@
   #headerPixelArtWrap:before,#headerPixelArtWrap:after{content:"";position:absolute;top:0;bottom:0;width:42px;z-index:2;pointer-events:none}
   #headerPixelArtWrap:before{left:0;background:linear-gradient(90deg,#0a0f1d,transparent)}
   #headerPixelArtWrap:after{right:0;background:linear-gradient(270deg,#0a0f1d,transparent)}
-  @media(max-width:1350px){#headerPixelArtWrap{display:none!important}}
+  @media(max-width:1050px){#headerPixelArtWrap{display:none!important}}
 
   
   /* Ajuste de mascotas: evita que sprites grandes como Totoro queden recortados */
@@ -792,8 +792,8 @@ body.cioe-custom-theme #themeCustomizerBtn{background-color:var(--cioe-accent)!i
 
 
 <style id="cioePetLandscapeStyles">
-#headerPixelArtWrap #headerPixelArt{position:absolute!important;inset:0!important;width:100%!important;height:100%!important;object-fit:fill!important;object-position:center center!important;image-rendering:pixelated!important;z-index:0!important}
-#headerLandscapeForeground{position:absolute!important;inset:0!important;width:100%!important;height:100%!important;object-fit:fill!important;object-position:center center!important;image-rendering:pixelated!important;z-index:6!important;pointer-events:none!important;display:none}
+#headerPixelArtWrap #headerPixelArt{position:absolute!important;inset:0!important;width:100%!important;height:100%!important;object-fit:cover!important;object-position:center bottom!important;image-rendering:pixelated!important;z-index:0!important}
+#headerLandscapeForeground{position:absolute!important;inset:0!important;width:100%!important;height:100%!important;object-fit:cover!important;object-position:center bottom!important;image-rendering:pixelated!important;z-index:6!important;pointer-events:none!important;display:none}
 #headerPixelArtWrap .header-extra-pet,#headerDogPet{z-index:5!important}
 #headerPetBall{z-index:7!important}
 #themeCustomizerModal .theme-landscape-box{margin-top:12px;display:grid;grid-template-columns:220px minmax(0,1fr);gap:14px;align-items:center;padding:12px;border-radius:14px;background:#091525;border:1px solid #29435e}
@@ -6567,9 +6567,43 @@ document.addEventListener('DOMContentLoaded', function(){
   }
   function files(scene,type){
     const b='pets/backgrounds/'+scene+'/';
+    // Prueba todas las variantes de archivo disponibles en cada carpeta.
+    // Así funciona aunque un paisaje tenga dark/light, nano/small/medium/large o archivo base.
     return type==='background'
-      ? [b+'background-dark-small.png',b+'background-small.png',b+'background-dark-medium.png',b+'background.png',b+'background-dark.png']
-      : [b+'foreground-dark-small.png',b+'foreground-small.png',b+'foreground-dark-medium.png',b+'foreground.png',b+'foreground-dark.png'];
+      ? [
+          b+'background-dark-large.png',
+          b+'background-dark-medium.png',
+          b+'background-dark-small.png',
+          b+'background-dark-nano.png',
+          b+'background-large.png',
+          b+'background-medium.png',
+          b+'background-small.png',
+          b+'background-nano.png',
+          b+'background-dark.png',
+          b+'background.png',
+          b+'background-light-large.png',
+          b+'background-light-medium.png',
+          b+'background-light-small.png',
+          b+'background-light-nano.png',
+          b+'background-light.png'
+        ]
+      : [
+          b+'foreground-dark-large.png',
+          b+'foreground-dark-medium.png',
+          b+'foreground-dark-small.png',
+          b+'foreground-dark-nano.png',
+          b+'foreground-large.png',
+          b+'foreground-medium.png',
+          b+'foreground-small.png',
+          b+'foreground-nano.png',
+          b+'foreground-dark.png',
+          b+'foreground.png',
+          b+'foreground-light-large.png',
+          b+'foreground-light-medium.png',
+          b+'foreground-light-small.png',
+          b+'foreground-light-nano.png',
+          b+'foreground-light.png'
+        ];
   }
   function load(img,list,callback){
     let n=0;
