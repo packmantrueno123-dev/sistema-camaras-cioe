@@ -5048,39 +5048,37 @@ body.cioe-custom-theme #themeCustomizerBtn{background-color:var(--cioe-accent)!i
             <i class="fa-solid fa-power-off mr-1"></i><span id="themePowerText">ON</span>
           </button>
         </div>
-        <div class="bg-[#030712] border border-slate-700 rounded-xl p-4 space-y-3">
-          <div>
-            <p class="text-xs font-black text-white"><i class="fa-solid fa-paw text-amber-400 mr-2"></i>MASCOTAS DEL ENCABEZADO</p>
-            <p class="text-[10px] text-slate-400 mt-1">Activa las mascotas que quieras mostrar en la franja superior.</p>
+        <div class="pet-settings-card">
+          <div class="flex items-center justify-between gap-3 mb-3">
+            <div>
+              <p class="text-xs font-black text-white"><i class="fa-solid fa-paw text-amber-400 mr-2"></i>MASCOTAS DEL ENCABEZADO</p>
+              <p class="text-[10px] text-slate-400 mt-1">Elige qué mascotas aparecen y cómo se mueven en la franja superior.</p>
+            </div>
+            <span class="pet-status-badge"><i class="fa-solid fa-sparkles mr-1"></i>PIXEL PETS</span>
           </div>
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
-            <div class="pet-control-row"><span class="text-xs font-bold">🐕 Akita</span><button id="petToggleAkita" type="button" onclick="toggleHeaderPet('akita')" class="pet-toggle bg-emerald-600">ON</button></div>
-            <div class="pet-control-row"><span class="text-xs font-bold">🦊 Zorro</span><button id="petToggleFox" type="button" onclick="toggleHeaderPet('fox')" class="pet-toggle bg-rose-600">OFF</button></div>
-            <div class="pet-control-row"><span class="text-xs font-bold">🐼 Panda</span><button id="petTogglePanda" type="button" onclick="toggleHeaderPet('panda')" class="pet-toggle bg-rose-600">OFF</button></div>
-            <div class="pet-control-row"><span class="text-xs font-bold">🐢 Tortuga</span><button id="petToggleTotoro" type="button" onclick="toggleHeaderPet('totoro')" class="pet-toggle bg-rose-600">OFF</button></div>
-            <div class="pet-control-row"><span class="text-xs font-bold">🐱 Gato</span><button id="petToggleCat" type="button" onclick="toggleHeaderPet('cat')" class="pet-toggle bg-rose-600">OFF</button></div>
+          <div class="pet-choice-grid">
+            <div class="pet-choice"><span class="pet-choice-icon">🐕</span><div><b>Akita</b><small>Perro</small></div><button id="petToggleAkita" type="button" onclick="toggleHeaderPet('akita')" class="pet-toggle bg-emerald-600">ON</button></div>
+            <div class="pet-choice"><span class="pet-choice-icon">🦊</span><div><b>Zorro</b><small>Rojo</small></div><button id="petToggleFox" type="button" onclick="toggleHeaderPet('fox')" class="pet-toggle bg-rose-600">OFF</button></div>
+            <div class="pet-choice"><span class="pet-choice-icon">🐼</span><div><b>Panda</b><small>Negro</small></div><button id="petTogglePanda" type="button" onclick="toggleHeaderPet('panda')" class="pet-toggle bg-rose-600">OFF</button></div>
+            <div class="pet-choice"><span class="pet-choice-icon">🐢</span><div><b>Tortuga</b><small>Totoro</small></div><button id="petToggleTotoro" type="button" onclick="toggleHeaderPet('totoro')" class="pet-toggle bg-rose-600">OFF</button></div>
+            <div class="pet-choice pet-choice-cat"><span class="pet-choice-icon">🐱</span><div><b>Gato</b><small>Color seleccionable</small></div><button id="petToggleCat" type="button" onclick="toggleHeaderPet('cat')" class="pet-toggle bg-rose-600">OFF</button></div>
           </div>
-          <div class="grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-2 items-end">
-            <label class="text-[10px] font-black text-slate-400 uppercase">Tipo de gato
-              <select id="catVariantSelect" class="cat-select mt-1" onchange="changeCatVariant(this.value)">
-                <option value="blanco_negro_ojos_dorados">Blanco y negro · ojos dorados</option>
-                <option value="blanco_ojos_celestes">Blanco · ojos celestes</option>
-                <option value="gris_ojos_azules">Gris · ojos azules</option>
-                <option value="marron_ojos_ambar">Marrón · ojos ámbar</option>
-                <option value="naranja_ojos_verdes">Naranja · ojos verdes</option>
-                <option value="negro_ojos_amarillos">Negro · ojos amarillos</option>
-              </select>
-            </label>
-            <button id="throwBallBtn" type="button" onclick="throwPetBall()" class="bg-amber-500 hover:bg-amber-400 text-black px-4 py-2 rounded-xl text-xs font-black whitespace-nowrap"><i class="fa-solid fa-baseball mr-1"></i> Tirar pelota</button>
+          <div class="cat-config-box">
+            <div class="cat-config-title"><span>🐱</span><div><b>TIPO DE GATO</b><small>Selecciona el color y los ojos</small></div></div>
+            <select id="catVariantSelect" class="cat-select" onchange="changeCatVariant(this.value)">
+              <option value="blanco_negro_ojos_dorados">⚫⚪ Blanco + negro · ojos dorados</option>
+              <option value="blanco_ojos_celestes">⚪ Blanco · ojos celestes</option>
+              <option value="gris_ojos_azules">🩶 Gris · ojos azules</option>
+              <option value="marron_ojos_ambar">🟤 Marrón · ojos ámbar</option>
+              <option value="naranja_ojos_verdes">🟠 Naranja · ojos verdes</option>
+              <option value="negro_ojos_amarillos">⚫ Negro · ojos amarillos</option>
+            </select>
           </div>
-          <div class="pet-control-row">
-            <div><p class="text-xs font-black text-white">MOVIMIENTO</p><p class="text-[10px] text-slate-400">ON: caminan, corren y descansan. OFF: se quedan quietos.</p></div>
-            <button id="petMovementBtn" type="button" onclick="togglePetMovement()" class="pet-toggle bg-emerald-600">ON</button>
+          <div class="pet-actions-grid">
+            <div class="pet-option-box"><div><p class="text-xs font-black text-white"><i class="fa-solid fa-person-running text-cyan-400 mr-2"></i>MOVIMIENTO</p><p class="text-[10px] text-slate-400 mt-1">Caminar, correr y descansar.</p></div><button id="petMovementBtn" type="button" onclick="togglePetMovement()" class="pet-toggle bg-emerald-600">ON</button></div>
+            <div class="pet-option-box"><div><p class="text-xs font-black text-white"><i class="fa-solid fa-panorama text-violet-400 mr-2"></i>ESCENA</p><p class="text-[10px] text-slate-400 mt-1">Mostrar la franja pixel-art.</p></div><button id="headerAnimationBtn" type="button" onclick="toggleHeaderAnimation()" class="pet-toggle bg-emerald-600"><span id="headerAnimationText">ON</span></button></div>
           </div>
-          <div class="pet-control-row">
-            <div><p class="text-xs font-black text-white">ESCENA DEL ENCABEZADO</p><p class="text-[10px] text-slate-400">Oculta o muestra toda la franja pixel-art.</p></div>
-            <button id="headerAnimationBtn" type="button" onclick="toggleHeaderAnimation()" class="pet-toggle bg-emerald-600"><span id="headerAnimationText">ON</span></button>
-          </div>
+          <button id="throwBallBtn" type="button" onclick="throwPetBall()" class="throw-ball-premium"><span class="ball-mini">⚾</span><span><b>TIRAR PELOTA</b><small>Las mascotas activas correrán a buscarla</small></span><i class="fa-solid fa-chevron-right"></i></button>
         </div>
         <div><p class="text-[10px] font-black text-slate-400 uppercase mb-2">Temas rápidos</p><div class="grid grid-cols-2 sm:grid-cols-5 gap-2">
           <button onclick="applyThemePreset('original')" class="theme-preset">Original</button><button onclick="applyThemePreset('blue')" class="theme-preset">Azul</button><button onclick="applyThemePreset('purple')" class="theme-preset">Morado</button><button onclick="applyThemePreset('green')" class="theme-preset">Verde</button><button onclick="applyThemePreset('red')" class="theme-preset">Rojo</button>
@@ -5195,17 +5193,22 @@ body.cioe-custom-theme #themeCustomizerBtn{background-color:var(--cioe-accent)!i
 #headerPixelArtWrap .header-extra-pet[alt="fox"]{height:50px!important;filter:brightness(1.45) contrast(1.20) saturate(1.28) drop-shadow(0 2px 2px rgba(0,0,0,.65))!important;}
 #headerPixelArtWrap .header-extra-pet[alt="panda"]{height:50px!important;filter:brightness(1.55) contrast(1.12) saturate(1.08) drop-shadow(0 2px 2px rgba(0,0,0,.65))!important;}
 #headerPixelArtWrap .header-extra-pet[alt="totoro"]{height:48px!important;filter:brightness(1.35) contrast(1.12) drop-shadow(0 2px 2px rgba(0,0,0,.65))!important;}
-#headerPixelArtWrap .header-extra-pet[alt="cat"]{height:46px!important;filter:brightness(1.18) contrast(1.15) saturate(1.12) drop-shadow(0 2px 2px rgba(0,0,0,.65))!important;}
+#headerPixelArtWrap .header-extra-pet[alt="cat"]{height:42px!important;width:auto!important;bottom:4px!important;object-fit:contain!important;filter:brightness(1.10) contrast(1.10) saturate(1.08) drop-shadow(0 2px 2px rgba(0,0,0,.65))!important;}
 #headerPetBall{position:absolute;left:500px;bottom:7px;width:14px;height:14px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#fff 0 12%,#fbbf24 14% 48%,#f97316 50% 100%);border:1px solid rgba(0,0,0,.55);z-index:6;display:none;pointer-events:none;box-shadow:0 2px 3px rgba(0,0,0,.5);will-change:left,bottom;}
 .cat-select{width:100%;background:#0a0f1d;border:1px solid #334155;border-radius:9px;padding:7px 9px;color:#e5e7eb;font-size:11px;font-weight:800;outline:none}.cat-select:focus{border-color:#22d3ee}
 #headerPixelArtWrap .header-extra-pet.pet-moving-right{transform:scaleX(1)!important;}
 #headerPixelArtWrap .header-extra-pet.pet-moving-left{transform:scaleX(-1)!important;}
 /* El Akita queda exactamente con su configuración original */
 #headerDogPet{z-index:5!important;}
-/* Gato sin el fondo morado del GIF: se dibuja en canvas con chroma-key. */
-#headerCatCanvas{position:absolute!important;bottom:3px!important;height:46px!important;width:auto!important;image-rendering:pixelated!important;z-index:5!important;pointer-events:none;transform-origin:center bottom!important;filter:brightness(1.12) contrast(1.12) saturate(1.08) drop-shadow(0 2px 2px rgba(0,0,0,.65));}
-#throwBallBtn{box-shadow:0 0 0 1px rgba(251,191,36,.35),0 5px 14px rgba(245,158,11,.18);}
-#throwBallBtn:active{transform:scale(.97);}
+/* Panel premium de mascotas */
+.pet-settings-card{background:linear-gradient(145deg,#030712,#07101f);border:1px solid #334155;border-radius:16px;padding:16px;box-shadow:inset 0 1px 0 rgba(255,255,255,.025)}
+.pet-status-badge{font-size:9px;font-weight:900;letter-spacing:.08em;color:#67e8f9;background:rgba(8,145,178,.10);border:1px solid rgba(34,211,238,.22);padding:6px 9px;border-radius:999px;white-space:nowrap}
+.pet-choice-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.pet-choice{display:grid;grid-template-columns:30px 1fr auto;align-items:center;gap:8px;min-height:52px;padding:9px 10px;border-radius:12px;background:#0a0f1d;border:1px solid #1e293b;transition:.2s}.pet-choice:hover{border-color:#334155;transform:translateY(-1px)}.pet-choice-cat{grid-column:1/-1;border-color:rgba(34,211,238,.25);background:linear-gradient(90deg,rgba(8,145,178,.08),#0a0f1d)}.pet-choice-icon{width:30px;height:30px;display:grid;place-items:center;background:#111827;border:1px solid #243044;border-radius:9px;font-size:16px}.pet-choice b{display:block;font-size:11px;color:#fff}.pet-choice small{display:block;font-size:9px;color:#64748b;margin-top:1px}
+.cat-config-box{margin-top:10px;display:grid;grid-template-columns:150px 1fr;align-items:center;gap:12px;padding:11px;border:1px solid rgba(34,211,238,.18);border-radius:12px;background:rgba(6,182,212,.035)}.cat-config-title{display:flex;align-items:center;gap:8px}.cat-config-title>span{font-size:20px}.cat-config-title b{display:block;font-size:10px;color:#e2e8f0}.cat-config-title small{display:block;font-size:8px;color:#64748b;margin-top:2px}
+.pet-actions-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}.pet-option-box{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 11px;border-radius:12px;background:#0a0f1d;border:1px solid #1e293b}
+.throw-ball-premium{width:100%;margin-top:10px;display:grid;grid-template-columns:36px 1fr auto;align-items:center;gap:10px;text-align:left;padding:10px 12px;border-radius:13px;color:#111827;background:linear-gradient(135deg,#fbbf24,#f59e0b);border:1px solid #fcd34d;box-shadow:0 8px 22px rgba(245,158,11,.18);transition:.18s}.throw-ball-premium:hover{transform:translateY(-1px);filter:brightness(1.05)}.throw-ball-premium:active{transform:scale(.985)}.throw-ball-premium .ball-mini{width:34px;height:34px;border-radius:10px;background:rgba(255,255,255,.28);display:grid;place-items:center;font-size:18px}.throw-ball-premium b{display:block;font-size:11px}.throw-ball-premium small{display:block;font-size:9px;font-weight:700;opacity:.7;margin-top:1px}
+@media(max-width:640px){.pet-choice-grid,.pet-actions-grid{grid-template-columns:1fr}.pet-choice-cat{grid-column:auto}.cat-config-box{grid-template-columns:1fr}}
+#throwBallBtn:active{transform:scale(.985);}
 </style>
 
 <script id="cioeMultiPetHeader">
@@ -5222,7 +5225,7 @@ document.addEventListener('DOMContentLoaded', function(){
     fox:{key:'fox', folder:'pets/fox', prefix:'red', defaultOn:false, x:120, dir:1, speed:58, phase:1200},
     panda:{key:'panda', folder:'pets/panda', prefix:'black', defaultOn:false, x:230, dir:-1, speed:48, phase:2400},
     totoro:{key:'totoro', folder:'pets/totoro', prefix:'gray', defaultOn:false, x:340, dir:-1, speed:44, phase:3600},
-    cat:{key:'cat', folder:'pets/cat', prefix:'cat_blanco_negro_ojos_dorados', defaultOn:false, x:440, dir:1, speed:56, phase:4800}
+    cat:{key:'cat', folder:'pets/cat', prefix:'cat_blanco_negro_ojos_dorados', defaultOn:false, x:400, dir:1, speed:52, phase:4800}
   };
   const CAT_VARIANT_KEY='cioe_header_cat_variant_v1';
   const CAT_VARIANTS=['blanco_negro_ojos_dorados','blanco_ojos_celestes','gris_ojos_azules','marron_ojos_ambar','naranja_ojos_verdes','negro_ojos_amarillos'];
@@ -5263,36 +5266,8 @@ document.addEventListener('DOMContentLoaded', function(){
   }
   Object.values(PETS).forEach(makePet);
 
-  // Render especial del gato: elimina automáticamente el fondo morado de los GIF.
+  // Los GIF del gato ya tienen fondo transparente, así que se muestran directamente como imagen.
   const catSource=PETS.cat.el;
-  let catCanvas=null, catCtx=null;
-  if(catSource){
-    catSource.style.opacity='0';
-    catSource.style.pointerEvents='none';
-    catCanvas=document.createElement('canvas');
-    catCanvas.id='headerCatCanvas';
-    catCanvas.width=128; catCanvas.height=96;
-    catCanvas.style.left=PETS.cat.x+'px';
-    wrap.appendChild(catCanvas);
-    catCtx=catCanvas.getContext('2d',{willReadFrequently:true});
-  }
-  function drawCatFrame(){
-    if(catSource && catCanvas && catCtx && petEnabled(PETS.cat) && catSource.complete && catSource.naturalWidth){
-      const w=catSource.naturalWidth, h=catSource.naturalHeight;
-      if(catCanvas.width!==w||catCanvas.height!==h){catCanvas.width=w;catCanvas.height=h;}
-      catCtx.clearRect(0,0,w,h);
-      catCtx.drawImage(catSource,0,0,w,h);
-      try{
-        const im=catCtx.getImageData(0,0,w,h), d=im.data;
-        for(let i=0;i<d.length;i+=4){
-          const r=d[i],g=d[i+1],b=d[i+2];
-          // Fondo original aproximado #a56fa5 / tonos morados cercanos.
-          if(r>105 && b>95 && r>g*1.18 && b>g*1.12 && Math.abs(r-b)<55){d[i+3]=0;}
-        }
-        catCtx.putImageData(im,0,0);
-      }catch(e){}
-    }
-  }
 
   const btnIds={akita:'petToggleAkita',fox:'petToggleFox',panda:'petTogglePanda',totoro:'petToggleTotoro',cat:'petToggleCat'};
   function paintBtn(btn,on){
@@ -5304,9 +5279,8 @@ document.addEventListener('DOMContentLoaded', function(){
   function refreshPetUI(){
     Object.values(PETS).forEach(p=>{
       const on=petEnabled(p);
-      if(p.el) p.el.style.display=(p.key==='cat'?'':(on?'':'none'));
-      if(p.key==='cat' && p.el) p.el.style.opacity='0';
-      if(p.key==='cat' && catCanvas) catCanvas.style.display=on?'':'none';
+      if(p.el) p.el.style.display=on?'':'none';
+      if(p.key==='cat' && p.el) p.el.style.opacity='1';
       paintBtn(document.getElementById(btnIds[p.key]),on);
     });
     paintBtn(document.getElementById('petMovementBtn'),movementEnabled());
@@ -5325,7 +5299,7 @@ document.addEventListener('DOMContentLoaded', function(){
     localStorage.setItem(CAT_VARIANT_KEY,v);
     PETS.cat.prefix='cat_'+v;
     setGif(PETS.cat,PETS.cat.mode==='run'?'run':'walk');
-    if(catSource) catSource.style.opacity='0';
+    if(catSource) catSource.style.opacity='1';
   };
   function ensureBall(){
     if(ball) return ball;
@@ -5405,11 +5379,6 @@ document.addEventListener('DOMContentLoaded', function(){
         }else{
           p.el.classList.toggle('pet-moving-right',p.dir===1);
           p.el.classList.toggle('pet-moving-left',p.dir===-1);
-        }
-        if(p.key==='cat' && catCanvas){
-          catCanvas.style.left=p.x+'px';
-          catCanvas.style.transform=p.dir===-1?'scaleX(-1)':'scaleX(1)';
-          drawCatFrame();
         }
       });
     }
