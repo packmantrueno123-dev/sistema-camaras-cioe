@@ -3,6 +3,7 @@ const cors = require("cors");
 const { Pool } = require("pg");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
+const { randomUUID } = require("crypto");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -121,7 +122,7 @@ app.use(express.json({ limit: "10mb" }));
 // AUTENTICACIÓN
 // ======================================================
 
-function auth(req, res, next) {
+async function auth(req, res, next) {
   const header = req.headers.authorization || "";
 
   const token = header.startsWith("Bearer ")
@@ -137,11 +138,50 @@ function auth(req, res, next) {
 
   try {
     req.user = jwt.verify(token, JWT_SECRET);
+
+    // El administrador no tiene límite de sesiones.
+    if (req.user?.role === "admin") {
+      return next();
+    }
+
+    // Cada usuario normal debe tener una sesión registrada y activa.
+    if (!req.user?.sid) {
+      return res.status(401).json({
+        ok: false,
+        error: "Sesión inválida. Inicia sesión nuevamente."
+      });
+    }
+
+    const session = await pool.query(
+      `UPDATE user_sessions
+       SET last_seen=NOW()
+       WHERE session_id=$1
+         AND user_id=$2
+         AND last_seen > NOW() - INTERVAL '5 minutes'
+       RETURNING session_id`,
+      [req.user.sid, req.user.id]
+    );
+
+    if (!session.rowCount) {
+      return res.status(401).json({
+        ok: false,
+        error: "La sesión venció o fue cerrada. Inicia sesión nuevamente."
+      });
+    }
+
     next();
-  } catch {
-    return res.status(401).json({
+  } catch (err) {
+    if (err?.name === "JsonWebTokenError" || err?.name === "TokenExpiredError") {
+      return res.status(401).json({
+        ok: false,
+        error: "Sesión inválida o vencida"
+      });
+    }
+
+    console.error("Error validando sesión:", err);
+    return res.status(500).json({
       ok: false,
-      error: "Sesión inválida o vencida"
+      error: "Error validando la sesión"
     });
   }
 }
@@ -205,6 +245,19 @@ async function initDb() {
       active BOOLEAN NOT NULL DEFAULT TRUE,
       created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     );
+
+    CREATE TABLE IF NOT EXISTS user_sessions (
+      session_id UUID PRIMARY KEY,
+      user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      last_seen TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_user_sessions_user_id
+    ON user_sessions(user_id);
+
+    CREATE INDEX IF NOT EXISTS idx_user_sessions_last_seen
+    ON user_sessions(last_seen);
   `);
 
   // Agrega la columna sin borrar usuarios existentes
@@ -317,6 +370,8 @@ app.get("/", (_req, res) => {
 // ======================================================
 
 app.post("/api/login", async (req, res) => {
+  const client = await pool.connect();
+
   try {
     const username = String(
       req.body?.username || ""
@@ -326,7 +381,7 @@ app.post("/api/login", async (req, res) => {
       req.body?.password || ""
     );
 
-    const q = await pool.query(
+    const q = await client.query(
       `SELECT
         id,
         username,
@@ -365,11 +420,68 @@ app.post("/api/login", async (req, res) => {
         ? allPermissions()
         : normalizePermissions(u.permissions);
 
+    let sessionId = null;
+
+    // ADMIN: acceso ilimitado.
+    // USUARIOS NORMALES: máximo 2 sesiones/pestañas activas.
+    if (u.role !== "admin") {
+      await client.query("BEGIN");
+
+      // Evita que dos inicios simultáneos superen el límite.
+      await client.query(
+        "SELECT pg_advisory_xact_lock($1)",
+        [u.id]
+      );
+
+      // Libera sesiones de pestañas/equipos que dejaron de enviar actividad.
+      await client.query(
+        `DELETE FROM user_sessions
+         WHERE user_id=$1
+           AND last_seen <= NOW() - INTERVAL '5 minutes'`,
+        [u.id]
+      );
+
+      const activeSessions = await client.query(
+        `SELECT COUNT(*)::int AS total
+         FROM user_sessions
+         WHERE user_id=$1`,
+        [u.id]
+      );
+
+      const total = activeSessions.rows[0]?.total || 0;
+
+      if (total >= 2) {
+        await client.query("ROLLBACK");
+
+        return res.status(409).json({
+          ok: false,
+          code: "SESSION_LIMIT",
+          error: "Este usuario ya tiene 2 sesiones activas. Cierra una sesión para poder ingresar."
+        });
+      }
+
+      sessionId = randomUUID();
+
+      await client.query(
+        `INSERT INTO user_sessions(
+          session_id,
+          user_id,
+          created_at,
+          last_seen
+        )
+        VALUES($1,$2,NOW(),NOW())`,
+        [sessionId, u.id]
+      );
+
+      await client.query("COMMIT");
+    }
+
     const token = jwt.sign(
       {
         id: u.id,
         username: u.username,
-        role: u.role
+        role: u.role,
+        ...(sessionId ? { sid: sessionId } : {})
       },
       JWT_SECRET,
       {
@@ -385,14 +497,49 @@ app.post("/api/login", async (req, res) => {
         username: u.username,
         role: u.role,
         permissions
-      }
+      },
+      sessionLimit: u.role === "admin" ? null : 2
     });
   } catch (err) {
+    try { await client.query("ROLLBACK"); } catch (_) {}
     console.error(err);
 
     res.status(500).json({
       ok: false,
       error: "Error interno"
+    });
+  } finally {
+    client.release();
+  }
+});
+
+// ======================================================
+// SESIONES ACTIVAS
+// ======================================================
+
+// Mantiene viva una pestaña abierta. Los usuarios normales envían
+// este pulso periódicamente; el admin queda exento del límite.
+app.post("/api/session/heartbeat", auth, async (req, res) => {
+  res.json({ ok: true });
+});
+
+// Cierra únicamente la sesión/pestaña actual.
+app.post("/api/logout", auth, async (req, res) => {
+  try {
+    if (req.user?.role !== "admin" && req.user?.sid) {
+      await pool.query(
+        `DELETE FROM user_sessions
+         WHERE session_id=$1 AND user_id=$2`,
+        [req.user.sid, req.user.id]
+      );
+    }
+
+    res.json({ ok: true });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({
+      ok: false,
+      error: "No se pudo cerrar la sesión"
     });
   }
 });
@@ -771,6 +918,11 @@ app.patch(
         });
       }
 
+      await pool.query(
+        "DELETE FROM user_sessions WHERE user_id=$1",
+        [req.params.id]
+      );
+
       res.json({
         ok: true
       });
@@ -814,6 +966,13 @@ app.patch(
           error:
             "No se puede modificar ese usuario"
         });
+      }
+
+      if (!req.body?.active) {
+        await pool.query(
+          "DELETE FROM user_sessions WHERE user_id=$1",
+          [req.params.id]
+        );
       }
 
       res.json({
