@@ -6735,15 +6735,8 @@ document.addEventListener('DOMContentLoaded', function(){
     if(scene==='winter'){
       const b='pets/backgrounds/winter/';
       return type==='background'
-        ? [
-            b+'background.png',
-            b+'winter-background-mountains.png',
-            b+'background-light-small.png'
-          ]
-        : [
-            b+'foreground.png',
-            b+'foreground-light-small.png'
-          ];
+        ? [b+'winter-background.png']
+        : [b+'winter-foreground.png'];
     }
 
     // Autumn necesita priorizar la variante SMALL para mantener la escala correcta.
