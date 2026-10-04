@@ -5058,6 +5058,20 @@ body.cioe-custom-theme #themeCustomizerBtn{background-color:var(--cioe-accent)!i
             <div class="pet-control-row"><span class="text-xs font-bold">🦊 Zorro</span><button id="petToggleFox" type="button" onclick="toggleHeaderPet('fox')" class="pet-toggle bg-rose-600">OFF</button></div>
             <div class="pet-control-row"><span class="text-xs font-bold">🐼 Panda</span><button id="petTogglePanda" type="button" onclick="toggleHeaderPet('panda')" class="pet-toggle bg-rose-600">OFF</button></div>
             <div class="pet-control-row"><span class="text-xs font-bold">🐢 Tortuga</span><button id="petToggleTotoro" type="button" onclick="toggleHeaderPet('totoro')" class="pet-toggle bg-rose-600">OFF</button></div>
+            <div class="pet-control-row"><span class="text-xs font-bold">🐱 Gato</span><button id="petToggleCat" type="button" onclick="toggleHeaderPet('cat')" class="pet-toggle bg-rose-600">OFF</button></div>
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-2 items-end">
+            <label class="text-[10px] font-black text-slate-400 uppercase">Tipo de gato
+              <select id="catVariantSelect" class="cat-select mt-1" onchange="changeCatVariant(this.value)">
+                <option value="blanco_negro_ojos_dorados">Blanco y negro · ojos dorados</option>
+                <option value="blanco_ojos_celestes">Blanco · ojos celestes</option>
+                <option value="gris_ojos_azules">Gris · ojos azules</option>
+                <option value="marron_ojos_ambar">Marrón · ojos ámbar</option>
+                <option value="naranja_ojos_verdes">Naranja · ojos verdes</option>
+                <option value="negro_ojos_amarillos">Negro · ojos amarillos</option>
+              </select>
+            </label>
+            <button id="throwBallBtn" type="button" onclick="throwPetBall()" class="bg-amber-500 hover:bg-amber-400 text-black px-4 py-2 rounded-xl text-xs font-black whitespace-nowrap"><i class="fa-solid fa-baseball mr-1"></i> Tirar pelota</button>
           </div>
           <div class="pet-control-row">
             <div><p class="text-xs font-black text-white">MOVIMIENTO</p><p class="text-[10px] text-slate-400">ON: caminan, corren y descansan. OFF: se quedan quietos.</p></div>
@@ -5181,6 +5195,9 @@ body.cioe-custom-theme #themeCustomizerBtn{background-color:var(--cioe-accent)!i
 #headerPixelArtWrap .header-extra-pet[alt="fox"]{height:50px!important;filter:brightness(1.45) contrast(1.20) saturate(1.28) drop-shadow(0 2px 2px rgba(0,0,0,.65))!important;}
 #headerPixelArtWrap .header-extra-pet[alt="panda"]{height:50px!important;filter:brightness(1.55) contrast(1.12) saturate(1.08) drop-shadow(0 2px 2px rgba(0,0,0,.65))!important;}
 #headerPixelArtWrap .header-extra-pet[alt="totoro"]{height:48px!important;filter:brightness(1.35) contrast(1.12) drop-shadow(0 2px 2px rgba(0,0,0,.65))!important;}
+#headerPixelArtWrap .header-extra-pet[alt="cat"]{height:46px!important;filter:brightness(1.18) contrast(1.15) saturate(1.12) drop-shadow(0 2px 2px rgba(0,0,0,.65))!important;}
+#headerPetBall{position:absolute;left:500px;bottom:7px;width:14px;height:14px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#fff 0 12%,#fbbf24 14% 48%,#f97316 50% 100%);border:1px solid rgba(0,0,0,.55);z-index:6;display:none;pointer-events:none;box-shadow:0 2px 3px rgba(0,0,0,.5);will-change:left,bottom;}
+.cat-select{width:100%;background:#0a0f1d;border:1px solid #334155;border-radius:9px;padding:7px 9px;color:#e5e7eb;font-size:11px;font-weight:800;outline:none}.cat-select:focus{border-color:#22d3ee}
 #headerPixelArtWrap .header-extra-pet.pet-moving-right{transform:scaleX(1)!important;}
 #headerPixelArtWrap .header-extra-pet.pet-moving-left{transform:scaleX(-1)!important;}
 /* El Akita queda exactamente con su configuración original */
@@ -5200,8 +5217,14 @@ document.addEventListener('DOMContentLoaded', function(){
     akita:{el:akita, key:'akita', folder:'pets', prefix:'akita', defaultOn:true, x:18, dir:1, speed:52, phase:0},
     fox:{key:'fox', folder:'pets/fox', prefix:'red', defaultOn:false, x:120, dir:1, speed:58, phase:1200},
     panda:{key:'panda', folder:'pets/panda', prefix:'black', defaultOn:false, x:230, dir:-1, speed:48, phase:2400},
-    totoro:{key:'totoro', folder:'pets/totoro', prefix:'gray', defaultOn:false, x:340, dir:-1, speed:44, phase:3600}
+    totoro:{key:'totoro', folder:'pets/totoro', prefix:'gray', defaultOn:false, x:340, dir:-1, speed:44, phase:3600},
+    cat:{key:'cat', folder:'pets/cat', prefix:'cat_blanco_negro_ojos_dorados', defaultOn:false, x:440, dir:1, speed:56, phase:4800}
   };
+  const CAT_VARIANT_KEY='cioe_header_cat_variant_v1';
+  const CAT_VARIANTS=['blanco_negro_ojos_dorados','blanco_ojos_celestes','gris_ojos_azules','marron_ojos_ambar','naranja_ojos_verdes','negro_ojos_amarillos'];
+  function currentCatVariant(){const v=localStorage.getItem(CAT_VARIANT_KEY)||'blanco_negro_ojos_dorados';return CAT_VARIANTS.includes(v)?v:'blanco_negro_ojos_dorados'}
+  PETS.cat.prefix='cat_'+currentCatVariant();
+  let ball=null, ballActive=false, ballX=500, ballEnd=0;
   const MOVE_KEY='cioe_header_pets_movement_v1';
 
   function petStorageKey(key){return 'cioe_header_pet_'+key+'_v1'}
@@ -5211,6 +5234,10 @@ document.addEventListener('DOMContentLoaded', function(){
   }
   function movementEnabled(){return localStorage.getItem(MOVE_KEY)!=='0'}
   function path(p,mode){
+    if(p.key==='cat'){
+      if(mode==='run') return `${p.folder}/${p.prefix}_run_x4.gif`;
+      return `${p.folder}/${p.prefix}_walk_x4.gif`;
+    }
     if(mode==='run') return `${p.folder}/${p.prefix}_run_8fps.gif`;
     if(mode==='idle') return `${p.folder}/${p.prefix}_idle_8fps.gif`;
     return `${p.folder}/${p.prefix}_walk_8fps.gif`;
@@ -5232,7 +5259,7 @@ document.addEventListener('DOMContentLoaded', function(){
   }
   Object.values(PETS).forEach(makePet);
 
-  const btnIds={akita:'petToggleAkita',fox:'petToggleFox',panda:'petTogglePanda',totoro:'petToggleTotoro'};
+  const btnIds={akita:'petToggleAkita',fox:'petToggleFox',panda:'petTogglePanda',totoro:'petToggleTotoro',cat:'petToggleCat'};
   function paintBtn(btn,on){
     if(!btn)return;
     btn.textContent=on?'ON':'OFF';
@@ -5256,6 +5283,28 @@ document.addEventListener('DOMContentLoaded', function(){
     localStorage.setItem(MOVE_KEY,movementEnabled()?'0':'1');
     refreshPetUI();
   };
+  window.changeCatVariant=function(v){
+    if(!CAT_VARIANTS.includes(v)) return;
+    localStorage.setItem(CAT_VARIANT_KEY,v);
+    PETS.cat.prefix='cat_'+v;
+    setGif(PETS.cat,PETS.cat.mode==='run'?'run':'walk');
+  };
+  function ensureBall(){
+    if(ball) return ball;
+    ball=document.createElement('div'); ball.id='headerPetBall'; wrap.appendChild(ball); return ball;
+  }
+  window.throwPetBall=function(){
+    if(localStorage.getItem('cioe_header_animation_enabled_v1')==='0') return;
+    const active=Object.values(PETS).filter(p=>petEnabled(p) && p.el);
+    if(!active.length) return;
+    const b=ensureBall();
+    const max=Math.max(80,wrap.clientWidth-32);
+    ballX=70+Math.random()*(max-70);
+    b.style.left=ballX+'px'; b.style.bottom='8px'; b.style.display='block';
+    ballActive=true; ballEnd=performance.now()+2600;
+    active.forEach(p=>{p.mode='run';p.pauseUntil=0;p.dir=(ballX>=p.x)?1:-1;setGif(p,'run')});
+  };
+  const catSelect=document.getElementById('catVariantSelect'); if(catSelect) catSelect.value=currentCatVariant();
 
   Object.values(PETS).forEach(p=>{
     p.nextPause=performance.now()+4200+p.phase;
@@ -5293,9 +5342,16 @@ document.addEventListener('DOMContentLoaded', function(){
           }
           if(p.mode!=='idle'){
             setGif(p,p.mode==='run'?'run':'walk');
-            p.x+=p.dir*(p.mode==='run'?p.speed*1.9:p.speed)*dt;
-            if(p.x>=max){p.x=max;p.dir=-1}
-            if(p.x<=18){p.x=18;p.dir=1}
+            if(ballActive){
+              p.dir=(ballX>=p.x)?1:-1;
+              p.mode='run'; setGif(p,'run');
+              p.x+=p.dir*p.speed*2.25*dt;
+              if(Math.abs(p.x-ballX)<18) p.x=ballX-(p.el.offsetWidth/2);
+            }else{
+              p.x+=p.dir*(p.mode==='run'?p.speed*1.9:p.speed)*dt;
+            }
+            if(p.x>=max){p.x=max;if(!ballActive)p.dir=-1}
+            if(p.x<=18){p.x=18;if(!ballActive)p.dir=1}
           }
         }
         p.el.style.left=p.x+'px';
@@ -5307,6 +5363,11 @@ document.addEventListener('DOMContentLoaded', function(){
           p.el.classList.toggle('pet-moving-left',p.dir===-1);
         }
       });
+    }
+    if(ballActive && now>=ballEnd){
+      ballActive=false;
+      if(ball) ball.style.display='none';
+      Object.values(PETS).forEach(p=>{if(p.el&&petEnabled(p)){p.mode='walk';p.nextRun=now+5000+Math.random()*5000;setGif(p,'walk')}});
     }
     requestAnimationFrame(frame);
   }
