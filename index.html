@@ -922,17 +922,17 @@ body.cioe-custom-theme #themeCustomizerBtn{background-color:var(--cioe-accent)!i
 </style>
 
 
-<style id="cioeWinterMountainBackgroundFix">
-#headerPixelArtWrap.winter-scene #headerPixelArt{
-  position:absolute!important;
-  inset:0!important;
-  width:100%!important;
-  height:100%!important;
-  object-fit:fill!important;
-  object-position:center center!important;
-  image-rendering:pixelated!important;
-  z-index:0!important;
+<style id="cioeWinterTwoImagesFinal">
+#headerPixelArtWrap.winter-scene #headerPixelArt,
+#headerPixelArtWrap.winter-scene #headerLandscapeForeground{
+ position:absolute!important;inset:0!important;width:100%!important;height:100%!important;
+ object-fit:fill!important;object-position:center bottom!important;image-rendering:pixelated!important
 }
+#headerPixelArtWrap.winter-scene #headerPixelArt{z-index:0!important}
+#headerPixelArtWrap.winter-scene #headerLandscapeForeground{z-index:1!important;pointer-events:none!important}
+#headerPixelArtWrap.winter-scene #headerDogPet,
+#headerPixelArtWrap.winter-scene .header-extra-pet{z-index:10!important}
+#headerPixelArtWrap.winter-scene #headerPetBall{z-index:12!important}
 </style>
 
 </head>
@@ -6731,13 +6731,10 @@ document.addEventListener('DOMContentLoaded', function(){
   }
 
   function files(scene,type){
-    // Winter: usa la imagen de montañas enviada como fondo y conserva su foreground actual.
-    if(scene==='winter' && type==='background'){
-      return [
-        'pets/backgrounds/winter/winter-background-mountains.png',
-        ...localFiles(scene,type),
-        ...officialFiles(scene,type)
-      ];
+    // WINTER: exclusivamente las dos imágenes seleccionadas.
+    if(scene==='winter'){
+      const b='pets/backgrounds/winter/';
+      return type==='background' ? [b+'background.png'] : [b+'foreground.png'];
     }
 
     // Autumn necesita priorizar la variante SMALL para mantener la escala correcta.
