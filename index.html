@@ -5034,7 +5034,34 @@ body.cioe-custom-theme #themeCustomizerBtn{background-color:var(--cioe-accent)!i
         'xmlns:x="urn:schemas-microsoft-com:office:excel" ' +
         'xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="UTF-8"></head><body>' +
         tableHtml +
-        '</body></html>';
+        '
+<style id="cioeLuizMeloCat1TestStyle">
+#luizMeloCat1Test{position:absolute;left:55%;bottom:3px;width:32px;height:32px;overflow:hidden;z-index:11;image-rendering:pixelated;pointer-events:none}
+#luizMeloCat1Test img{position:absolute;left:0;top:0;height:32px;width:auto;max-width:none!important;image-rendering:pixelated}
+</style>
+<script id="cioeLuizMeloCat1Test">
+window.addEventListener('load',function(){
+ const wrap=document.getElementById('headerPixelArtWrap'); if(!wrap)return;
+ const box=document.createElement('div'); box.id='luizMeloCat1Test';
+ const img=document.createElement('img'); img.src='pets/cat/luizmelo/Cat-1-Walk.png'; img.alt='LuizMelo Cat-1';
+ box.appendChild(img); wrap.appendChild(box);
+ img.onload=function(){
+   const h=img.naturalHeight||32, frames=Math.max(1,Math.round((img.naturalWidth||h)/h)), size=32;
+   img.style.height=size+'px'; img.style.width=(frames*size)+'px';
+   let f=0,x=Math.max(20,wrap.clientWidth*.55),dir=1,last=0;
+   function tick(ts){
+     if(ts-last>120){f=(f+1)%frames;img.style.left=(-f*size)+'px';last=ts}
+     x+=dir*.45; const max=Math.max(20,wrap.clientWidth-size-18);
+     if(x>=max){x=max;dir=-1} if(x<=18){x=18;dir=1}
+     box.style.left=x+'px'; box.style.transform=dir>0?'scaleX(1)':'scaleX(-1)';
+     requestAnimationFrame(tick);
+   } requestAnimationFrame(tick);
+ };
+ img.onerror=function(){console.error('[CIOE] No se encontró Cat-1-Walk.png')};
+});
+</script>
+
+</body></html>';
 
       const blob = new Blob(['\ufeff', excelHtml], { type: 'application/vnd.ms-excel;charset=utf-8;' });
       const url = URL.createObjectURL(blob);
