@@ -1006,20 +1006,21 @@ body.cioe-custom-theme #themeCustomizerBtn{background-color:var(--cioe-accent)!i
 </style>
 
 
-<style id="cioeThemeActionsTopFix2026">
-/* RESTABLECER + GUARDAR arriba, al lado de DISEÑO DE COLORES */
-#themeCustomizerModal .theme-redesign-power{
-  padding-right:330px!important;
-  position:relative!important;
-  min-height:50px!important;
+
+
+
+<style id="cioeThemeActionsInlineCompact2026">
+/* Botones dentro de DISEÑO DE COLORES, compactos y sin salirse del panel */
+#themeCustomizerModal .theme-actions-inline{
+  margin-top:10px!important;
+  padding-top:9px!important;
+  border-top:1px solid #1c2b40!important;
 }
-#themeCustomizerModal .theme-redesign-footer{
-  position:absolute!important;
-  top:82px!important;
-  right:42px!important;
-  bottom:auto!important;
-  z-index:8!important;
-  width:310px!important;
+#themeCustomizerModal .theme-actions-inline .theme-redesign-footer{
+  position:static!important;
+  inset:auto!important;
+  width:100%!important;
+  margin:0!important;
   padding:0!important;
   border:0!important;
   background:transparent!important;
@@ -1027,23 +1028,41 @@ body.cioe-custom-theme #themeCustomizerBtn{background-color:var(--cioe-accent)!i
   grid-template-columns:1fr 1.25fr!important;
   gap:8px!important;
 }
-#themeCustomizerModal .theme-redesign-footer button{
-  min-height:40px!important;
-  height:40px!important;
-  padding:5px 9px!important;
-  border-radius:11px!important;
+#themeCustomizerModal .theme-actions-inline button{
+  min-height:36px!important;
+  height:36px!important;
+  padding:4px 10px!important;
+  border-radius:10px!important;
 }
-#themeCustomizerModal .theme-redesign-footer .footer-icon{
-  width:27px!important;height:27px!important;font-size:10px!important;
+#themeCustomizerModal .theme-actions-inline .footer-icon{
+  width:24px!important;height:24px!important;font-size:9px!important;
 }
-#themeCustomizerModal .theme-redesign-footer b{font-size:9px!important}
-#themeCustomizerModal .theme-redesign-footer small{display:none!important}
-@media(max-width:900px){
-  #themeCustomizerModal .theme-redesign-power{padding-right:0!important}
-  #themeCustomizerModal .theme-redesign-footer{
-    position:static!important;width:auto!important;margin:0 16px 12px!important;
-    grid-template-columns:1fr 1fr!important;
-  }
+#themeCustomizerModal .theme-actions-inline b{font-size:9px!important;line-height:1!important}
+#themeCustomizerModal .theme-actions-inline small{display:none!important}
+
+/* Achica un poco el personalizador completo */
+#themeCustomizerModal .theme-redesign-shell{
+  width:min(980px,calc(100vw - 20px))!important;
+  max-width:980px!important;
+  max-height:calc(100vh - 20px)!important;
+}
+#themeCustomizerModal .theme-redesign-header{min-height:58px!important;padding:8px 15px!important}
+#themeCustomizerModal .theme-redesign-body{padding:8px 14px!important;gap:8px!important}
+#themeCustomizerModal .theme-redesign-section{padding:9px 10px!important}
+#themeCustomizerModal .theme-quick-grid{gap:7px!important}
+#themeCustomizerModal .theme-preset-rich{height:39px!important}
+#themeCustomizerModal .theme-color-grid-rich{gap:9px!important;margin-top:9px!important}
+#themeCustomizerModal .theme-color-box-rich{min-height:60px!important;padding:8px 10px!important}
+#themeCustomizerModal .theme-pet-five{margin-top:9px!important;gap:7px!important}
+#themeCustomizerModal .theme-pet-five .pet-choice{min-height:58px!important;padding:7px!important}
+#themeCustomizerModal .theme-variant-grid{gap:8px!important;margin-top:8px!important}
+#themeCustomizerModal .dog-config-box,#themeCustomizerModal .cat-config-box{padding:8px!important}
+#themeCustomizerModal .individual-pet-variant{padding:4px 6px!important}
+#themeCustomizerModal .theme-landscape-box{margin-top:7px!important;padding:7px 9px!important}
+#themeCustomizerModal .theme-actions-three .pet-option-box{min-height:52px!important;padding:7px 9px!important}
+
+@media(max-width:640px){
+ #themeCustomizerModal .theme-actions-inline .theme-redesign-footer{grid-template-columns:1fr!important}
 }
 </style>
 
@@ -6288,7 +6307,12 @@ body.cioe-custom-theme #themeCustomizerBtn{background-color:var(--cioe-accent)!i
               <i class="fa-solid fa-chevron-down"></i>
             </label>
           </div>
-        </section>
+        
+<div class="theme-actions-inline"><div class="theme-redesign-footer">
+        <button onclick="resetTheme()" class="theme-footer-reset"><span class="footer-icon"><i class="fa-solid fa-rotate-left"></i></span><span><b>RESTABLECER</b><small>Volver a los valores originales</small></span></button>
+        <button onclick="saveTheme()" class="theme-footer-save"><span class="footer-icon"><i class="fa-solid fa-floppy-disk"></i></span><span><b>GUARDAR CAMBIOS</b><small>Aplicar la configuración</small></span></button>
+      </div></div>
+</section>
 
         <!-- MASCOTAS -->
         <section class="theme-redesign-section">
@@ -6385,10 +6409,7 @@ body.cioe-custom-theme #themeCustomizerBtn{background-color:var(--cioe-accent)!i
         <p id="themeMessage" class="theme-redesign-message"></p>
       </div>
 
-      <div class="theme-redesign-footer">
-        <button onclick="resetTheme()" class="theme-footer-reset"><span class="footer-icon"><i class="fa-solid fa-rotate-left"></i></span><span><b>RESTABLECER</b><small>Volver a los valores originales</small></span></button>
-        <button onclick="saveTheme()" class="theme-footer-save"><span class="footer-icon"><i class="fa-solid fa-floppy-disk"></i></span><span><b>GUARDAR CAMBIOS</b><small>Aplicar la configuración</small></span></button>
-      </div>
+      
     </div>
   </div>
 
@@ -6838,7 +6859,6 @@ document.addEventListener('DOMContentLoaded', function(){
     if(e.target?.id==='dogCountSelect'||e.target?.id==='catCountSelect') setTimeout(render,80);
   });
   document.addEventListener('DOMContentLoaded',()=>setTimeout(render,350));
-  setInterval(apply,1200);
 })();
 </script>
 
