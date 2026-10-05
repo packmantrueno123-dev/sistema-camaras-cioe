@@ -6018,9 +6018,20 @@ body.cioe-custom-theme #themeCustomizerBtn{background-color:var(--cioe-accent)!i
           <button type="button" onclick="clearGlobalReportFilters()" class="w-full bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-xl px-3 py-2.5 text-xs font-bold text-slate-200"><i class="fa-solid fa-filter-circle-xmark mr-1"></i> Limpiar filtros</button>
         </div>
       </div>
-      <div class="px-5 py-3 border-b border-slate-800 flex justify-between text-[11px]">
-        <span class="text-slate-400">Fecha, hora, año, cámara y contenido del reporte.</span>
-        <span id="globalHistoryCount" class="font-black text-cyan-400">0 reportes</span>
+      <div class="px-5 py-3 border-b border-slate-800 space-y-2">
+        <div class="flex flex-wrap items-center justify-between gap-2 text-[11px]">
+          <span class="text-slate-400">Fecha, hora, año, cámara y contenido del reporte.</span>
+          <div class="flex flex-wrap items-center gap-2">
+            <span class="px-2.5 py-1 rounded-full border border-amber-500/30 bg-amber-500/10 text-amber-300 font-black">
+              <i class="fa-regular fa-clock mr-1"></i>Historial temporal: 30 días
+            </span>
+            <span id="globalHistoryCount" class="px-2.5 py-1 rounded-full border border-cyan-500/30 bg-cyan-500/10 font-black text-cyan-400">0 reportes</span>
+          </div>
+        </div>
+        <div class="rounded-xl border border-amber-500/25 bg-amber-500/10 px-3 py-2 text-[10px] text-amber-200 leading-relaxed">
+          <i class="fa-solid fa-triangle-exclamation mr-1 text-amber-400"></i>
+          <b>AVISO:</b> Los reportes se mostrarán en este calendario durante 30 días. Revise la información necesaria antes de finalizar este período. Al vencer el plazo, el reporte dejará de mostrarse aquí, pero permanecerá guardado en el Centro de Control.
+        </div>
       </div>
       <div id="globalReportHistoryList" class="p-4 space-y-2 overflow-y-auto flex-1"></div>
       <div class="p-4 border-t border-slate-800 flex justify-end">
@@ -6089,6 +6100,36 @@ body.cioe-custom-theme #themeCustomizerBtn{background-color:var(--cioe-accent)!i
     document.getElementById('globalHistorySecond').value='';
     renderGlobalReportHistory();
   };
+  function globalHistoryEntryDate(entry){
+    if(entry && entry.iso){
+      const d=new Date(entry.iso);
+      if(!Number.isNaN(d.getTime())) return d;
+    }
+    const raw=String(entry?.timestamp||'');
+    const m=raw.match(/(\d{1,2})\/(\d{1,2})\/(\d{4})[^\d]*(\d{1,2}):(\d{2}):(\d{2})\s*(a\.?\s*m\.?|p\.?\s*m\.?)?/i);
+    if(!m)return null;
+    let h=Number(m[4]);
+    const ap=String(m[7]||'').replace(/[.\s]/g,'').toLowerCase();
+    if(ap==='pm' && h<12)h+=12;
+    if(ap==='am' && h===12)h=0;
+    const d=new Date(Number(m[3]),Number(m[2])-1,Number(m[1]),h,Number(m[5]),Number(m[6]));
+    return Number.isNaN(d.getTime())?null:d;
+  }
+
+  function globalHistoryDaysRemaining(entry){
+    const d=globalHistoryEntryDate(entry);
+    if(!d)return null;
+    const expires=d.getTime()+(30*24*60*60*1000);
+    return Math.max(0,Math.ceil((expires-Date.now())/(24*60*60*1000)));
+  }
+
+  function globalHistoryIsVisible(entry){
+    const d=globalHistoryEntryDate(entry);
+    if(!d)return true; // conserva registros antiguos sin fecha válida
+    const age=Date.now()-d.getTime();
+    return age>=0 && age<(30*24*60*60*1000);
+  }
+
   window.renderGlobalReportHistory=function(){
     const list=document.getElementById('globalReportHistoryList');
     const camFilter=document.getElementById('globalHistoryCamera').value;
@@ -6105,6 +6146,9 @@ body.cioe-custom-theme #themeCustomizerBtn{background-color:var(--cioe-accent)!i
       if(camFilter && String(camId)!==String(camFilter))return;
       const cam=(window.cameras||cameras||[]).find(c=>String(c.id)===String(camId));
       (Array.isArray(entries)?entries:[]).forEach(entry=>{
+        // El calendario solo muestra los últimos 30 días.
+        // No se borra del localStorage para conservar el historial del Centro de Control.
+        if(!globalHistoryIsVisible(entry))return;
         if(dateFilter && historyDateKey(entry)!==dateFilter)return;
         const tp=historyTimeParts(entry);
         if(hourFilter!==null && (!tp || tp.h!==hourFilter))return;
@@ -6118,13 +6162,27 @@ body.cioe-custom-theme #themeCustomizerBtn{background-color:var(--cioe-accent)!i
     if(!rows.length){
       list.innerHTML='<div class="p-8 text-center border border-slate-800 rounded-xl text-slate-500 text-xs"><i class="fa-regular fa-calendar-xmark text-2xl mb-2 block"></i>No hay reportes para los filtros seleccionados.</div>';return;
     }
-    list.innerHTML=rows.map(r=>`<div class="bg-[#030712] border border-slate-800 rounded-xl p-4">
-      <div class="flex flex-wrap items-center justify-between gap-2 mb-2">
-        <span class="font-black text-white text-xs">${escapeHtml(r.camName)}</span>
-        <span class="text-[10px] font-black text-cyan-300"><i class="fa-regular fa-clock mr-1"></i>${escapeHtml(r.timestamp||'SIN FECHA')}</span>
-      </div>
-      <div class="text-xs text-slate-300 whitespace-pre-wrap break-words">${escapeHtml(r.text||'SIN REPORTE')}</div>
-    </div>`).join('');
+    list.innerHTML=rows.map(r=>{
+      const days=globalHistoryDaysRemaining(r);
+      const daysLabel=days===null?'Plazo no disponible':(days===1?'1 día restante':days+' días restantes');
+      const urgencyClass=days!==null && days<=3
+        ? 'border-rose-500/30 bg-rose-500/10 text-rose-300'
+        : (days!==null && days<=7
+          ? 'border-amber-500/30 bg-amber-500/10 text-amber-300'
+          : 'border-emerald-500/30 bg-emerald-500/10 text-emerald-300');
+      return `<div class="bg-[#030712] border border-slate-800 rounded-xl p-4">
+        <div class="flex flex-wrap items-center justify-between gap-2 mb-2">
+          <span class="font-black text-white text-xs">${escapeHtml(r.camName)}</span>
+          <div class="flex flex-wrap items-center justify-end gap-2">
+            <span class="text-[10px] font-black text-cyan-300"><i class="fa-regular fa-clock mr-1"></i>${escapeHtml(r.timestamp||'SIN FECHA')}</span>
+            <span class="text-[10px] font-black px-2 py-1 rounded-full border ${urgencyClass}">
+              <i class="fa-solid fa-hourglass-half mr-1"></i>${daysLabel}
+            </span>
+          </div>
+        </div>
+        <div class="text-xs text-slate-300 whitespace-pre-wrap break-words">${escapeHtml(r.text||'SIN REPORTE')}</div>
+      </div>`;
+    }).join('');
   };
 })();
 </script>
