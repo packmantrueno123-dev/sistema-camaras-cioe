@@ -1093,6 +1093,45 @@ body.cioe-custom-theme #themeCustomizerBtn{background-color:var(--cioe-accent)!i
 }
 </style>
 
+
+<style id="cioeThemeActionFinalLayout2026">
+#themeCustomizerModal .theme-actions-inline .theme-redesign-footer{
+  display:grid!important;
+  grid-template-columns:150px minmax(0,1fr)!important;
+  gap:8px!important;
+  align-items:center!important;
+}
+#themeCustomizerModal .theme-actions-inline .cioe-reset-mini{
+  width:150px!important;min-width:150px!important;height:38px!important;min-height:38px!important;
+  padding:4px 9px!important;border-radius:10px!important;
+}
+#themeCustomizerModal .theme-actions-inline .theme-footer-save{
+  width:100%!important;height:38px!important;min-height:38px!important;
+}
+@media(max-width:640px){
+ #themeCustomizerModal .theme-actions-inline .theme-redesign-footer{
+   grid-template-columns:115px minmax(0,1fr)!important;
+ }
+ #themeCustomizerModal .theme-actions-inline .cioe-reset-mini{
+   width:115px!important;min-width:115px!important;
+ }
+}
+</style>
+
+
+<style id="cioeResetOnlyCompact2026">
+#themeCustomizerModal .theme-actions-inline .theme-redesign-footer{
+  display:flex!important;
+  justify-content:flex-start!important;
+  align-items:center!important;
+}
+#themeCustomizerModal .theme-actions-inline .cioe-reset-mini{
+  width:150px!important;
+  min-width:150px!important;
+  max-width:150px!important;
+}
+</style>
+
 </head>
 <body class="min-h-screen flex flex-col p-3 md:p-5 space-y-4 w-full">
 
@@ -6336,7 +6375,10 @@ body.cioe-custom-theme #themeCustomizerBtn{background-color:var(--cioe-accent)!i
           </div>
         
 <div class="theme-actions-inline"><div class="theme-redesign-footer">
-        <button onclick="saveTheme()" class="theme-footer-save"><span class="footer-icon"><i class="fa-solid fa-floppy-disk"></i></span><span><b>GUARDAR CAMBIOS</b><small>Aplicar la configuración</small></span></button>
+        <button type="button" onclick="resetTheme()" class="theme-footer-reset cioe-reset-mini" title="Restablecer configuración">
+  <span class="footer-icon"><i class="fas fa-rotate-left"></i></span>
+  <span><b>RESTABLECER</b></span>
+</button>
       </div></div>
 </section>
 
@@ -6926,13 +6968,6 @@ document.addEventListener('DOMContentLoaded', function(){
   window.changeDogCount=function(v){
     const n=clamp(v);
     localStorage.setItem(DK,String(n));
-    localStorage.setItem(DOG_ON,n>0?'1':'0');
-    const b=document.getElementById('petToggleAkita');
-    if(b){
-      b.textContent=n>0?'ON':'OFF';
-      b.classList.toggle('bg-emerald-600',n>0);
-      b.classList.toggle('bg-rose-600',n===0);
-    }
     if(typeof window.renderIndividualPetVariants==='function') window.renderIndividualPetVariants();
     if(typeof window.cioeRebuildLifePets==='function') setTimeout(window.cioeRebuildLifePets,60);
   };
@@ -6940,13 +6975,6 @@ document.addEventListener('DOMContentLoaded', function(){
   window.changeCatCount=function(v){
     const n=clamp(v);
     localStorage.setItem(CK,String(n));
-    localStorage.setItem(CAT_ON,n>0?'1':'0');
-    const b=document.getElementById('petToggleCat');
-    if(b){
-      b.textContent=n>0?'ON':'OFF';
-      b.classList.toggle('bg-emerald-600',n>0);
-      b.classList.toggle('bg-rose-600',n===0);
-    }
     if(typeof window.renderIndividualPetVariants==='function') window.renderIndividualPetVariants();
     if(typeof window.cioeRebuildLifePets==='function') setTimeout(window.cioeRebuildLifePets,60);
   };
@@ -6959,6 +6987,7 @@ document.addEventListener('DOMContentLoaded', function(){
         const wrapped=function(key){
           originalToggle(key);
           if(key==='akita'||key==='cat'){
+            // ON/OFF no cambia la cantidad seleccionada.
             setTimeout(()=>window.cioeRebuildLifePets&&window.cioeRebuildLifePets(),60);
           }
         };
@@ -6969,7 +6998,7 @@ document.addEventListener('DOMContentLoaded', function(){
       // Ensure selects reflect stored values.
       const ds=document.getElementById('dogCountSelect');
       const cs=document.getElementById('catCountSelect');
-      if(ds) ds.value=String(clamp(localStorage.getItem(DK) ?? '1'));
+      if(ds) ds.value=String(clamp(localStorage.getItem(DK) ?? '0'));
       if(cs) cs.value=String(clamp(localStorage.getItem(CK) ?? '0'));
     },1600);
   },{once:true});
@@ -7019,7 +7048,8 @@ document.addEventListener('DOMContentLoaded', function(){
     clear();
     const dogOn=localStorage.getItem('cioe_header_pet_akita_v1')!=='0';
     const catOn=localStorage.getItem('cioe_header_pet_cat_v1')==='1';
-    const dn=dogOn?clamp(localStorage.getItem(DK),1):0;
+    // La cantidad manda: 0 = ninguno, 1 = uno, etc.
+    const dn=dogOn?clamp(localStorage.getItem(DK),0):0;
     const cn=catOn?clamp(localStorage.getItem(CK),0):0;
     const dogs=readArr(DVK,dn,document.getElementById('dogTypeSelect')?.value||'akita');
     const cats=readArr(CVK,cn,document.getElementById('catVariantSelect')?.value||'blanco_negro_ojos_dorados');
@@ -7027,8 +7057,9 @@ document.addEventListener('DOMContentLoaded', function(){
     // Hide original first dog/cat when the life controller owns those species.
     const baseDog=document.getElementById('headerDogPet');
     const baseCat=wrap.querySelector('.header-extra-pet[alt="cat"]');
-    if(baseDog)baseDog.style.visibility=dn?'hidden':'';
-    if(baseCat)baseCat.style.visibility=cn?'hidden':'';
+    // Las mascotas originales quedan ocultas: este controlador dibuja exactamente la cantidad elegida.
+    if(baseDog)baseDog.style.visibility='hidden';
+    if(baseCat)baseCat.style.visibility='hidden';
 
     const W=Math.max(500,wrap.clientWidth||820);
     function add(kind,variant,i,total){
