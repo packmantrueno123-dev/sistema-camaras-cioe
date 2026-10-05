@@ -5034,7 +5034,117 @@ body.cioe-custom-theme #themeCustomizerBtn{background-color:var(--cioe-accent)!i
         'xmlns:x="urn:schemas-microsoft-com:office:excel" ' +
         'xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="UTF-8"></head><body>' +
         tableHtml +
-        '</body></html>';
+        '
+<!-- ===== CIOE: LUIZMELO CAT-1 - INTEGRACIÓN AISLADA ===== -->
+<style id="cioeLuizMeloCat1OnlyCSS">
+#cioeLuizCat1{
+  position:absolute;
+  left:52%;
+  bottom:4px;
+  width:32px;
+  height:32px;
+  overflow:hidden;
+  z-index:12;
+  pointer-events:none;
+  image-rendering:pixelated;
+}
+#cioeLuizCat1 > img{
+  position:absolute;
+  left:0;
+  top:0;
+  height:32px;
+  width:auto;
+  max-width:none !important;
+  image-rendering:pixelated;
+}
+</style>
+
+<script id="cioeLuizMeloCat1OnlyJS">
+(function(){
+  'use strict';
+
+  function iniciarLuizCat1(){
+    const wrap=document.getElementById('headerPixelArtWrap');
+    if(!wrap || document.getElementById('cioeLuizCat1')) return;
+
+    const box=document.createElement('div');
+    box.id='cioeLuizCat1';
+    box.setAttribute('aria-hidden','true');
+
+    const img=document.createElement('img');
+    img.alt='';
+    img.src='pets/cat/luizmelo/Cat-1-Walk.png';
+
+    box.appendChild(img);
+    wrap.appendChild(box);
+
+    img.addEventListener('load',function(){
+      const naturalW=img.naturalWidth;
+      const naturalH=img.naturalHeight;
+      if(!naturalW || !naturalH) return;
+
+      // El sprite sheet de LuizMelo es horizontal.
+      const frames=Math.max(1,Math.round(naturalW/naturalH));
+      const frameSize=32;
+
+      box.style.width=frameSize+'px';
+      box.style.height=frameSize+'px';
+      img.style.height=frameSize+'px';
+      img.style.width=(frames*frameSize)+'px';
+
+      let frame=0;
+      let x=Math.max(18,Math.min(wrap.clientWidth-frameSize-18,wrap.clientWidth*0.52));
+      let direction=1;
+      let previousFrame=0;
+      let previousMove=performance.now();
+
+      function animate(now){
+        // Cambio de cuadro del sprite.
+        if(now-previousFrame>=120){
+          frame=(frame+1)%frames;
+          img.style.left=(-frame*frameSize)+'px';
+          previousFrame=now;
+        }
+
+        // Movimiento suave e independiente del resto del sistema.
+        const elapsed=Math.min(40,now-previousMove);
+        previousMove=now;
+        x += direction * 0.035 * elapsed;
+
+        const minX=18;
+        const maxX=Math.max(minX,wrap.clientWidth-frameSize-18);
+        if(x>=maxX){x=maxX;direction=-1;}
+        else if(x<=minX){x=minX;direction=1;}
+
+        box.style.left=x+'px';
+        box.style.transform=direction===1?'scaleX(1)':'scaleX(-1)';
+        requestAnimationFrame(animate);
+      }
+
+      requestAnimationFrame(animate);
+    });
+
+    img.addEventListener('error',function(){
+      // Si el recurso no existe, se elimina solo esta mascota.
+      // No afecta login, panel, usuarios ni demás mascotas.
+      box.remove();
+      console.warn('[CIOE] No se encontró pets/cat/luizmelo/Cat-1-Walk.png');
+    });
+  }
+
+  // Se inicia después de que la página y el sistema existente hayan cargado.
+  if(document.readyState==='complete'){
+    setTimeout(iniciarLuizCat1,1200);
+  }else{
+    window.addEventListener('load',function(){
+      setTimeout(iniciarLuizCat1,1200);
+    },{once:true});
+  }
+})();
+</script>
+<!-- ===== FIN LUIZMELO CAT-1 ===== -->
+
+</body></html>';
 
       const blob = new Blob(['\ufeff', excelHtml], { type: 'application/vnd.ms-excel;charset=utf-8;' });
       const url = URL.createObjectURL(blob);
