@@ -1082,6 +1082,17 @@ body.cioe-custom-theme #themeCustomizerBtn{background-color:var(--cioe-accent)!i
 }
 </style>
 
+
+<style id="cioeSaveOnlyButtonFix2026">
+#themeCustomizerModal .theme-actions-inline .theme-redesign-footer{
+  grid-template-columns:1fr!important;
+}
+#themeCustomizerModal .theme-actions-inline .theme-footer-save{
+  width:100%!important;
+  min-height:38px!important;
+}
+</style>
+
 </head>
 <body class="min-h-screen flex flex-col p-3 md:p-5 space-y-4 w-full">
 
@@ -6325,7 +6336,6 @@ body.cioe-custom-theme #themeCustomizerBtn{background-color:var(--cioe-accent)!i
           </div>
         
 <div class="theme-actions-inline"><div class="theme-redesign-footer">
-        <button onclick="resetTheme()" class="theme-footer-reset"><span class="footer-icon"><i class="fa-solid fa-rotate-left"></i></span><span><b>RESTABLECER</b><small>Volver a los valores originales</small></span></button>
         <button onclick="saveTheme()" class="theme-footer-save"><span class="footer-icon"><i class="fa-solid fa-floppy-disk"></i></span><span><b>GUARDAR CAMBIOS</b><small>Aplicar la configuración</small></span></button>
       </div></div>
 </section>
@@ -6900,6 +6910,72 @@ document.addEventListener('DOMContentLoaded', function(){
 #headerPixelArtWrap .cioe-life-pet.pet-resting{filter:drop-shadow(0 2px 2px rgba(0,0,0,.55)) brightness(.94)}
 </style>
 
+
+<script id="cioePetControlsBridge2026">
+(function(){
+  const DK='cioe_header_dog_count_v1';
+  const CK='cioe_header_cat_count_v1';
+  const DOG_ON='cioe_header_pet_akita_v1';
+  const CAT_ON='cioe_header_pet_cat_v1';
+
+  function clamp(v){
+    const n=parseInt(v,10);
+    return Number.isFinite(n)?Math.max(0,Math.min(5,n)):0;
+  }
+
+  window.changeDogCount=function(v){
+    const n=clamp(v);
+    localStorage.setItem(DK,String(n));
+    localStorage.setItem(DOG_ON,n>0?'1':'0');
+    const b=document.getElementById('petToggleAkita');
+    if(b){
+      b.textContent=n>0?'ON':'OFF';
+      b.classList.toggle('bg-emerald-600',n>0);
+      b.classList.toggle('bg-rose-600',n===0);
+    }
+    if(typeof window.renderIndividualPetVariants==='function') window.renderIndividualPetVariants();
+    if(typeof window.cioeRebuildLifePets==='function') setTimeout(window.cioeRebuildLifePets,60);
+  };
+
+  window.changeCatCount=function(v){
+    const n=clamp(v);
+    localStorage.setItem(CK,String(n));
+    localStorage.setItem(CAT_ON,n>0?'1':'0');
+    const b=document.getElementById('petToggleCat');
+    if(b){
+      b.textContent=n>0?'ON':'OFF';
+      b.classList.toggle('bg-emerald-600',n>0);
+      b.classList.toggle('bg-rose-600',n===0);
+    }
+    if(typeof window.renderIndividualPetVariants==='function') window.renderIndividualPetVariants();
+    if(typeof window.cioeRebuildLifePets==='function') setTimeout(window.cioeRebuildLifePets,60);
+  };
+
+  // After all original scripts are ready, wrap pet ON/OFF so the new multi-pets rebuild too.
+  window.addEventListener('load',function(){
+    setTimeout(function(){
+      const originalToggle=window.toggleHeaderPet;
+      if(typeof originalToggle==='function' && !originalToggle.__cioeWrapped){
+        const wrapped=function(key){
+          originalToggle(key);
+          if(key==='akita'||key==='cat'){
+            setTimeout(()=>window.cioeRebuildLifePets&&window.cioeRebuildLifePets(),60);
+          }
+        };
+        wrapped.__cioeWrapped=true;
+        window.toggleHeaderPet=wrapped;
+      }
+
+      // Ensure selects reflect stored values.
+      const ds=document.getElementById('dogCountSelect');
+      const cs=document.getElementById('catCountSelect');
+      if(ds) ds.value=String(clamp(localStorage.getItem(DK) ?? '1'));
+      if(cs) cs.value=String(clamp(localStorage.getItem(CK) ?? '0'));
+    },1600);
+  },{once:true});
+})();
+</script>
+
 <script id="cioePetLifeController2026">
 (function(){
   const DK='cioe_header_dog_count_v1', CK='cioe_header_cat_count_v1';
@@ -6941,7 +7017,10 @@ document.addEventListener('DOMContentLoaded', function(){
   function build(){
     const wrap=document.getElementById('headerPixelArtWrap'); if(!wrap)return;
     clear();
-    const dn=clamp(localStorage.getItem(DK),1), cn=clamp(localStorage.getItem(CK),0);
+    const dogOn=localStorage.getItem('cioe_header_pet_akita_v1')!=='0';
+    const catOn=localStorage.getItem('cioe_header_pet_cat_v1')==='1';
+    const dn=dogOn?clamp(localStorage.getItem(DK),1):0;
+    const cn=catOn?clamp(localStorage.getItem(CK),0):0;
     const dogs=readArr(DVK,dn,document.getElementById('dogTypeSelect')?.value||'akita');
     const cats=readArr(CVK,cn,document.getElementById('catVariantSelect')?.value||'blanco_negro_ojos_dorados');
 
@@ -6968,6 +7047,8 @@ document.addEventListener('DOMContentLoaded', function(){
     dogs.forEach((v,i)=>add('dog',v,i,dogs.length));
     cats.forEach((v,i)=>add('cat',v,i,cats.length));
   }
+
+  window.cioeRebuildLifePets=build;
 
   function detectBallTarget(){
     const wrap=document.getElementById('headerPixelArtWrap');
@@ -7418,6 +7499,28 @@ document.addEventListener('DOMContentLoaded', function(){
     apply(getScene());
   }
 })();
+</script>
+
+
+<script id="cioeFinalSaveButtonFix2026">
+window.addEventListener('load',function(){
+  setTimeout(function(){
+    const previousSave=window.saveTheme;
+    window.saveTheme=async function(){
+      const msg=document.getElementById('themeMessage');
+      try{
+        if(typeof previousSave==='function') await previousSave.apply(this,arguments);
+        if(typeof window.cioeRebuildLifePets==='function') window.cioeRebuildLifePets();
+        if(typeof window.renderIndividualPetVariants==='function') window.renderIndividualPetVariants();
+        if(typeof pushStateToServer==='function') await pushStateToServer();
+        if(msg) msg.textContent='Configuración guardada correctamente.';
+      }catch(err){
+        console.error('[CIOE] Error al guardar configuración:',err);
+        if(msg) msg.textContent='No se pudo guardar en el servidor. Revise la conexión.';
+      }
+    };
+  },1800);
+},{once:true});
 </script>
 
 </body>
