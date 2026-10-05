@@ -5034,8 +5034,7 @@ body.cioe-custom-theme #themeCustomizerBtn{background-color:var(--cioe-accent)!i
         'xmlns:x="urn:schemas-microsoft-com:office:excel" ' +
         'xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="UTF-8"></head><body>' +
         tableHtml +
-        '
-</body></html>';
+        '</body></html>';
 
       const blob = new Blob(['\ufeff', excelHtml], { type: 'application/vnd.ms-excel;charset=utf-8;' });
       const url = URL.createObjectURL(blob);
@@ -5438,11 +5437,9 @@ body.cioe-custom-theme #themeCustomizerBtn{background-color:var(--cioe-accent)!i
         loadingBar.style.width = "78%";
         loadingText.textContent = "Sincronizando sistema...";
         const changed = await initialServerSync();
-        if (changed) {
-          window.__cioeApplyingRemoteReload = true;
-          location.reload();
-          return;
-        }
+        // No recargar aquí: algunos ajustes visuales de mascotas modifican
+        // localStorage al iniciar y podían provocar un bucle de recarga.
+        // El estado del servidor ya fue aplicado y podemos continuar el login.
 
         loadingBar.style.width = "100%";
         loadingText.textContent = "Listo";
@@ -5485,11 +5482,9 @@ body.cioe-custom-theme #themeCustomizerBtn{background-color:var(--cioe-accent)!i
           sessionStorage.setItem(CIOE_USER_KEY, JSON.stringify(me.user));
         }
         const changed = await initialServerSync();
-        if (changed) {
-          window.__cioeApplyingRemoteReload = true;
-          location.reload();
-          return;
-        }
+        // No recargar aquí: algunos ajustes visuales de mascotas modifican
+        // localStorage al iniciar y podían provocar un bucle de recarga.
+        // El estado del servidor ya fue aplicado y podemos continuar el login.
         document.getElementById("loginView").classList.add("hidden");
         document.getElementById("mainDashboardView").classList.remove("hidden");
         applyUserPermissions();
