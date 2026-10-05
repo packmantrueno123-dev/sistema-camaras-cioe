@@ -6887,140 +6887,188 @@ document.addEventListener('DOMContentLoaded', function(){
 })();
 </script>
 
-<script id="cioePetCountController">
+
+
+
+<style id="cioePetLifeStyles2026">
+#headerPixelArtWrap .cioe-life-pet{
+  position:absolute!important;bottom:3px!important;height:44px!important;width:auto!important;
+  max-height:44px!important;max-width:76px!important;object-fit:contain!important;
+  image-rendering:pixelated!important;z-index:10!important;pointer-events:none!important;
+  filter:drop-shadow(0 2px 2px rgba(0,0,0,.55));transform-origin:center bottom!important;
+}
+#headerPixelArtWrap .cioe-life-pet.pet-resting{filter:drop-shadow(0 2px 2px rgba(0,0,0,.55)) brightness(.94)}
+</style>
+
+<script id="cioePetLifeController2026">
 (function(){
-  const DOG_COUNT_KEY='cioe_header_dog_count_v1';
-  const CAT_COUNT_KEY='cioe_header_cat_count_v1';
-  const DOG_ON_KEY='cioe_header_pet_akita_v1';
-  const CAT_ON_KEY='cioe_header_pet_cat_v1';
-  const MOVE_KEY='cioe_header_pets_movement_v1';
+  const DK='cioe_header_dog_count_v1', CK='cioe_header_cat_count_v1';
+  const DVK='cioe_header_dog_individual_variants_v1', CVK='cioe_header_cat_individual_variants_v1';
+  const MOVE='cioe_header_pets_movement_v1';
+  let pets=[], raf=0, last=performance.now(), ballMode=false, ballTarget=0, ballUntil=0;
+  let originalThrow=null;
 
-  function clampCount(v, fallback){
-    const n=parseInt(v,10);
-    return Number.isFinite(n)?Math.max(0,Math.min(5,n)):fallback;
+  const clamp=(v,d)=>{v=parseInt(v,10);return Number.isFinite(v)?Math.max(0,Math.min(5,v)):d};
+  function readArr(k,n,f){let a=[];try{a=JSON.parse(localStorage.getItem(k)||'[]')}catch(_){}
+    if(!Array.isArray(a))a=[];while(a.length<n)a.push(f);return a.slice(0,n)}
+  function moving(){return localStorage.getItem(MOVE)!=='0'}
+
+  function dogSrc(v,mode){
+    const suffix=mode==='run'?'run_8fps.gif':mode==='idle'?'idle_8fps.gif':'walk_8fps.gif';
+    return `pets/dog/${v}_${suffix}`;
   }
-  function getDogCount(){ return clampCount(localStorage.getItem(DOG_COUNT_KEY),1); }
-  function getCatCount(){ return clampCount(localStorage.getItem(CAT_COUNT_KEY),0); }
-  function isOn(key, def){ const v=localStorage.getItem(key); return v===null?def:v==='1'; }
+  function catSrc(v,mode){
+    // Los gatos disponibles tienen walk/run. Para descanso se mantiene walk sin desplazamiento.
+    const suffix=mode==='run'?'run_x2.gif':'walk_x2.gif';
+    return `pets/cat/cat_${v}_${suffix}`;
+  }
+  function srcFor(p,mode){return p.kind==='dog'?dogSrc(p.variant,mode):catSrc(p.variant,mode)}
+  function setMode(p,mode){
+    if(p.mode===mode && p.el.dataset.petMode===mode)return;
+    p.mode=mode;p.el.dataset.petMode=mode;
+    const src=srcFor(p,mode);
+    if(!p.el.src.endsWith(src))p.el.src=src;
+    p.el.classList.toggle('pet-resting',mode==='idle');
+  }
+  function face(p){
+    // Dog GIF faces right; cat GIF faces left.
+    const flip=p.kind==='dog' ? p.dir<0 : p.dir>0;
+    p.el.style.transform=flip?'scaleX(-1)':'scaleX(1)';
+  }
+  function clear(){
+    pets.forEach(p=>p.el?.remove());pets=[];
+  }
+  function build(){
+    const wrap=document.getElementById('headerPixelArtWrap'); if(!wrap)return;
+    clear();
+    const dn=clamp(localStorage.getItem(DK),1), cn=clamp(localStorage.getItem(CK),0);
+    const dogs=readArr(DVK,dn,document.getElementById('dogTypeSelect')?.value||'akita');
+    const cats=readArr(CVK,cn,document.getElementById('catVariantSelect')?.value||'blanco_negro_ojos_dorados');
 
-  let extras=[];
+    // Hide original first dog/cat when the life controller owns those species.
+    const baseDog=document.getElementById('headerDogPet');
+    const baseCat=wrap.querySelector('.header-extra-pet[alt="cat"]');
+    if(baseDog)baseDog.style.visibility=dn?'hidden':'';
+    if(baseCat)baseCat.style.visibility=cn?'hidden':'';
 
-  function clearExtras(){
-    extras.forEach(p=>p.el && p.el.remove());
-    extras=[];
+    const W=Math.max(500,wrap.clientWidth||820);
+    function add(kind,variant,i,total){
+      const el=document.createElement('img');
+      el.className='cioe-life-pet';
+      el.alt=kind==='dog'?`Perro ${i+1}`:`Gato ${i+1}`;
+      const spread=kind==='dog' ? 70+i*(Math.max(90,(W-180)/Math.max(1,total))) : W-120-i*(Math.max(85,(W-220)/Math.max(1,total)));
+      const x=Math.max(18,Math.min(W-82,spread));
+      const p={kind,variant,index:i,el,x,dir:i%2? -1:1,speed:(kind==='dog'?48:52)+i*3,
+               mode:'walk',nextRest:performance.now()+3200+i*850,nextRun:performance.now()+6500+i*1100,
+               restUntil:0,runUntil:0};
+      el.style.left=x+'px';el.src=srcFor(p,'walk');
+      el.onerror=()=>{el.style.display='none'};
+      wrap.appendChild(el);pets.push(p);face(p);
+    }
+    dogs.forEach((v,i)=>add('dog',v,i,dogs.length));
+    cats.forEach((v,i)=>add('cat',v,i,cats.length));
   }
 
-  function makeExtra(kind,index,base){
+  function detectBallTarget(){
     const wrap=document.getElementById('headerPixelArtWrap');
-    if(!wrap || !base) return null;
-    const img=document.createElement('img');
-    img.className='cioe-count-pet';
-    img.dataset.countPet=kind;
-    img.dataset.countIndex=String(index);
-    img.alt=kind==='dog'?'Perro adicional':'Gato adicional';
-    img.src=base.src;
-    const w=Math.max(160,wrap.clientWidth||820);
-    const start=kind==='dog' ? 60+(index*105) : Math.max(80,w-170-(index*95));
-    img.style.left=Math.min(w-80,start)+'px';
-    wrap.appendChild(img);
-    return {
-      kind, index, el:img, x:Math.min(w-80,start),
-      dir:(index%2===0?1:-1),
-      speed:(kind==='dog'?34:38)+(index*4)
-    };
+    const ball=document.getElementById('headerPetBall');
+    if(!wrap||!ball)return null;
+    const bx=parseFloat(ball.style.left);
+    return Number.isFinite(bx)?bx:null;
   }
 
-  function rebuild(){
-    const dogBase=document.getElementById('headerDogPet');
-    const catBase=document.querySelector('#headerPixelArtWrap .header-extra-pet[alt="cat"]');
-    const dogCount=getDogCount();
-    const catCount=getCatCount();
-
-    clearExtras();
-
-    // El elemento original cuenta como la primera mascota.
-    if(dogBase) dogBase.style.display=(dogCount>0 && isOn(DOG_ON_KEY,true))?'':'none';
-    if(catBase) catBase.style.display=(catCount>0 && isOn(CAT_ON_KEY,false))?'':'none';
-
-    if(dogCount>0 && isOn(DOG_ON_KEY,true)){
-      for(let i=1;i<dogCount;i++){
-        const p=makeExtra('dog',i,dogBase);
-        if(p) extras.push(p);
-      }
-    }
-    if(catCount>0 && isOn(CAT_ON_KEY,false)){
-      for(let i=1;i<catCount;i++){
-        const p=makeExtra('cat',i,catBase);
-        if(p) extras.push(p);
-      }
-    }
-
-    const ds=document.getElementById('dogCountSelect'); if(ds) ds.value=String(dogCount);
-    const cs=document.getElementById('catCountSelect'); if(cs) cs.value=String(catCount);
-    setTimeout(()=>window.applyIndividualPetVariants&&window.applyIndividualPetVariants(),40);
+  function startChase(){
+    const wrap=document.getElementById('headerPixelArtWrap'); if(!wrap)return;
+    setTimeout(()=>{
+      const x=detectBallTarget();
+      ballTarget=x==null ? Math.max(70,wrap.clientWidth*.62) : x;
+      ballMode=true;ballUntil=performance.now()+2700;
+      pets.forEach(p=>{p.restUntil=0;p.runUntil=ballUntil;p.dir=ballTarget>=p.x?1:-1;setMode(p,'run');face(p)});
+    },680);
   }
 
-  window.changeDogCount=function(v){
-    const n=clampCount(v,1);
-    localStorage.setItem(DOG_COUNT_KEY,String(n));
-    if(n>0) localStorage.setItem(DOG_ON_KEY,'1');
-    rebuild();
-    setTimeout(()=>window.renderIndividualPetVariants&&window.renderIndividualPetVariants(),70);
-  };
-  window.changeCatCount=function(v){
-    const n=clampCount(v,0);
-    localStorage.setItem(CAT_COUNT_KEY,String(n));
-    if(n>0) localStorage.setItem(CAT_ON_KEY,'1');
-    rebuild();
-    setTimeout(()=>window.renderIndividualPetVariants&&window.renderIndividualPetVariants(),70);
-  };
-
-  function syncSources(){
-    // Solo se usa cuando cambia una variante/cantidad; NO durante cada frame.
-    if(typeof window.applyIndividualPetVariants==='function'){
-      window.applyIndividualPetVariants();
-    }
-  }
-
-  let last=performance.now();
   function frame(now){
     const wrap=document.getElementById('headerPixelArtWrap');
-    if(wrap){
-      const dt=Math.min((now-last)/1000,.05);
-      const moving=localStorage.getItem(MOVE_KEY)!=='0';
-      extras.forEach(p=>{
-        if(!p.el) return;
-        if(moving){
-          const max=Math.max(18,wrap.clientWidth-p.el.offsetWidth-18);
-          p.x+=p.dir*p.speed*dt;
-          if(p.x>=max){p.x=max;p.dir=-1}
-          if(p.x<=18){p.x=18;p.dir=1}
-          p.el.style.left=p.x+'px';
-          // Los GIF del gato miran originalmente hacia la izquierda.
-          const flip = p.kind==='cat' ? (p.dir===1) : (p.dir===-1);
-          p.el.style.transform=flip?'scaleX(-1)':'scaleX(1)';
+    if(!wrap){raf=requestAnimationFrame(frame);return}
+    const dt=Math.min((now-last)/1000,.05);last=now;
+    const sceneOn=localStorage.getItem('cioe_header_animation_enabled_v1')!=='0';
+    if(sceneOn){
+      const canMove=moving();
+      pets.forEach(p=>{
+        if(!p.el||p.el.style.display==='none')return;
+        const max=Math.max(18,wrap.clientWidth-p.el.offsetWidth-18);
+
+        if(ballMode && now<ballUntil){
+          p.dir=ballTarget>=p.x?1:-1;setMode(p,'run');
+          const dist=ballTarget-p.x;
+          if(Math.abs(dist)>12)p.x+=p.dir*p.speed*2.35*dt;
+          else {p.x=Math.max(18,Math.min(max,ballTarget-p.el.offsetWidth/2));}
+        }else if(!canMove){
+          setMode(p,'idle');
+        }else if(now<p.restUntil){
+          setMode(p,'idle');
+        }else{
+          if(now>=p.nextRest && now>=p.runUntil){
+            p.restUntil=now+1100+Math.random()*1700;
+            p.nextRest=now+5200+Math.random()*5200;
+            setMode(p,'idle');
+          }else{
+            if(now>=p.nextRun){
+              p.runUntil=now+1200+Math.random()*900;
+              p.nextRun=now+7200+Math.random()*6000;
+            }
+            const running=now<p.runUntil;
+            setMode(p,running?'run':'walk');
+            p.x+=p.dir*p.speed*(running?1.8:1)*dt;
+            if(p.x>=max){p.x=max;p.dir=-1}
+            if(p.x<=18){p.x=18;p.dir=1}
+          }
         }
+        p.el.style.left=p.x+'px';face(p);
       });
     }
-    last=now;
-    requestAnimationFrame(frame);
+    if(ballMode && now>=ballUntil){
+      ballMode=false;
+      pets.forEach(p=>{p.runUntil=0;p.nextRest=now+2500+Math.random()*3000;setMode(p,'walk')});
+    }
+    raf=requestAnimationFrame(frame);
   }
 
-  // Reaplica cantidades cuando cambian los ON/OFF o variantes.
-  document.addEventListener('click',function(e){
-    if(e.target && ['petToggleAkita','petToggleCat'].includes(e.target.id)){
-      setTimeout(rebuild,0);
+  function hookThrow(){
+    if(window.throwPetBall && window.throwPetBall!==wrappedThrow){
+      originalThrow=window.throwPetBall;
+      window.throwPetBall=wrappedThrow;
+    }
+  }
+  function wrappedThrow(){
+    if(originalThrow)originalThrow();
+    startChase();
+  }
+
+  // Rebuild only on explicit configuration changes; never every frame.
+  document.addEventListener('change',e=>{
+    if(['dogCountSelect','catCountSelect'].includes(e.target?.id) ||
+       e.target?.matches?.('[data-dog-i],[data-cat-i]')){
+      setTimeout(build,90);
     }
   });
-  // Las variantes individuales se administran por mascota.
-  // No copiar el color del selector general sobre todos los clones.
 
-  window.addEventListener('load',function(){
-    setTimeout(rebuild,1200);
-    requestAnimationFrame(frame);
+  window.addEventListener('load',()=>{
+    setTimeout(()=>{
+      build();hookThrow();
+      if(!raf)raf=requestAnimationFrame(frame);
+    },1400);
   },{once:true});
 
-  // No reconstruir las mascotas al recuperar el foco: conserva sus variantes individuales.
+  // Save button may apply server-loaded settings; rebuild once after it.
+  const oldSave=window.saveTheme;
+  if(typeof oldSave==='function'){
+    window.saveTheme=async function(){
+      const r=await oldSave.apply(this,arguments);
+      setTimeout(build,120);
+      return r;
+    };
+  }
 })();
 </script>
 
