@@ -1005,6 +1005,48 @@ body.cioe-custom-theme #themeCustomizerBtn{background-color:var(--cioe-accent)!i
 }
 </style>
 
+
+<style id="cioeThemeActionsTopFix2026">
+/* RESTABLECER + GUARDAR arriba, al lado de DISEÑO DE COLORES */
+#themeCustomizerModal .theme-redesign-power{
+  padding-right:330px!important;
+  position:relative!important;
+  min-height:50px!important;
+}
+#themeCustomizerModal .theme-redesign-footer{
+  position:absolute!important;
+  top:82px!important;
+  right:42px!important;
+  bottom:auto!important;
+  z-index:8!important;
+  width:310px!important;
+  padding:0!important;
+  border:0!important;
+  background:transparent!important;
+  display:grid!important;
+  grid-template-columns:1fr 1.25fr!important;
+  gap:8px!important;
+}
+#themeCustomizerModal .theme-redesign-footer button{
+  min-height:40px!important;
+  height:40px!important;
+  padding:5px 9px!important;
+  border-radius:11px!important;
+}
+#themeCustomizerModal .theme-redesign-footer .footer-icon{
+  width:27px!important;height:27px!important;font-size:10px!important;
+}
+#themeCustomizerModal .theme-redesign-footer b{font-size:9px!important}
+#themeCustomizerModal .theme-redesign-footer small{display:none!important}
+@media(max-width:900px){
+  #themeCustomizerModal .theme-redesign-power{padding-right:0!important}
+  #themeCustomizerModal .theme-redesign-footer{
+    position:static!important;width:auto!important;margin:0 16px 12px!important;
+    grid-template-columns:1fr 1fr!important;
+  }
+}
+</style>
+
 </head>
 <body class="min-h-screen flex flex-col p-3 md:p-5 space-y-4 w-full">
 
@@ -6721,126 +6763,82 @@ document.addEventListener('DOMContentLoaded', function(){
 
 <script id="cioeIndividualPetVariants">
 (function(){
-  const DOG_COUNT_KEY='cioe_header_dog_count_v1';
-  const CAT_COUNT_KEY='cioe_header_cat_count_v1';
-  const DOG_VARIANTS_KEY='cioe_header_dog_individual_variants_v1';
-  const CAT_VARIANTS_KEY='cioe_header_cat_individual_variants_v1';
+  const DK='cioe_header_dog_count_v1', CK='cioe_header_cat_count_v1';
+  const DVK='cioe_header_dog_individual_variants_v1', CVK='cioe_header_cat_individual_variants_v1';
+  const DOGS=[['akita','🟠 Akita'],['black','⚫ Negro'],['brown','🟤 Marrón'],['red','🔴 Rojo'],['white','⚪ Blanco']];
+  const CATS=[['blanco_negro_ojos_dorados','⚫⚪ Blanco + negro'],['blanco_ojos_celestes','⚪ Blanco · ojos celestes'],['gris_ojos_azules','🩶 Gris · ojos azules'],['marron_ojos_ambar','🟤 Marrón · ojos ámbar'],['naranja_ojos_verdes','🟠 Naranja · ojos verdes'],['negro_ojos_amarillos','⚫ Negro · ojos amarillos']];
 
-  const DOG_OPTIONS=[
-    ['akita','🟠 Akita'],['black','⚫ Negro'],['brown','🟤 Marrón'],
-    ['red','🔴 Rojo'],['white','⚪ Blanco']
-  ];
-  const CAT_OPTIONS=[
-    ['blanco_negro_ojos_dorados','⚫⚪ Blanco + negro'],
-    ['blanco_ojos_celestes','⚪ Blanco'],
-    ['gris_ojos_azules','🩶 Gris'],
-    ['marron_ojos_ambar','🟤 Marrón'],
-    ['naranja_ojos_verdes','🟠 Naranja'],
-    ['negro_ojos_amarillos','⚫ Negro']
-  ];
+  const clamp=(v,d)=>{v=parseInt(v,10);return Number.isFinite(v)?Math.max(0,Math.min(5,v)):d};
+  const arr=(k,n,f)=>{let a=[];try{a=JSON.parse(localStorage.getItem(k)||'[]')}catch(_){}
+    if(!Array.isArray(a))a=[]; while(a.length<n)a.push(f); return a.slice(0,n)};
+  const save=(k,a)=>localStorage.setItem(k,JSON.stringify(a));
+  const opts=(a,v)=>a.map(x=>`<option value="${x[0]}"${x[0]===v?' selected':''}>${x[1]}</option>`).join('');
 
-  function count(key,def){
-    const n=parseInt(localStorage.getItem(key),10);
-    return Number.isFinite(n)?Math.max(0,Math.min(5,n)):def;
-  }
-  function read(key, n, fallback){
-    let a=[];
-    try{ a=JSON.parse(localStorage.getItem(key)||'[]'); }catch(_){}
-    if(!Array.isArray(a))a=[];
-    while(a.length<n)a.push(fallback);
-    return a.slice(0,n);
-  }
-  function write(key,a){ localStorage.setItem(key,JSON.stringify(a)); }
-
-  function optionHtml(options,value){
-    return options.map(([v,l])=>'<option value="'+v+'"'+(v===value?' selected':'')+'>'+l+'</option>').join('');
-  }
-
-  function renderSelectors(){
-    const dn=count(DOG_COUNT_KEY,1), cn=count(CAT_COUNT_KEY,0);
-    const dogs=read(DOG_VARIANTS_KEY,dn,localStorage.getItem('cioe_header_dog_variant_v1')||'akita');
-    const cats=read(CAT_VARIANTS_KEY,cn,localStorage.getItem('cioe_header_cat_variant_v1')||'blanco_negro_ojos_dorados');
-    write(DOG_VARIANTS_KEY,dogs); write(CAT_VARIANTS_KEY,cats);
+  function render(){
+    const dn=clamp(localStorage.getItem(DK),1), cn=clamp(localStorage.getItem(CK),0);
+    const dogs=arr(DVK,dn,document.getElementById('dogTypeSelect')?.value||'akita');
+    const cats=arr(CVK,cn,document.getElementById('catVariantSelect')?.value||'blanco_negro_ojos_dorados');
+    save(DVK,dogs); save(CVK,cats);
 
     const dw=document.getElementById('dogIndividualVariants');
     if(dw){
-      dw.innerHTML=dogs.map((v,i)=>
-        '<div class="individual-pet-variant"><label>PERRO '+(i+1)+'</label>'+
-        '<select data-dog-index="'+i+'">'+optionHtml(DOG_OPTIONS,v)+'</select></div>'
-      ).join('');
-      dw.querySelectorAll('select[data-dog-index]').forEach(s=>s.addEventListener('change',()=>{
-        const a=read(DOG_VARIANTS_KEY,dn,'akita'); a[+s.dataset.dogIndex]=s.value; write(DOG_VARIANTS_KEY,a); applyVariants();
-      }));
+      dw.innerHTML=dogs.map((v,i)=>`<div class="individual-pet-variant"><label>PERRO ${i+1}</label><select data-dog-i="${i}">${opts(DOGS,v)}</select></div>`).join('');
+      dw.querySelectorAll('[data-dog-i]').forEach(s=>s.onchange=()=>{
+        const a=arr(DVK,dn,'akita'); a[+s.dataset.dogI]=s.value; save(DVK,a); apply();
+      });
     }
-
     const cw=document.getElementById('catIndividualVariants');
     if(cw){
-      cw.innerHTML=cats.map((v,i)=>
-        '<div class="individual-pet-variant"><label>GATO '+(i+1)+'</label>'+
-        '<select data-cat-index="'+i+'">'+optionHtml(CAT_OPTIONS,v)+'</select></div>'
-      ).join('');
-      cw.querySelectorAll('select[data-cat-index]').forEach(s=>s.addEventListener('change',()=>{
-        const a=read(CAT_VARIANTS_KEY,cn,'blanco_negro_ojos_dorados'); a[+s.dataset.catIndex]=s.value; write(CAT_VARIANTS_KEY,a); applyVariants();
-      }));
+      cw.innerHTML=cats.map((v,i)=>`<div class="individual-pet-variant"><label>GATO ${i+1}</label><select data-cat-i="${i}">${opts(CATS,v)}</select></div>`).join('');
+      cw.querySelectorAll('[data-cat-i]').forEach(s=>s.onchange=()=>{
+        const a=arr(CVK,cn,'blanco_negro_ojos_dorados'); a[+s.dataset.catI]=s.value; save(CVK,a); apply();
+      });
     }
-    setTimeout(applyVariants,30);
+    setTimeout(apply,40);
   }
 
-  function dogSrc(v){
-    const map={
-      akita:'pets/dog/akita_walk_8fps.gif',
-      black:'pets/dog/black_walk_8fps.gif',
-      brown:'pets/dog/brown_walk_8fps.gif',
-      red:'pets/dog/red_walk_8fps.gif',
-      white:'pets/dog/white_walk_8fps.gif'
-    };
-    return map[v]||map.akita;
-  }
-  function catSrc(v){
-    const map={
-      blanco_negro_ojos_dorados:'pets/cat/Blanco+negro_ojos_dorados.gif',
-      blanco_ojos_celestes:'pets/cat/Blanco_ojos_celestes.gif',
-      gris_ojos_azules:'pets/cat/Gris_ojos_azules.gif',
-      marron_ojos_ambar:'pets/cat/Marron_ojos_ambar.gif',
-      naranja_ojos_verdes:'pets/cat/Naranja_ojos_verdes.gif',
-      negro_ojos_amarillos:'pets/cat/Negro_ojos_amarillos.gif'
-    };
-    return map[v]||map.blanco_negro_ojos_dorados;
+  function getSrc(kind, variant){
+    const base = kind==='dog'
+      ? document.getElementById('headerDogPet')
+      : document.querySelector('#headerPixelArtWrap .header-extra-pet[alt="cat"]');
+    if(!base) return '';
+    const old=base.src;
+    try{
+      if(kind==='dog' && typeof window.changeDogVariant==='function') window.changeDogVariant(variant);
+      if(kind==='cat' && typeof window.changeCatVariant==='function') window.changeCatVariant(variant);
+      const result=base.src;
+      base.src=old;
+      return result;
+    }catch(_){ base.src=old; return old; }
   }
 
-  function applyVariants(){
-    const dn=count(DOG_COUNT_KEY,1), cn=count(CAT_COUNT_KEY,0);
-    const dogs=read(DOG_VARIANTS_KEY,dn,'akita'), cats=read(CAT_VARIANTS_KEY,cn,'blanco_negro_ojos_dorados');
+  function apply(){
+    const dn=clamp(localStorage.getItem(DK),1), cn=clamp(localStorage.getItem(CK),0);
+    const dogs=arr(DVK,dn,'akita'), cats=arr(CVK,cn,'blanco_negro_ojos_dorados');
+    const dogSrcs=dogs.map(v=>getSrc('dog',v));
+    const catSrcs=cats.map(v=>getSrc('cat',v));
 
-    const dogBase=document.getElementById('headerDogPet');
-    if(dogBase && dogs[0]) dogBase.src=dogSrc(dogs[0]);
+    const db=document.getElementById('headerDogPet');
+    if(db && dogSrcs[0]) db.src=dogSrcs[0];
     document.querySelectorAll('#headerPixelArtWrap [data-count-pet="dog"]').forEach(el=>{
-      const i=parseInt(el.dataset.countIndex,10);
-      if(dogs[i]) el.src=dogSrc(dogs[i]);
+      const i=+el.dataset.countIndex; if(dogSrcs[i]) el.src=dogSrcs[i];
     });
 
-    const catBase=document.querySelector('#headerPixelArtWrap .header-extra-pet[alt="cat"]');
-    if(catBase && cats[0]) catBase.src=catSrc(cats[0]);
+    const cb=document.querySelector('#headerPixelArtWrap .header-extra-pet[alt="cat"]');
+    if(cb && catSrcs[0]) cb.src=catSrcs[0];
     document.querySelectorAll('#headerPixelArtWrap [data-count-pet="cat"]').forEach(el=>{
-      const i=parseInt(el.dataset.countIndex,10);
-      if(cats[i]) el.src=catSrc(cats[i]);
+      const i=+el.dataset.countIndex; if(catSrcs[i]) el.src=catSrcs[i];
     });
   }
 
-  const oldDog=window.changeDogCount, oldCat=window.changeCatCount;
-  window.addEventListener('load',()=>setTimeout(()=>{renderSelectors();applyVariants();},250));
+  window.renderIndividualPetVariants=render;
+  window.applyIndividualPetVariants=apply;
 
   document.addEventListener('change',e=>{
-    if(e.target && (e.target.id==='dogCountSelect'||e.target.id==='catCountSelect')){
-      setTimeout(renderSelectors,60);
-    }
+    if(e.target?.id==='dogCountSelect'||e.target?.id==='catCountSelect') setTimeout(render,80);
   });
-
-  // Keep variants applied after the multi-pet renderer rebuilds clones.
-  setInterval(applyVariants,800);
-
-  window.renderIndividualPetVariants=renderSelectors;
-  window.applyIndividualPetVariants=applyVariants;
+  document.addEventListener('DOMContentLoaded',()=>setTimeout(render,350));
+  setInterval(apply,1200);
 })();
 </script>
 
@@ -6932,6 +6930,11 @@ document.addEventListener('DOMContentLoaded', function(){
   };
 
   function syncSources(){
+    // Las variantes individuales administran el sprite de cada perro/gato.
+    if(typeof window.applyIndividualPetVariants==='function'){
+      window.applyIndividualPetVariants();
+      return;
+    }
     const dogBase=document.getElementById('headerDogPet');
     const catBase=document.querySelector('#headerPixelArtWrap .header-extra-pet[alt="cat"]');
     extras.forEach(p=>{
