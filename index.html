@@ -6819,18 +6819,27 @@ document.addEventListener('DOMContentLoaded', function(){
   }
 
   function getSrc(kind, variant){
-    const base = kind==='dog'
-      ? document.getElementById('headerDogPet')
-      : document.querySelector('#headerPixelArtWrap .header-extra-pet[alt="cat"]');
-    if(!base) return '';
-    const old=base.src;
-    try{
-      if(kind==='dog' && typeof window.changeDogVariant==='function') window.changeDogVariant(variant);
-      if(kind==='cat' && typeof window.changeCatVariant==='function') window.changeCatVariant(variant);
-      const result=base.src;
-      base.src=old;
-      return result;
-    }catch(_){ base.src=old; return old; }
+    // Resolver puro: NO llama changeDogVariant/changeCatVariant y NO escribe localStorage.
+    // Mantiene las rutas usadas por el proyecto.
+    if(kind==='dog'){
+      const map={
+        akita:'pets/dog/akita_walk_8fps.gif',
+        black:'pets/dog/black_walk_8fps.gif',
+        brown:'pets/dog/brown_walk_8fps.gif',
+        red:'pets/dog/red_walk_8fps.gif',
+        white:'pets/dog/white_walk_8fps.gif'
+      };
+      return map[variant] || map.akita;
+    }
+    const map={
+      blanco_negro_ojos_dorados:'pets/cat/Blanco+negro_ojos_dorados.gif',
+      blanco_ojos_celestes:'pets/cat/Blanco_ojos_celestes.gif',
+      gris_ojos_azules:'pets/cat/Gris_ojos_azules.gif',
+      marron_ojos_ambar:'pets/cat/Marron_ojos_ambar.gif',
+      naranja_ojos_verdes:'pets/cat/Naranja_ojos_verdes.gif',
+      negro_ojos_amarillos:'pets/cat/Negro_ojos_amarillos.gif'
+    };
+    return map[variant] || map.blanco_negro_ojos_dorados;
   }
 
   function apply(){
@@ -6858,7 +6867,7 @@ document.addEventListener('DOMContentLoaded', function(){
   document.addEventListener('change',e=>{
     if(e.target?.id==='dogCountSelect'||e.target?.id==='catCountSelect') setTimeout(render,80);
   });
-  document.addEventListener('DOMContentLoaded',()=>setTimeout(render,350));
+  window.addEventListener('load',()=>setTimeout(render,1200),{once:true});
 })();
 </script>
 
@@ -6950,17 +6959,10 @@ document.addEventListener('DOMContentLoaded', function(){
   };
 
   function syncSources(){
-    // Las variantes individuales administran el sprite de cada perro/gato.
+    // Solo se usa cuando cambia una variante/cantidad; NO durante cada frame.
     if(typeof window.applyIndividualPetVariants==='function'){
       window.applyIndividualPetVariants();
-      return;
     }
-    const dogBase=document.getElementById('headerDogPet');
-    const catBase=document.querySelector('#headerPixelArtWrap .header-extra-pet[alt="cat"]');
-    extras.forEach(p=>{
-      const base=p.kind==='dog'?dogBase:catBase;
-      if(base && p.el && p.el.src!==base.src) p.el.src=base.src;
-    });
   }
 
   let last=performance.now();
@@ -6982,7 +6984,6 @@ document.addEventListener('DOMContentLoaded', function(){
           p.el.style.transform=flip?'scaleX(-1)':'scaleX(1)';
         }
       });
-      syncSources();
     }
     last=now;
     requestAnimationFrame(frame);
@@ -7000,10 +7001,10 @@ document.addEventListener('DOMContentLoaded', function(){
     }
   });
 
-  document.addEventListener('DOMContentLoaded',function(){
-    setTimeout(rebuild,120);
+  window.addEventListener('load',function(){
+    setTimeout(rebuild,1200);
     requestAnimationFrame(frame);
-  });
+  },{once:true});
 
   // Tras cargar el estado compartido del servidor, vuelve a dibujar las cantidades.
   window.addEventListener('focus',()=>setTimeout(rebuild,80));
