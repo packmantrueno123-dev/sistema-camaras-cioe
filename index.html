@@ -6406,13 +6406,6 @@ body.cioe-custom-theme #themeCustomizerBtn{background-color:var(--cioe-accent)!i
           <div class="theme-variant-grid">
             <div class="dog-config-box">
               <div class="dog-config-title"><span>🐶</span><div><b>TIPO DE PERRO</b><small>Selecciona el color del perro</small></div></div>
-              <select id="dogTypeSelect" class="cat-select" onchange="changeDogVariant(this.value)">
-                <option value="akita">🟠 Akita</option>
-                <option value="black">⚫ Negro</option>
-                <option value="brown">🟤 Marrón</option>
-                <option value="red">🔴 Rojo</option>
-                <option value="white">⚪ Blanco</option>
-              </select>
               <div class="mt-2 flex items-center gap-2">
                 <span class="text-[9px] font-black text-slate-400 whitespace-nowrap">CANTIDAD</span>
                 <select id="dogCountSelect" class="cat-select" onchange="changeDogCount(this.value)">
@@ -6428,14 +6421,6 @@ body.cioe-custom-theme #themeCustomizerBtn{background-color:var(--cioe-accent)!i
             </div>
             <div class="cat-config-box">
               <div class="cat-config-title"><span>🐱</span><div><b>TIPO DE GATO</b><small>Selecciona el color y los ojos</small></div></div>
-              <select id="catVariantSelect" class="cat-select" onchange="changeCatVariant(this.value)">
-                <option value="blanco_negro_ojos_dorados">⚫⚪ Blanco + negro · ojos dorados</option>
-                <option value="blanco_ojos_celestes">⚪ Blanco · ojos celestes</option>
-                <option value="gris_ojos_azules">🩶 Gris · ojos azules</option>
-                <option value="marron_ojos_ambar">🟤 Marrón · ojos ámbar</option>
-                <option value="naranja_ojos_verdes">🟠 Naranja · ojos verdes</option>
-                <option value="negro_ojos_amarillos">⚫ Negro · ojos amarillos</option>
-              </select>
               <div class="mt-2 flex items-center gap-2">
                 <span class="text-[9px] font-black text-slate-400 whitespace-nowrap">CANTIDAD</span>
                 <select id="catCountSelect" class="cat-select" onchange="changeCatCount(this.value)">
@@ -6865,8 +6850,8 @@ document.addEventListener('DOMContentLoaded', function(){
 
   function render(){
     const dn=clamp(localStorage.getItem(DK),1), cn=clamp(localStorage.getItem(CK),0);
-    const dogs=arr(DVK,dn,document.getElementById('dogTypeSelect')?.value||'akita');
-    const cats=arr(CVK,cn,document.getElementById('catVariantSelect')?.value||'blanco_negro_ojos_dorados');
+    const dogs=arr(DVK,dn,'akita');
+    const cats=arr(CVK,cn,'blanco_negro_ojos_dorados');
     save(DVK,dogs); save(CVK,cats);
 
     const dw=document.getElementById('dogIndividualVariants');
@@ -7051,8 +7036,8 @@ document.addEventListener('DOMContentLoaded', function(){
     // La cantidad manda: 0 = ninguno, 1 = uno, etc.
     const dn=dogOn?clamp(localStorage.getItem(DK),0):0;
     const cn=catOn?clamp(localStorage.getItem(CK),0):0;
-    const dogs=readArr(DVK,dn,document.getElementById('dogTypeSelect')?.value||'akita');
-    const cats=readArr(CVK,cn,document.getElementById('catVariantSelect')?.value||'blanco_negro_ojos_dorados');
+    const dogs=readArr(DVK,dn,'akita');
+    const cats=readArr(CVK,cn,'blanco_negro_ojos_dorados');
 
     // Hide original first dog/cat when the life controller owns those species.
     const baseDog=document.getElementById('headerDogPet');
