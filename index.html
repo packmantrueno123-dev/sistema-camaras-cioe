@@ -1066,6 +1066,22 @@ body.cioe-custom-theme #themeCustomizerBtn{background-color:var(--cioe-accent)!i
 }
 </style>
 
+
+<style id="cioePetUniformSmallSize2026">
+/* Todas las mascotas múltiples usan el mismo tamaño visual pequeño */
+#headerPixelArtWrap #headerDogPet,
+#headerPixelArtWrap .cioe-count-pet[data-count-pet="dog"],
+#headerPixelArtWrap .header-extra-pet[alt="cat"],
+#headerPixelArtWrap .cioe-count-pet[data-count-pet="cat"]{
+  height:44px!important;
+  width:auto!important;
+  max-height:44px!important;
+  max-width:76px!important;
+  object-fit:contain!important;
+  transform-origin:center bottom!important;
+}
+</style>
+
 </head>
 <body class="min-h-screen flex flex-col p-3 md:p-5 space-y-4 w-full">
 
@@ -6849,15 +6865,15 @@ document.addEventListener('DOMContentLoaded', function(){
     const catSrcs=cats.map(v=>getSrc('cat',v));
 
     const db=document.getElementById('headerDogPet');
-    if(db && dogSrcs[0]) db.src=dogSrcs[0];
+    if(db && dogSrcs[0] && !db.src.endsWith(dogSrcs[0])) db.src=dogSrcs[0];
     document.querySelectorAll('#headerPixelArtWrap [data-count-pet="dog"]').forEach(el=>{
-      const i=+el.dataset.countIndex; if(dogSrcs[i]) el.src=dogSrcs[i];
+      const i=+el.dataset.countIndex; if(dogSrcs[i] && !el.src.endsWith(dogSrcs[i])) el.src=dogSrcs[i];
     });
 
     const cb=document.querySelector('#headerPixelArtWrap .header-extra-pet[alt="cat"]');
-    if(cb && catSrcs[0]) cb.src=catSrcs[0];
+    if(cb && catSrcs[0] && !cb.src.endsWith(catSrcs[0])) cb.src=catSrcs[0];
     document.querySelectorAll('#headerPixelArtWrap [data-count-pet="cat"]').forEach(el=>{
-      const i=+el.dataset.countIndex; if(catSrcs[i]) el.src=catSrcs[i];
+      const i=+el.dataset.countIndex; if(catSrcs[i] && !el.src.endsWith(catSrcs[i])) el.src=catSrcs[i];
     });
   }
 
@@ -6941,6 +6957,7 @@ document.addEventListener('DOMContentLoaded', function(){
 
     const ds=document.getElementById('dogCountSelect'); if(ds) ds.value=String(dogCount);
     const cs=document.getElementById('catCountSelect'); if(cs) cs.value=String(catCount);
+    setTimeout(()=>window.applyIndividualPetVariants&&window.applyIndividualPetVariants(),40);
   }
 
   window.changeDogCount=function(v){
@@ -6995,19 +7012,15 @@ document.addEventListener('DOMContentLoaded', function(){
       setTimeout(rebuild,0);
     }
   });
-  document.addEventListener('change',function(e){
-    if(e.target && ['dogTypeSelect','catVariantSelect'].includes(e.target.id)){
-      setTimeout(syncSources,0);
-    }
-  });
+  // Las variantes individuales se administran por mascota.
+  // No copiar el color del selector general sobre todos los clones.
 
   window.addEventListener('load',function(){
     setTimeout(rebuild,1200);
     requestAnimationFrame(frame);
   },{once:true});
 
-  // Tras cargar el estado compartido del servidor, vuelve a dibujar las cantidades.
-  window.addEventListener('focus',()=>setTimeout(rebuild,80));
+  // No reconstruir las mascotas al recuperar el foco: conserva sus variantes individuales.
 })();
 </script>
 
