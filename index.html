@@ -7178,7 +7178,7 @@ document.addEventListener('DOMContentLoaded', function(){
   function render(){
     const dn=clamp(localStorage.getItem(DK),1), cn=clamp(localStorage.getItem(CK),0);
     const dogs=arr(DVK,dn,'akita');
-    const cats=arr(CVK,cn,'blanco_negro_ojos_dorados');
+    const cats=arr(CVK,cn,'luizmelo_cat1').map(v=>CATS.some(x=>x[0]===v)?v:'luizmelo_cat1');
     save(DVK,dogs); save(CVK,cats);
 
     const dw=document.getElementById('dogIndividualVariants');
@@ -7192,7 +7192,7 @@ document.addEventListener('DOMContentLoaded', function(){
     if(cw){
       cw.innerHTML=cats.map((v,i)=>`<div class="individual-pet-variant"><label>GATO ${i+1}</label><select data-cat-i="${i}">${opts(CATS,v)}</select></div>`).join('');
       cw.querySelectorAll('[data-cat-i]').forEach(s=>s.onchange=()=>{
-        const a=arr(CVK,cn,'blanco_negro_ojos_dorados'); a[+s.dataset.catI]=s.value; save(CVK,a); apply();
+        const a=arr(CVK,cn,'luizmelo_cat1').map(v=>CATS.some(x=>x[0]===v)?v:'luizmelo_cat1'); a[+s.dataset.catI]=s.value; save(CVK,a); apply();
       });
     }
     setTimeout(apply,40);
@@ -7225,12 +7225,12 @@ document.addEventListener('DOMContentLoaded', function(){
       luizmelo_cat5:'pets/cat/Bloom/Cat-5-Walk.gif',
       luizmelo_cat6:'pets/cat/Anacleta/Cat-6-Walk.gif'
     };
-    return map[variant] || map.blanco_negro_ojos_dorados;
+    return map[variant] || map.luizmelo_cat1;
   }
 
   function apply(){
     const dn=clamp(localStorage.getItem(DK),1), cn=clamp(localStorage.getItem(CK),0);
-    const dogs=arr(DVK,dn,'akita'), cats=arr(CVK,cn,'blanco_negro_ojos_dorados');
+    const dogs=arr(DVK,dn,'akita'), cats=arr(CVK,cn,'luizmelo_cat1').map(v=>CATS.some(x=>x[0]===v)?v:'luizmelo_cat1');
     const dogSrcs=dogs.map(v=>getSrc('dog',v));
     const catSrcs=cats.map(v=>getSrc('cat',v));
 
@@ -7259,6 +7259,23 @@ document.addEventListener('DOMContentLoaded', function(){
 
 
 
+
+<script id="cioeRemoveLegacyCats2026">
+(function(){
+  const K='cioe_header_cat_individual_variants_v1';
+  const allowed=['luizmelo_cat1','luizmelo_cat2','luizmelo_cat3','luizmelo_cat4','luizmelo_cat5','luizmelo_cat6'];
+  try{
+    let a=JSON.parse(localStorage.getItem(K)||'[]');
+    if(!Array.isArray(a)) a=[];
+    a=a.map(v=>allowed.includes(v)?v:'luizmelo_cat1');
+    localStorage.setItem(K,JSON.stringify(a));
+  }catch(_){ localStorage.setItem(K,'[]'); }
+  // Borra cualquier IMG legacy que hubiera quedado creado por una versión anterior.
+  document.addEventListener('DOMContentLoaded',()=>{
+    document.querySelectorAll('#headerPixelArtWrap .header-extra-pet[alt="cat"]').forEach(el=>el.remove());
+  },{once:true});
+})();
+</script>
 
 <style id="cioePetLifeStyles2026">
 #headerPixelArtWrap .cioe-life-pet{
@@ -7348,6 +7365,8 @@ document.addEventListener('DOMContentLoaded', function(){
   function readArr(k,n,f){let a=[];try{a=JSON.parse(localStorage.getItem(k)||'[]')}catch(_){}
     if(!Array.isArray(a))a=[];while(a.length<n)a.push(f);return a.slice(0,n)}
   function moving(){return localStorage.getItem(MOVE)!=='0'}
+  const NEW_CATS=['luizmelo_cat1','luizmelo_cat2','luizmelo_cat3','luizmelo_cat4','luizmelo_cat5','luizmelo_cat6'];
+  function sanitizeCats(a){return a.map(v=>NEW_CATS.includes(v)?v:'luizmelo_cat1')}
 
   function dogSrc(v,mode){
     const suffix=mode==='run'?'run_8fps.gif':mode==='idle'?'idle_8fps.gif':'walk_8fps.gif';
@@ -7378,9 +7397,9 @@ document.addEventListener('DOMContentLoaded', function(){
       const file=mode==='run'?'Cat-6-Run.gif':mode==='idle'?'Cat-6-Idle.gif':'Cat-6-Walk.gif';
       return `pets/cat/Anacleta/${file}`;
     }
-    // Los gatos GIF existentes mantienen exactamente sus rutas actuales.
-    const suffix=mode==='run'?'run_x2.gif':'walk_x2.gif';
-    return `pets/cat/cat_${v}_${suffix}`;
+    // Cualquier valor antiguo guardado se convierte visualmente a Cat-1; nunca carga gatos legacy.
+    const file=mode==='run'?'Cat-1-Run.gif':mode==='idle'?'Cat-1-Idle.gif':'Cat-1-Walk.gif';
+    return `pets/cat/luizmelo/${file}`;
   }
   function srcFor(p,mode){return p.kind==='dog'?dogSrc(p.variant,mode):catSrc(p.variant,mode)}
   function setMode(p,mode){
@@ -7407,7 +7426,8 @@ document.addEventListener('DOMContentLoaded', function(){
     const dn=dogOn?clamp(localStorage.getItem(DK),0):0;
     const cn=catOn?clamp(localStorage.getItem(CK),0):0;
     const dogs=readArr(DVK,dn,'akita');
-    const cats=readArr(CVK,cn,'blanco_negro_ojos_dorados');
+    const cats=sanitizeCats(readArr(CVK,cn,'luizmelo_cat1'));
+    localStorage.setItem(CVK,JSON.stringify(cats));
 
     // Hide original first dog/cat when the life controller owns those species.
     const baseDog=document.getElementById('headerDogPet');
