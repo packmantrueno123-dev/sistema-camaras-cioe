@@ -6985,10 +6985,13 @@ document.addEventListener('DOMContentLoaded', function(){
     wrap.appendChild(img);
     p.el=img;
   }
-  Object.values(PETS).forEach(makePet);
+  // El controlador antiguo conserva perro/zorro/panda/tortuga, pero NO crea el gato legacy.
+  // Los gatos son dibujados exclusivamente por cioePetLifeController2026 según la cantidad y variante elegidas.
+  Object.values(PETS).forEach(p=>{ if(p.key!=='cat') makePet(p); });
+  PETS.cat.el=null;
 
-  // Los GIF del gato ya tienen fondo transparente, así que se muestran directamente como imagen.
-  const catSource=PETS.cat.el;
+  // No existe un gato base antiguo; evita que aparezca el blanco/negro como mascota extra.
+  const catSource=null;
 
   const btnIds={akita:'petToggleAkita',fox:'petToggleFox',panda:'petTogglePanda',totoro:'petToggleTotoro',cat:'petToggleCat'};
   function paintBtn(btn,on){
