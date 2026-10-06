@@ -6891,7 +6891,7 @@ document.addEventListener('DOMContentLoaded', function(){
       luizmelo_cat2:'pets/cat/michi/Cat-2-Walk.gif',
       luizmelo_cat3:'pets/cat/micha/Cat-3-Walk.gif',
       luizmelo_cat4:'pets/cat/papita/Cat-4-Walk.gif',
-      luizmelo_cat5:'pets/cat/bloom/Cat-5-Walk.gif'
+      luizmelo_cat5:'pets/cat/Bloom/Cat-5-Walk.gif'
     };
     return map[variant] || map.blanco_negro_ojos_dorados;
   }
@@ -7040,7 +7040,7 @@ document.addEventListener('DOMContentLoaded', function(){
     }
     if(v==='luizmelo_cat5'){
       const file=mode==='run'?'Cat-5-Run.gif':mode==='idle'?'Cat-5-Idle.gif':'Cat-5-Walk.gif';
-      return `pets/cat/bloom/${file}`;
+      return `pets/cat/Bloom/${file}`;
     }
     // Los gatos GIF existentes mantienen exactamente sus rutas actuales.
     const suffix=mode==='run'?'run_x2.gif':'walk_x2.gif';
