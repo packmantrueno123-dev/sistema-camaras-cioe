@@ -3,7 +3,7 @@ const cors = require("cors");
 const { Pool } = require("pg");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
-const { randomUUID } = require("crypto");
+const { randomUUID, createHash } = require("crypto");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -276,6 +276,25 @@ async function initDb() {
       ADD COLUMN IF NOT EXISTS user_agent TEXT;
   `);
 
+  // Registro persistente de dispositivos.
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS user_devices (
+      device_id UUID PRIMARY KEY,
+      user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      device_key TEXT NOT NULL,
+      device_name TEXT NOT NULL DEFAULT 'Dispositivo',
+      user_agent TEXT,
+      first_seen TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      last_seen TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      UNIQUE(user_id, device_key)
+    );
+    CREATE INDEX IF NOT EXISTS idx_user_devices_user_id ON user_devices(user_id);
+  `);
+  await pool.query(`
+    ALTER TABLE user_sessions
+      ADD COLUMN IF NOT EXISTS device_id UUID REFERENCES user_devices(device_id) ON DELETE SET NULL;
+  `);
+
   // ====================================================
   // CREAR ADMIN SI NO EXISTE
   // ====================================================
@@ -380,6 +399,27 @@ function getClientIp(req) {
   return raw.replace(/^::ffff:/,"")||"No disponible";
 }
 
+function deviceInfoFromUA(ua){
+  ua=String(ua||"");
+  let device="PC";
+  if(/iPhone/i.test(ua)) device="iPhone";
+  else if(/iPad/i.test(ua)) device="iPad";
+  else if(/Android/i.test(ua)&&/Mobile/i.test(ua)) device="Android";
+  else if(/Android/i.test(ua)) device="Tablet Android";
+  else if(/Macintosh|Mac OS X/i.test(ua)) device="Mac";
+  else if(/Windows/i.test(ua)) device="PC Windows";
+  let browser="Navegador web";
+  if(/Edg\//i.test(ua))browser="Microsoft Edge";
+  else if(/OPR\//i.test(ua))browser="Opera";
+  else if(/Firefox\//i.test(ua))browser="Mozilla Firefox";
+  else if(/Chrome\//i.test(ua))browser="Google Chrome";
+  else if(/Safari\//i.test(ua))browser="Safari";
+  return {device,browser,name:`${device} — ${browser}`};
+}
+function makeDeviceKey(ua){
+  return createHash("sha256").update(String(ua||"desconocido")).digest("hex");
+}
+
 // ======================================================
 // LOGIN
 // ======================================================
@@ -476,11 +516,22 @@ app.post("/api/login", async (req, res) => {
       }
 
       sessionId = randomUUID();
-
+      const loginUA=String(req.headers["user-agent"]||"").slice(0,500);
+      const deviceKey=makeDeviceKey(loginUA);
+      const deviceMeta=deviceInfoFromUA(loginUA);
+      const deviceRow=await client.query(
+        `INSERT INTO user_devices(device_id,user_id,device_key,device_name,user_agent,first_seen,last_seen)
+         VALUES($1,$2,$3,$4,$5,NOW(),NOW())
+         ON CONFLICT(user_id,device_key)
+         DO UPDATE SET device_name=EXCLUDED.device_name,user_agent=EXCLUDED.user_agent,last_seen=NOW()
+         RETURNING device_id`,
+        [randomUUID(),u.id,deviceKey,deviceMeta.name,loginUA]
+      );
+      const deviceId=deviceRow.rows[0].device_id;
       await client.query(
-        `INSERT INTO user_sessions(session_id,user_id,created_at,last_seen,ip_address,user_agent)
-         VALUES($1,$2,NOW(),NOW(),$3,$4)`,
-        [sessionId,u.id,getClientIp(req),String(req.headers["user-agent"]||"").slice(0,500)]
+        `INSERT INTO user_sessions(session_id,user_id,created_at,last_seen,ip_address,user_agent,device_id)
+         VALUES($1,$2,NOW(),NOW(),$3,$4,$5)`,
+        [sessionId,u.id,getClientIp(req),loginUA,deviceId]
       );
 
       await client.query("COMMIT");
@@ -732,9 +783,29 @@ app.get("/api/users/:id/sessions",auth,adminOnly,async(req,res)=>{
   const target=await pool.query(`SELECT id,username,role FROM users WHERE id=$1`,[userId]);
   if(!target.rowCount)return res.status(404).json({ok:false,error:"Usuario no encontrado"});
   await pool.query(`DELETE FROM user_sessions WHERE user_id=$1 AND last_seen <= NOW() - INTERVAL '5 minutes'`,[userId]);
-  const q=await pool.query(`SELECT session_id,created_at,last_seen,COALESCE(ip_address,'No disponible') ip_address,COALESCE(user_agent,'') user_agent FROM user_sessions WHERE user_id=$1 AND last_seen > NOW() - INTERVAL '5 minutes' ORDER BY created_at DESC`,[userId]);
+  const q=await pool.query(`SELECT session_id,device_id,created_at,last_seen,COALESCE(ip_address,'No disponible') ip_address,COALESCE(user_agent,'') user_agent FROM user_sessions WHERE user_id=$1 AND last_seen > NOW() - INTERVAL '5 minutes' ORDER BY created_at DESC`,[userId]);
   res.json({ok:true,username:target.rows[0].username,limit:target.rows[0].role==="admin"?null:2,sessions:q.rows});
  }catch(err){console.error(err);res.status(500).json({ok:false,error:"No se pudieron consultar las sesiones"});}
+});
+app.get("/api/users/:id/devices",auth,adminOnly,async(req,res)=>{
+ try{
+  const userId=Number(req.params.id);
+  if(!Number.isInteger(userId))return res.status(400).json({ok:false,error:"Usuario inválido"});
+  const q=await pool.query(`SELECT d.device_id,d.device_name,d.user_agent,d.first_seen,d.last_seen,COUNT(s.session_id)::int active_sessions FROM user_devices d LEFT JOIN user_sessions s ON s.device_id=d.device_id AND s.last_seen>NOW()-INTERVAL '5 minutes' WHERE d.user_id=$1 GROUP BY d.device_id ORDER BY d.last_seen DESC`,[userId]);
+  res.json({ok:true,devices:q.rows});
+ }catch(err){console.error(err);res.status(500).json({ok:false,error:"No se pudieron consultar los dispositivos"});}
+});
+app.delete("/api/users/:id/devices/:deviceId",auth,adminOnly,async(req,res)=>{
+ const client=await pool.connect();
+ try{
+  const userId=Number(req.params.id),deviceId=String(req.params.deviceId||"");
+  await client.query("BEGIN");
+  await client.query(`DELETE FROM user_sessions WHERE user_id=$1 AND device_id=$2`,[userId,deviceId]);
+  const q=await client.query(`DELETE FROM user_devices WHERE user_id=$1 AND device_id=$2 RETURNING device_id`,[userId,deviceId]);
+  if(!q.rowCount){await client.query("ROLLBACK");return res.status(404).json({ok:false,error:"Dispositivo no encontrado"});}
+  await client.query("COMMIT");res.json({ok:true});
+ }catch(err){try{await client.query("ROLLBACK")}catch(_){}console.error(err);res.status(500).json({ok:false,error:"No se pudo revocar el dispositivo"});}
+ finally{client.release();}
 });
 app.delete("/api/users/:id/sessions/:sessionId",auth,adminOnly,async(req,res)=>{
  try{
