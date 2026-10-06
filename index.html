@@ -1428,6 +1428,39 @@ body.cioe-custom-theme #themeCustomizerBtn{background-color:var(--cioe-accent)!i
 }
 </style>
 
+
+<script id="cioePetGifPreload2026">
+(function(){
+  const files=[
+    'pets/dog/akita_walk_8fps.gif','pets/dog/akita_run_8fps.gif','pets/dog/akita_idle_8fps.gif',
+    'pets/cat/luizmelo/Cat-1-Walk.gif','pets/cat/luizmelo/Cat-1-Run.gif','pets/cat/luizmelo/Cat-1-Idle.gif',
+    'pets/cat/michi/Cat-2-Walk.gif','pets/cat/michi/Cat-2-Run.gif','pets/cat/michi/Cat-2-Idle.gif',
+    'pets/cat/micha/Cat-3-Walk.gif','pets/cat/micha/Cat-3-Run.gif','pets/cat/micha/Cat-3-Idle.gif',
+    'pets/cat/papita/Cat-4-Walk.gif','pets/cat/papita/Cat-4-Run.gif','pets/cat/papita/Cat-4-Idle.gif',
+    'pets/cat/Bloom/Cat-5-Walk.gif','pets/cat/Bloom/Cat-5-Run.gif','pets/cat/Bloom/Cat-5-Idle.gif',
+    'pets/cat/Anacleta/Cat-6-Walk.gif','pets/cat/Anacleta/Cat-6-Run.gif','pets/cat/Anacleta/Cat-6-Idle.gif'
+  ];
+  files.forEach(src=>{ const img=new Image(); img.src=src; });
+})();
+</script>
+<style id="cioeBallIconOnly2026">
+#headerThrowBallBtn{
+  width:48px!important;
+  min-width:48px!important;
+  height:42px!important;
+  padding:0!important;
+  display:inline-flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  gap:0!important;
+}
+#headerThrowBallBtn .header-ball-icon{
+  margin:0!important;
+  font-size:16px!important;
+  line-height:1!important;
+}
+</style>
+
 </head>
 <body class="min-h-screen flex flex-col p-3 md:p-5 space-y-4 w-full">
 
@@ -1507,9 +1540,8 @@ body.cioe-custom-theme #themeCustomizerBtn{background-color:var(--cioe-accent)!i
           <img id="headerLandscapeForeground" src="" alt="" aria-hidden="true">
           <img id="headerDogPet" src="pets/dog/akita_walk_8fps.gif" alt="Akita animado">
         </div>
-        <button id="headerThrowBallBtn" type="button" onclick="throwPetBall()" class="header-throw-ball" title="Tirar pelota">
+        <button id="headerThrowBallBtn" type="button" onclick="throwPetBall()" class="header-throw-ball" title="Tirar pelota" aria-label="Tirar pelota">
           <span class="header-ball-icon">⚾</span>
-          <span>Tirar pelota</span>
         </button>
       </div>
 
@@ -7486,12 +7518,18 @@ document.addEventListener('DOMContentLoaded', function(){
     }
   });
 
-  window.addEventListener('load',()=>{
-    setTimeout(()=>{
-      build();hookThrow();
-      if(!raf)raf=requestAnimationFrame(frame);
-    },1400);
-  },{once:true});
+  function startLifePetsFast(){
+    build();
+    hookThrow();
+    if(!raf)raf=requestAnimationFrame(frame);
+  }
+  if(document.readyState==='loading'){
+    document.addEventListener('DOMContentLoaded',startLifePetsFast,{once:true});
+  }else{
+    startLifePetsFast();
+  }
+  /* Segundo pase corto por si el estado remoto terminó de aplicarse justo después. */
+  window.addEventListener('load',()=>setTimeout(build,80),{once:true});
 
   // Save button may apply server-loaded settings; rebuild once after it.
   const oldSave=window.saveTheme;
