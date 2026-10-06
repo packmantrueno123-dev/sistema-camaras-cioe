@@ -1132,6 +1132,87 @@ body.cioe-custom-theme #themeCustomizerBtn{background-color:var(--cioe-accent)!i
 }
 </style>
 
+
+<style id="cioePetPanelSelectFix2026">
+/* ===== PANEL MASCOTAS: FLECHAS Y SELECTORES CORREGIDOS ===== */
+
+/* Cada selector individual conserva espacio suficiente para la flecha */
+#themeCustomizerModal .individual-pet-variant{
+  display:grid!important;
+  grid-template-columns:82px minmax(0,1fr)!important;
+  gap:8px!important;
+  align-items:center!important;
+  overflow:visible!important;
+}
+
+/* Flecha propia, centrada y siempre dentro del selector */
+#themeCustomizerModal .individual-pet-variant select,
+#themeCustomizerModal #dogCountSelect,
+#themeCustomizerModal #catCountSelect,
+#themeCustomizerModal #petLandscapeSelect{
+  -webkit-appearance:none!important;
+  appearance:none!important;
+  background-color:#07111f!important;
+  background-image:
+    linear-gradient(45deg,transparent 50%,#9fb0c7 50%),
+    linear-gradient(135deg,#9fb0c7 50%,transparent 50%)!important;
+  background-position:
+    calc(100% - 15px) 50%,
+    calc(100% - 10px) 50%!important;
+  background-size:5px 5px,5px 5px!important;
+  background-repeat:no-repeat!important;
+  padding-left:11px!important;
+  padding-right:32px!important;
+  box-sizing:border-box!important;
+  cursor:pointer!important;
+}
+
+/* Selectores PERRO/GATO: más limpios y sin flecha pegada al borde */
+#themeCustomizerModal .individual-pet-variant select{
+  width:100%!important;
+  min-width:0!important;
+  height:34px!important;
+  border-radius:10px!important;
+  border:1px solid #344a65!important;
+  color:#e9f0f8!important;
+  font-size:9px!important;
+  font-weight:850!important;
+}
+
+/* Cantidad: misma flecha y alineación */
+#themeCustomizerModal #dogCountSelect,
+#themeCustomizerModal #catCountSelect{
+  height:36px!important;
+  border-radius:11px!important;
+}
+
+/* Paisaje: texto y flecha centrados correctamente */
+#themeCustomizerModal #petLandscapeSelect{
+  width:100%!important;
+  height:36px!important;
+  border-radius:11px!important;
+  color:#e9f0f8!important;
+  font-size:9px!important;
+  font-weight:850!important;
+}
+
+/* Opciones del desplegable */
+#themeCustomizerModal .individual-pet-variant select option,
+#themeCustomizerModal #dogCountSelect option,
+#themeCustomizerModal #catCountSelect option,
+#themeCustomizerModal #petLandscapeSelect option{
+  background:#07111f!important;
+  color:#e9f0f8!important;
+}
+
+/* Evita que el selector choque con el borde en pantallas pequeñas */
+@media(max-width:640px){
+  #themeCustomizerModal .individual-pet-variant{
+    grid-template-columns:72px minmax(0,1fr)!important;
+  }
+}
+</style>
+
 </head>
 <body class="min-h-screen flex flex-col p-3 md:p-5 space-y-4 w-full">
 
@@ -6438,7 +6519,7 @@ body.cioe-custom-theme #themeCustomizerBtn{background-color:var(--cioe-accent)!i
               <div><b>PAISAJE DE MASCOTAS</b><small>Selecciona el escenario de la franja superior</small></div>
             </div>
             <select id="petLandscapeSelect" class="cat-select" onchange="changePetLandscape(this.value)">
-              <option value="none">🌑 Sin paisaje</option>
+              <option value="none">Sin paisaje</option>
               <option value="autumn">🍂 Autumn</option>
               <option value="beach">🏖️ Beach</option>
               <option value="castle">🏰 Castle</option>
