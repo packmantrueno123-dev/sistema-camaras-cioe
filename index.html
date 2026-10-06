@@ -5458,11 +5458,13 @@ body.cioe-custom-theme #themeCustomizerBtn{background-color:var(--cioe-accent)!i
       // REPORTES Y DATOS
       ["ver_reportes", "Ver reportes / detalles", "Abrir reportes y detalles de cámaras", "fa-clipboard-list", "Reportes y datos"],
       ["editar_reportes", "Editar reportes", "Crear o modificar novedades y detalles", "fa-file-pen", "Reportes y datos"],
-      ["reporte_whatsapp", "Reporte WhatsApp", "Copiar el resumen para WhatsApp", "fa-share-nodes", "Reportes y datos"],
+      ["reporte_whatsapp", "Reporte Excel", "Generar y descargar el reporte Excel del Centro de Control", "fa-file-excel", "Reportes y datos"],
       ["exportar_csv", "Exportar CSV", "Descargar/exportar información del sistema", "fa-file-csv", "Reportes y datos"],
 
       // APARIENCIA
-      ["personalizar_colores", "Personalizar colores", "Permitir cambiar y utilizar diseños de colores", "fa-palette", "Apariencia"],
+      ["personalizar_colores", "Personalizar colores", "Permitir abrir el panel de personalización", "fa-palette", "Apariencia"],
+      ["diseno_colores", "Diseño de colores", "Permitir activar, desactivar y cambiar el diseño de colores", "fa-paint-roller", "Apariencia"],
+      ["mascotas_encabezado", "Mascotas del encabezado", "Permitir configurar las mascotas, paisaje, movimiento y pelota", "fa-paw", "Apariencia"],
 
       // PERIFONEO
       ["telefono_perifoneo", "Ver teléfono / perifoneo", "Consultar números y datos de perifoneo", "fa-phone", "Perifoneo"],
@@ -5542,6 +5544,16 @@ body.cioe-custom-theme #themeCustomizerBtn{background-color:var(--cioe-accent)!i
       setPermissionElements('[onclick*="copySummary"]', hasPermission("reporte_whatsapp"));
       setPermissionElements('[onclick*="exportCSV"]', hasPermission("exportar_csv"));
       setPermissionElements('#themeCustomizerBtn', hasPermission("personalizar_colores"));
+
+      // Permisos independientes dentro de Personalizar colores.
+      const themeColorsSection = document.getElementById("themeColorsPermissionSection");
+      const themePetsSection = document.getElementById("themePetsPermissionSection");
+      if (themeColorsSection) themeColorsSection.classList.toggle("hidden", !hasPermission("diseno_colores"));
+      if (themePetsSection) themePetsSection.classList.toggle("hidden", !hasPermission("mascotas_encabezado"));
+
+      // El permiso que antes se llamaba Reporte WhatsApp ahora controla Reporte Excel.
+      setPermissionElements('[onclick*="downloadExcelReport"]', hasPermission("reporte_whatsapp"));
+
       if (!hasPermission("personalizar_colores")) {
         document.body.classList.remove('cioe-custom-theme');
         const themeModal = document.getElementById('themeCustomizerModal');
@@ -5591,7 +5603,8 @@ body.cioe-custom-theme #themeCustomizerBtn{background-color:var(--cioe-accent)!i
 
       // Reportes / exportación
       if (/exportcsv/.test(action)) return ["exportar_csv", "exportar CSV"];
-      if (/copysummary/.test(action)) return ["reporte_whatsapp", "generar el reporte de WhatsApp"];
+      if (/downloadexcelreport/.test(action)) return ["reporte_whatsapp", "generar el Reporte Excel"];
+      if (/copysummary/.test(action)) return ["reporte_whatsapp", "generar el reporte"];
       if (/saveunifiedreport|savedetailreport|openunifiedreporteditor/.test(action)) return ["editar_reportes", "editar reportes"];
       if (/showreportdetail|showfijadetail|showvecinaldetail|showtotemreport|showepdetail/.test(action)) return ["ver_reportes", "ver reportes o detalles"];
 
@@ -6657,7 +6670,7 @@ body.cioe-custom-theme #themeCustomizerBtn{background-color:var(--cioe-accent)!i
       <div class="theme-redesign-body">
 
         <!-- DISEÑO DE COLORES -->
-        <section class="theme-redesign-section theme-colors-section">
+        <section id="themeColorsPermissionSection" class="theme-redesign-section theme-colors-section">
           <div class="theme-redesign-power">
             <div class="theme-section-heading">
               <div class="theme-section-icon amber"><i class="fa-solid fa-palette"></i></div>
@@ -6707,7 +6720,7 @@ body.cioe-custom-theme #themeCustomizerBtn{background-color:var(--cioe-accent)!i
 </section>
 
         <!-- MASCOTAS -->
-        <section class="theme-redesign-section">
+        <section id="themePetsPermissionSection" class="theme-redesign-section">
           <div class="theme-pets-heading">
             <div class="theme-section-heading">
               <div class="theme-section-icon yellow"><i class="fa-solid fa-paw"></i></div>
@@ -6828,6 +6841,7 @@ body.cioe-custom-theme #themeCustomizerBtn{background-color:var(--cioe-accent)!i
    updatePowerUI();
  }
  window.toggleThemePower=function(){
+   if(typeof hasPermission==='function' && !hasPermission('diseno_colores')){ if(typeof permissionDenied==='function') permissionDenied('cambiar el diseño de colores'); return; }
    const next=!isEnabled();
    localStorage.setItem(ENABLED_KEY,next?'1':'0');
    if(next){
@@ -6844,11 +6858,16 @@ body.cioe-custom-theme #themeCustomizerBtn{background-color:var(--cioe-accent)!i
      if(typeof permissionDenied==='function') permissionDenied('personalizar los colores');
      return;
    }
-   const m=document.getElementById('themeCustomizerModal');m.classList.remove('hidden');m.classList.add('flex');updatePowerUI()
+   const m=document.getElementById('themeCustomizerModal');
+   const colors=document.getElementById('themeColorsPermissionSection');
+   const pets=document.getElementById('themePetsPermissionSection');
+   if(colors && typeof hasPermission==='function') colors.classList.toggle('hidden',!hasPermission('diseno_colores'));
+   if(pets && typeof hasPermission==='function') pets.classList.toggle('hidden',!hasPermission('mascotas_encabezado'));
+   m.classList.remove('hidden');m.classList.add('flex');updatePowerUI()
  }
  window.closeThemeCustomizer=function(){const m=document.getElementById('themeCustomizerModal');m.classList.add('hidden');m.classList.remove('flex')}
- window.applyThemePreset=function(name){if(!isEnabled()){localStorage.setItem(ENABLED_KEY,'1')}applyCioeTheme(presets[name]||presets.original)}
- window.previewCustomTheme=function(){if(!isEnabled()){localStorage.setItem(ENABLED_KEY,'1')}applyCioeTheme({bg:document.getElementById('themeBgColor').value,panel:document.getElementById('themePanelColor').value,accent:document.getElementById('themeAccentColor').value})}
+ window.applyThemePreset=function(name){if(typeof hasPermission==='function' && !hasPermission('diseno_colores')){if(typeof permissionDenied==='function')permissionDenied('cambiar el diseño de colores');return;}if(!isEnabled()){localStorage.setItem(ENABLED_KEY,'1')}applyCioeTheme(presets[name]||presets.original)}
+ window.previewCustomTheme=function(){if(typeof hasPermission==='function' && !hasPermission('diseno_colores')){if(typeof permissionDenied==='function')permissionDenied('cambiar el diseño de colores');return;}if(!isEnabled()){localStorage.setItem(ENABLED_KEY,'1')}applyCioeTheme({bg:document.getElementById('themeBgColor').value,panel:document.getElementById('themePanelColor').value,accent:document.getElementById('themeAccentColor').value})}
  window.saveTheme=async function(){
    const t={bg:document.getElementById('themeBgColor').value,panel:document.getElementById('themePanelColor').value,accent:document.getElementById('themeAccentColor').value};
    localStorage.setItem(KEY,JSON.stringify(t));
