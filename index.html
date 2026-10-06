@@ -2157,10 +2157,40 @@ body.cioe-custom-theme #themeCustomizerBtn{background-color:var(--cioe-accent)!i
         </div>
       </div>
 
-      <div class="flex items-center gap-2">
+      <div class="flex items-center gap-2 relative">
         <button onclick="openVecinalModal()" class="bg-amber-500 hover:bg-amber-400 text-black px-4 py-2 rounded-xl text-xs font-black transition flex items-center gap-2 shadow-lg shadow-amber-500/10">
           <i class="fa-solid fa-plus text-sm"></i> Añadir Cámara Vecinal
         </button>
+
+        <div class="relative">
+          <button type="button" onclick="toggleVecinalExcelReportPanel(event)" class="bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2">
+            <i class="fa-solid fa-file-excel text-emerald-400"></i> Reporte Excel
+          </button>
+
+          <div id="vecinalExcelReportPanel" class="hidden absolute right-0 top-11 z-[90] w-[430px] max-w-[calc(100vw-24px)] bg-[#0a0f1d] border border-slate-700 rounded-2xl p-4 shadow-2xl">
+            <div class="flex items-center justify-between gap-3 mb-3">
+              <div>
+                <p class="text-xs font-black text-white uppercase tracking-wide"><i class="fa-solid fa-file-excel text-emerald-400 mr-1"></i> Reporte Excel Vecinal</p>
+                <p class="text-[10px] text-slate-400 mt-1">Selecciona qué cámaras vecinales deseas descargar.</p>
+              </div>
+              <button type="button" onclick="closeVecinalExcelReportPanel()" class="w-8 h-8 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-300"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-1 bg-[#030712] p-1 rounded-xl border border-slate-800">
+              <button type="button" data-vecinal-excel-filter="ALL" onclick="setVecinalExcelReportFilter('ALL')" class="vecinal-excel-report-filter px-3 py-2 rounded-lg text-[10px] font-black bg-amber-500 text-black">Todas</button>
+              <button type="button" data-vecinal-excel-filter="OPERATIVA" onclick="setVecinalExcelReportFilter('OPERATIVA')" class="vecinal-excel-report-filter px-3 py-2 rounded-lg text-[10px] font-bold text-slate-400 hover:text-white">Operativas</button>
+              <button type="button" data-vecinal-excel-filter="INOPERATIVA" onclick="setVecinalExcelReportFilter('INOPERATIVA')" class="vecinal-excel-report-filter px-3 py-2 rounded-lg text-[10px] font-bold text-slate-400 hover:text-white">Inoperativas</button>
+              <button type="button" data-vecinal-excel-filter="MANTENIMIENTO" onclick="setVecinalExcelReportFilter('MANTENIMIENTO')" class="vecinal-excel-report-filter px-3 py-2 rounded-lg text-[10px] font-bold text-slate-400 hover:text-white">Mantenimiento</button>
+            </div>
+
+            <div class="mt-3 flex items-center justify-between gap-3 bg-[#030712] border border-slate-800 rounded-xl px-3 py-2.5">
+              <span id="vecinalExcelReportCount" class="text-[10px] font-bold text-slate-300">0 cámaras seleccionadas</span>
+              <button type="button" onclick="downloadVecinalExcelReport()" class="bg-emerald-500 hover:bg-emerald-400 text-black px-4 py-2 rounded-xl text-[10px] font-black transition flex items-center gap-2">
+                <i class="fa-solid fa-download"></i> Descargar Excel
+              </button>
+            </div>
+          </div>
+        </div>
 
         <button onclick="openVecinalAddToBarrio()" class="bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2 rounded-xl text-xs font-black transition flex items-center gap-2 shadow-lg shadow-emerald-500/10">
           <i class="fa-solid fa-folder-plus text-sm"></i> Añadir a un Barrio
@@ -3020,6 +3050,233 @@ body.cioe-custom-theme #themeCustomizerBtn{background-color:var(--cioe-accent)!i
       { barrio: "B47 - PARQUE LA LIBERTAD LAS PALMERAS", camara: "PARQUE LA LIBERTAD LAS PALMERAS", urbanizacion: "URB. LAS PALMERAS II ETAPA", zona: "SUR 2D", sistema: "PSS", conexion: "OPERATIVA", detalles: "FUNCIONA", estacion: "ESTACIÓN 18" }
     ];
 
+    const IMPORTED_VECINAL_CAMERAS_20261006 = [
+      { barrio: "B1 - JR. VENUS / PARQUE PARACAS", camara: "JR. VENUS-MANCO CAPAC", urbanizacion: "AA.HH. MORADORES DEL PASAJE VENUS", zona: "SUR 3 B", sistema: "PSS", conexion: "OPERATIVA", detalles: "FUNCIONA", estacion: "ESTACIÓN 18" },
+      { barrio: "B1 - JR. VENUS / PARQUE PARACAS", camara: "JR. VENUS 7324 NORTE", urbanizacion: "AA.HH. MORADORES DEL PASAJE VENUS", zona: "SUR 4 B", sistema: "PSS", conexion: "OPERATIVA", detalles: "FUNCIONA", estacion: "ESTACIÓN 18" },
+      { barrio: "B1 - JR. VENUS / PARQUE PARACAS", camara: "LOZA NORTE", urbanizacion: "AA.HH. MORADORES DEL PASAJE VENUS", zona: "SUR 5 B", sistema: "PSS", conexion: "OPERATIVA", detalles: "FUNCIONA", estacion: "ESTACIÓN 18" },
+      { barrio: "B1 - JR. VENUS / PARQUE PARACAS", camara: "JR. VENUS 7324 SUR", urbanizacion: "AA.HH. MORADORES DEL PASAJE VENUS", zona: "SUR 6 B", sistema: "PSS", conexion: "OPERATIVA", detalles: "FUNCIONA", estacion: "ESTACIÓN 18" },
+      { barrio: "B1 - JR. VENUS / PARQUE PARACAS", camara: "JR.VENUS 7390", urbanizacion: "AA.HH. MORADORES DEL PASAJE VENUS", zona: "SUR 7 B", sistema: "PSS", conexion: "OPERATIVA", detalles: "FUNCIONA", estacion: "ESTACIÓN 18" },
+      { barrio: "B1 - JR. VENUS / PARQUE PARACAS", camara: "PJ. VENUS", urbanizacion: "AA.HH. MORADORES DEL PASAJE VENUS", zona: "SUR 8 B", sistema: "PSS", conexion: "OPERATIVA", detalles: "FUNCIONA", estacion: "ESTACIÓN 18" },
+      { barrio: "B1 - JR. VENUS / PARQUE PARACAS", camara: "LOZA SUR", urbanizacion: "AA.HH. MORADORES DEL PASAJE VENUS", zona: "SUR 9 B", sistema: "PSS", conexion: "OPERATIVA", detalles: "FUNCIONA", estacion: "ESTACIÓN 18" },
+      { barrio: "B2 - FLORESTA DE PRO", camara: "P4 - CALLE. 55-69", urbanizacion: "URB. LA FLORESTA DE PRO", zona: "NORTE 3 B", sistema: "PSS", conexion: "OPERATIVA", detalles: "FUNCIONA", estacion: "ESTACIÓN 18" },
+      { barrio: "B2 - FLORESTA DE PRO", camara: "P3 - CALLE 49", urbanizacion: "URB. LA FLORESTA DE PRO", zona: "NORTE 3 B", sistema: "PSS", conexion: "OPERATIVA", detalles: "FUNCIONA", estacion: "ESTACIÓN 18" },
+      { barrio: "B2 - FLORESTA DE PRO", camara: "CALLE 52", urbanizacion: "URB. LA FLORESTA DE PRO", zona: "NORTE 3 B", sistema: "PSS", conexion: "OPERATIVA", detalles: "FUNCIONA", estacion: "ESTACIÓN 18" },
+      { barrio: "B2 - FLORESTA DE PRO", camara: "CALLE 53", urbanizacion: "URB. LA FLORESTA DE PRO", zona: "NORTE 3 B", sistema: "PSS", conexion: "OPERATIVA", detalles: "FUNCIONA", estacion: "ESTACIÓN 18" },
+      { barrio: "B2 - FLORESTA DE PRO", camara: "CALLE 52", urbanizacion: "URB. LA FLORESTA DE PRO", zona: "NORTE 3 B", sistema: "PSS", conexion: "OPERATIVA", detalles: "FUNCIONA", estacion: "ESTACIÓN 18" },
+      { barrio: "B2 - FLORESTA DE PRO", camara: "CALLE Z", urbanizacion: "URB. LA FLORESTA DE PRO", zona: "NORTE 3 B", sistema: "PSS", conexion: "OPERATIVA", detalles: "FUNCIONA", estacion: "ESTACIÓN 18" },
+      { barrio: "B2 - FLORESTA DE PRO", camara: "HUANDOY - C.53", urbanizacion: "URB. LA FLORESTA DE PRO", zona: "NORTE 3 B", sistema: "PSS", conexion: "OPERATIVA", detalles: "FUNCIONA", estacion: "ESTACIÓN 18" },
+      { barrio: "B2 - FLORESTA DE PRO", camara: "C. 55. AV.HUANDOY", urbanizacion: "URB. LA FLORESTA DE PRO", zona: "NORTE 3 B", sistema: "PSS", conexion: "OPERATIVA", detalles: "FUNCIONA", estacion: "ESTACIÓN 18" },
+      { barrio: "B3 - JR. CAYETANO HEREDIA/JR. JOSÉ PEREYRA", camara: "CAYETANO - HEREDIA", urbanizacion: "URB. PANAMERICANA NORTE", zona: "SUR 2 D", sistema: "PSS", conexion: "OPERATIVA", detalles: "PTZ", estacion: "ESTACIÓN 18" },
+      { barrio: "B4 - PARQUE SANTA ANA", camara: "2 DE OCTUBRE - CALLE 3", urbanizacion: "URB. SANTA ANA", zona: "NORTE 5 A", sistema: "PSS", conexion: "INOPERATIVA", detalles: "FUNCIONA", estacion: "ESTACIÓN 18" },
+      { barrio: "B4 - PARQUE SANTA ANA", camara: "CALLE 13", urbanizacion: "URB. SANTA ANA", zona: "NORTE 5 A", sistema: "PSS", conexion: "INOPERATIVA", detalles: "FUNCIONA", estacion: "ESTACIÓN 18" },
+      { barrio: "B4 - PARQUE SANTA ANA", camara: "2 DE OCTUBRE", urbanizacion: "URB. SANTA ANA", zona: "NORTE 5 A", sistema: "PSS", conexion: "INOPERATIVA", detalles: "FUNCIONA", estacion: "ESTACIÓN 18" },
+      { barrio: "B4 - PARQUE SANTA ANA", camara: "CALLE 3 - CALLE 13", urbanizacion: "URB. SANTA ANA", zona: "NORTE 5 A", sistema: "PSS", conexion: "INOPERATIVA", detalles: "FUNCIONA", estacion: "ESTACIÓN 18" },
+      { barrio: "B4 - PARQUE SANTA ANA", camara: "CALLE 2 NORTE", urbanizacion: "URB. SANTA ANA", zona: "NORTE 5 A", sistema: "PSS", conexion: "INOPERATIVA", detalles: "FUNCIONA", estacion: "ESTACIÓN 18" },
+      { barrio: "B4 - PARQUE SANTA ANA", camara: "LOZA", urbanizacion: "URB. SANTA ANA", zona: "NORTE 5 A", sistema: "PSS", conexion: "INOPERATIVA", detalles: "FUNCIONA", estacion: "ESTACIÓN 18" },
+      { barrio: "B4 - PARQUE SANTA ANA", camara: "CALLE 1 - CALLE 13 (1)", urbanizacion: "URB. SANTA ANA", zona: "NORTE 5 A", sistema: "PSS", conexion: "INOPERATIVA", detalles: "FUNCIONA", estacion: "ESTACIÓN 18" },
+      { barrio: "B4 - PARQUE SANTA ANA", camara: "CALLE 2 SUR", urbanizacion: "URB. SANTA ANA", zona: "NORTE 5 A", sistema: "PSS", conexion: "INOPERATIVA", detalles: "FUNCIONA", estacion: "ESTACIÓN 18" },
+      { barrio: "B4 - PARQUE SANTA ANA", camara: "CALLE 2 - CALLE 13 (3)", urbanizacion: "URB. SANTA ANA", zona: "NORTE 5 A", sistema: "PSS", conexion: "INOPERATIVA", detalles: "FUNCIONA", estacion: "ESTACIÓN 18" },
+      { barrio: "B4 - PARQUE SANTA ANA", camara: "CALLE 14 IZQUIERDA", urbanizacion: "URB. SANTA ANA", zona: "NORTE 5 A", sistema: "PSS", conexion: "INOPERATIVA", detalles: "FUNCIONA", estacion: "ESTACIÓN 18" },
+      { barrio: "B4 - PARQUE SANTA ANA", camara: "CALLE 14 DERECHA", urbanizacion: "URB. SANTA ANA", zona: "NORTE 5 A", sistema: "PSS", conexion: "INOPERATIVA", detalles: "FUNCIONA", estacion: "ESTACIÓN 18" },
+      { barrio: "B4 - PARQUE SANTA ANA", camara: "CALLE 1 - CALLE 13 (2)", urbanizacion: "URB. SANTA ANA", zona: "NORTE 5 A", sistema: "PSS", conexion: "INOPERATIVA", detalles: "FUNCIONA", estacion: "ESTACIÓN 18" },
+      { barrio: "B5 - PARQUE TULIPANES / CA.PISCIS/ CA. ARIES", camara: "ACUARIO CDR 10", urbanizacion: "URB. MERCURIO II ETAPA", zona: "SUR 3 B", sistema: "PSS", conexion: "INOPERATIVA", detalles: "FUNCIONA", estacion: "ESTACIÓN 18" },
+      { barrio: "B5 - PARQUE TULIPANES / CA.PISCIS/ CA. ARIES", camara: "ACUARIO CDR 9", urbanizacion: "URB. MERCURIO II ETAPA", zona: "SUR 3 B", sistema: "PSS", conexion: "OPERATIVA", detalles: "FUNCIONA", estacion: "ESTACIÓN 18" },
+      { barrio: "B5 - PARQUE TULIPANES / CA.PISCIS/ CA. ARIES", camara: "JR. ARIES CDR 10", urbanizacion: "URB. MERCURIO II ETAPA", zona: "SUR 3 B", sistema: "PSS", conexion: "OPERATIVA", detalles: "FUNCIONA", estacion: "ESTACIÓN 18" },
+      { barrio: "B5 - PARQUE TULIPANES / CA.PISCIS/ CA. ARIES", camara: "B5 - PARQUE TULIPANES / CA.PISCIS/ CA. ARIES", urbanizacion: "URB. MERCURIO II ETAPA", zona: "SUR 3 B", sistema: "PSS", conexion: "OPERATIVA", detalles: "FUNCIONA", estacion: "ESTACIÓN 18" },
+      { barrio: "B5 - PARQUE TULIPANES / CA.PISCIS/ CA. ARIES", camara: "B5 - PARQUE TULIPANES / CA.PISCIS/ CA. ARIES", urbanizacion: "URB. MERCURIO II ETAPA", zona: "SUR 3 B", sistema: "PSS", conexion: "OPERATIVA", detalles: "FUNCIONA", estacion: "ESTACIÓN 18" },
+      { barrio: "B5 - PARQUE TULIPANES / CA.PISCIS/ CA. ARIES", camara: "B5 - PARQUE TULIPANES / CA.PISCIS/ CA. ARIES", urbanizacion: "URB. MERCURIO II ETAPA", zona: "SUR 3 B", sistema: "PSS", conexion: "OPERATIVA", detalles: "FUNCIONA", estacion: "ESTACIÓN 18" },
+      { barrio: "B5 - PARQUE TULIPANES / CA.PISCIS/ CA. ARIES", camara: "B5 - PARQUE TULIPANES / CA.PISCIS/ CA. ARIES", urbanizacion: "URB. MERCURIO II ETAPA", zona: "SUR 3 B", sistema: "PSS", conexion: "INOPERATIVA", detalles: "FUNCIONA", estacion: "ESTACIÓN 18" },
+      { barrio: "B5 - PARQUE TULIPANES / CA.PISCIS/ CA. ARIES", camara: "B5 - PARQUE TULIPANES / CA.PISCIS/ CA. ARIES", urbanizacion: "URB. MERCURIO II ETAPA", zona: "SUR 3 B", sistema: "PSS", conexion: "OPERATIVA", detalles: "FUNCIONA", estacion: "ESTACIÓN 18" },
+      { barrio: "B5 - PARQUE TULIPANES / CA.PISCIS/ CA. ARIES", camara: "B5 - PARQUE TULIPANES / CA.PISCIS/ CA. ARIES", urbanizacion: "URB. MERCURIO II ETAPA", zona: "SUR 3 B", sistema: "PSS", conexion: "INOPERATIVA", detalles: "FUNCIONA", estacion: "ESTACIÓN 18" },
+      { barrio: "B5 - PARQUE TULIPANES / CA.PISCIS/ CA. ARIES", camara: "B5 - PARQUE TULIPANES / CA.PISCIS/ CA. ARIES", urbanizacion: "URB. MERCURIO II ETAPA", zona: "SUR 3 B", sistema: "PSS", conexion: "OPERATIVA", detalles: "FUNCIONA", estacion: "ESTACIÓN 18" },
+      { barrio: "B5 - PARQUE TULIPANES / CA.PISCIS/ CA. ARIES", camara: "B5 - PARQUE TULIPANES / CA.PISCIS/ CA. ARIES", urbanizacion: "URB. MERCURIO II ETAPA", zona: "SUR 3 B", sistema: "PSS", conexion: "OPERATIVA", detalles: "FUNCIONA", estacion: "ESTACIÓN 18" },
+      { barrio: "B5 - PARQUE TULIPANES / CA.PISCIS/ CA. ARIES", camara: "B5 - PARQUE TULIPANES / CA.PISCIS/ CA. ARIES", urbanizacion: "URB. MERCURIO II ETAPA", zona: "SUR 3 B", sistema: "PSS", conexion: "OPERATIVA", detalles: "FUNCIONA", estacion: "ESTACIÓN 18" },
+      { barrio: "B5 - PARQUE TULIPANES / CA.PISCIS/ CA. ARIES", camara: "B5 - PARQUE TULIPANES / CA.PISCIS/ CA. ARIES", urbanizacion: "URB. MERCURIO II ETAPA", zona: "SUR 3 B", sistema: "PSS", conexion: "OPERATIVA", detalles: "FUNCIONA", estacion: "ESTACIÓN 18" },
+      { barrio: "B7 - COOPERATIVO. DE VIV. NUESTRA SRA. DE GUADALUPE", camara: "CALLE SURICHAC + LORENZO FARFAN", urbanizacion: "COOP. DE VIV. NUESTRA SRA. DE GUADALUPE", zona: "SUR 5 D", sistema: "PSS", conexion: "OPERATIVA", detalles: "FUNCIONA", estacion: "ESTACIÓN 18" },
+      { barrio: "B7 - COOPERATIVO. DE VIV. NUESTRA SRA. DE GUADALUPE", camara: "CALLE POCOTA PORTON 3", urbanizacion: "COOP. DE VIV. NUESTRA SRA. DE GUADALUPE", zona: "SUR 5 D", sistema: "PSS", conexion: "OPERATIVA", detalles: "FUNCIONA", estacion: "ESTACIÓN 18" },
+      { barrio: "B7 - COOPERATIVO. DE VIV. NUESTRA SRA. DE GUADALUPE", camara: "PUERTA PRINCIPAL TUPAC YUPANQUI", urbanizacion: "COOP. DE VIV. NUESTRA SRA. DE GUADALUPE", zona: "SUR 5 D", sistema: "PSS", conexion: "OPERATIVA", detalles: "FUNCIONA", estacion: "ESTACIÓN 18" },
+      { barrio: "B7 - COOPERATIVO. DE VIV. NUESTRA SRA. DE GUADALUPE", camara: "C. LORENZO FARFAN + TUPAC YUPAN", urbanizacion: "COOP. DE VIV. NUESTRA SRA. DE GUADALUPE", zona: "SUR 5 D", sistema: "PSS", conexion: "OPERATIVA", detalles: "FUNCIONA", estacion: "ESTACIÓN 18" },
+      { barrio: "B7 - COOPERATIVO. DE VIV. NUESTRA SRA. DE GUADALUPE", camara: "CALLE MIGUEL BASTIDAS", urbanizacion: "COOP. DE VIV. NUESTRA SRA. DE GUADALUPE", zona: "SUR 5 D", sistema: "PSS", conexion: "OPERATIVA", detalles: "FUNCIONA", estacion: "ESTACIÓN 18" },
+      { barrio: "B7 - COOPERATIVO. DE VIV. NUESTRA SRA. DE GUADALUPE", camara: "CALLE SURICHAC PORTON 5", urbanizacion: "COOP. DE VIV. NUESTRA SRA. DE GUADALUPE", zona: "SUR 5 D", sistema: "PSS", conexion: "OPERATIVA", detalles: "FUNCIONA", estacion: "ESTACIÓN 18" },
+      { barrio: "B7 - COOPERATIVO. DE VIV. NUESTRA SRA. DE GUADALUPE", camara: "CALLE POCOTA PORTON 2", urbanizacion: "COOP. DE VIV. NUESTRA SRA. DE GUADALUPE", zona: "SUR 5 D", sistema: "PSS", conexion: "OPERATIVA", detalles: "FUNCIONA", estacion: "ESTACIÓN 18" },
+      { barrio: "B7 - COOPERATIVO. DE VIV. NUESTRA SRA. DE GUADALUPE", camara: "PARQUE GUADALUPE", urbanizacion: "COOP. DE VIV. NUESTRA SRA. DE GUADALUPE", zona: "SUR 5 D", sistema: "PSS", conexion: "OPERATIVA", detalles: "FUNCIONA", estacion: "ESTACIÓN 18" },
+      { barrio: "B7 - COOPERATIVO. DE VIV. NUESTRA SRA. DE GUADALUPE", camara: "CALLE SURICHAC PORTON 4", urbanizacion: "COOP. DE VIV. NUESTRA SRA. DE GUADALUPE", zona: "SUR 5 D", sistema: "PSS", conexion: "OPERATIVA", detalles: "FUNCIONA", estacion: "ESTACIÓN 18" },
+      { barrio: "B7 - COOPERATIVO. DE VIV. NUESTRA SRA. DE GUADALUPE", camara: "CALLE D - PTZ", urbanizacion: "COOP. DE VIV. NUESTRA SRA. DE GUADALUPE", zona: "SUR 5 D", sistema: "PSS", conexion: "OPERATIVA", detalles: "FUNCIONA", estacion: "ESTACIÓN 18" },
+      { barrio: "B7 - COOPERATIVO. DE VIV. NUESTRA SRA. DE GUADALUPE", camara: "CALLE POCOTA", urbanizacion: "COOP. DE VIV. NUESTRA SRA. DE GUADALUPE", zona: "SUR 5 D", sistema: "PSS", conexion: "OPERATIVA", detalles: "FUNCIONA", estacion: "ESTACIÓN 18" },
+      { barrio: "B8 - ASOC DE VIVIENDA LA ESTRELLA", camara: "PARQUE ESTRELLA N1", urbanizacion: "ASOC. DE VIDA LA ESTRELLA", zona: "NORTE 2 A", sistema: "PSS", conexion: "OPERATIVA", detalles: "FUNCIONA", estacion: "ESTACIÓN 18" },
+      { barrio: "B8 - ASOC DE VIVIENDA LA ESTRELLA", camara: "PARQUE ESTRELLA N2", urbanizacion: "ASOC. DE VIDA LA ESTRELLA", zona: "NORTE 2 A", sistema: "PSS", conexion: "OPERATIVA", detalles: "FUNCIONA", estacion: "ESTACIÓN 18" },
+      { barrio: "B8 - ASOC DE VIVIENDA LA ESTRELLA", camara: "LA UNIDAD / PERSONALIDAD", urbanizacion: "ASOC. DE VIDA LA ESTRELLA", zona: "NORTE 2 A", sistema: "PSS", conexion: "OPERATIVA", detalles: "FUNCIONA", estacion: "ESTACIÓN 18" },
+      { barrio: "B8 - ASOC DE VIVIENDA LA ESTRELLA", camara: "PERSONALIDAD / JR LA HONESTIDAD", urbanizacion: "ASOC. DE VIDA LA ESTRELLA", zona: "NORTE 2 A", sistema: "PSS", conexion: "OPERATIVA", detalles: "FUNCIONA", estacion: "ESTACIÓN 18" },
+      { barrio: "B9 - PARQUE JAZMINES", camara: "CALLE CAMPANITAS PTZ", urbanizacion: "AA.HH. LOS JAZMINES DEL NARANJAL", zona: "SUR 1 A", sistema: "PSS", conexion: "OPERATIVA", detalles: "FUNCIONA", estacion: "ESTACIÓN 18" },
+      { barrio: "B9 - PARQUE JAZMINES", camara: "IPC", urbanizacion: "AA.HH. LOS JAZMINES DEL NARANJAL", zona: "SUR 1 A", sistema: "PSS", conexion: "OPERATIVA", detalles: "FUNCIONA", estacion: "ESTACIÓN 18" },
+      { barrio: "B9 - PARQUE JAZMINES", camara: "CAMPANILLAS FIJAS", urbanizacion: "AA.HH. LOS JAZMINES DEL NARANJAL", zona: "SUR 1 A", sistema: "PSS", conexion: "OPERATIVA", detalles: "FUNCIONA", estacion: "ESTACIÓN 18" },
+      { barrio: "B9 - PARQUE JAZMINES", camara: "CAMPANILLAS- LOS ALISOS", urbanizacion: "AA.HH. LOS JAZMINES DEL NARANJAL", zona: "SUR 1 A", sistema: "PSS", conexion: "OPERATIVA", detalles: "FUNCIONA", estacion: "ESTACIÓN 18" },
+      { barrio: "B10 - PARQUE SAN ANTONIO", camara: "CHANNEL 1", urbanizacion: "URB. VIRGEN DE LA PUERTA", zona: "SUR 5 B", sistema: "PSS", conexion: "OPERATIVA", detalles: "FUNCIONA", estacion: "ESTACIÓN 18" },
+      { barrio: "B10 - PARQUE SAN ANTONIO", camara: "CHANNEL 2", urbanizacion: "URB. VIRGEN DE LA PUERTA", zona: "SUR 5 B", sistema: "PSS", conexion: "OPERATIVA", detalles: "FUNCIONA", estacion: "ESTACIÓN 18" },
+      { barrio: "B10 - PARQUE SAN ANTONIO", camara: "IPC", urbanizacion: "URB. VIRGEN DE LA PUERTA", zona: "SUR 5 B", sistema: "PSS", conexion: "OPERATIVA", detalles: "FUNCIONA", estacion: "ESTACIÓN 18" },
+      { barrio: "B10 - PARQUE SAN ANTONIO", camara: "IPC", urbanizacion: "URB. VIRGEN DE LA PUERTA", zona: "SUR 5 B", sistema: "PSS", conexion: "OPERATIVA", detalles: "FUNCIONA", estacion: "ESTACIÓN 18" },
+      { barrio: "B10 - PARQUE SAN ANTONIO", camara: "PJ FRANBUESAS-ZARZAMORAS", urbanizacion: "URB. VIRGEN DE LA PUERTA", zona: "SUR 5 B", sistema: "PSS", conexion: "OPERATIVA", detalles: "FUNCIONA", estacion: "ESTACIÓN 18" },
+      { barrio: "B10 - PARQUE SAN ANTONIO", camara: "JR. DAMASCOS- ZARZAMORAS", urbanizacion: "URB. VIRGEN DE LA PUERTA", zona: "SUR 5 B", sistema: "PSS", conexion: "OPERATIVA", detalles: "FUNCIONA", estacion: "ESTACIÓN 18" },
+      { barrio: "B10 - PARQUE SAN ANTONIO", camara: "IP PTZ CAMERA", urbanizacion: "URB. VIRGEN DE LA PUERTA", zona: "SUR 5 B", sistema: "PSS", conexion: "OPERATIVA", detalles: "FUNCIONA", estacion: "ESTACIÓN 18" },
+      { barrio: "B10 - PARQUE SAN ANTONIO", camara: "IPC", urbanizacion: "URB. VIRGEN DE LA PUERTA", zona: "SUR 5 B", sistema: "PSS", conexion: "OPERATIVA", detalles: "FUNCIONA", estacion: "ESTACIÓN 18" },
+      { barrio: "B10 - PARQUE SAN ANTONIO", camara: "IPC", urbanizacion: "URB. VIRGEN DE LA PUERTA", zona: "SUR 5 B", sistema: "PSS", conexion: "OPERATIVA", detalles: "FUNCIONA", estacion: "ESTACIÓN 18" },
+      { barrio: "B14 - BULGARIA", camara: "JR. BULGARIA-CALLE 9", urbanizacion: "URB. VILLA SOL IV ETAPA", zona: "CENTRO 3 B", sistema: "PSS", conexion: "OPERATIVA", detalles: "FUNCIONA", estacion: "ESTACIÓN 18" },
+      { barrio: "B14 - BULGARIA", camara: "JR. BULGARIA-CALLE 9 1", urbanizacion: "URB. VILLA SOL IV ETAPA", zona: "CENTRO 3 B", sistema: "PSS", conexion: "OPERATIVA", detalles: "FUNCIONA", estacion: "ESTACIÓN 18" },
+      { barrio: "B14 - BULGARIA", camara: "JR. BULGARIA", urbanizacion: "URB. VILLA SOL IV ETAPA", zona: "CENTRO 3 B", sistema: "PSS", conexion: "OPERATIVA", detalles: "FUNCIONA", estacion: "ESTACIÓN 18" },
+      { barrio: "B14 - BULGARIA", camara: "JR. BULGARIA- ALEMANIA", urbanizacion: "URB. VILLA SOL IV ETAPA", zona: "CENTRO 3 B", sistema: "PSS", conexion: "OPERATIVA", detalles: "FUNCIONA", estacion: "ESTACIÓN 18" },
+      { barrio: "B14 - BULGARIA", camara: "CALLE 9", urbanizacion: "URB. VILLA SOL IV ETAPA", zona: "CENTRO 3 B", sistema: "PSS", conexion: "OPERATIVA", detalles: "FUNCIONA", estacion: "ESTACIÓN 18" },
+      { barrio: "B14 - BULGARIA", camara: "IPC", urbanizacion: "URB. VILLA SOL IV ETAPA", zona: "CENTRO 3 B", sistema: "PSS", conexion: "OPERATIVA", detalles: "FUNCIONA", estacion: "ESTACIÓN 18" },
+      { barrio: "B15-JR. ARIES MZ. H URB. MERCURIO II ETAPA", camara: "B15-JR. ARIES MZ. H URB. MERCURIO II ETAPA", urbanizacion: "URB. MERCURIO II ETAPA", zona: "SUR 3 B", sistema: "PSS", conexion: "INOPERATIVA", detalles: "FUNCIONA", estacion: "ESTACIÓN 18" },
+      { barrio: "B15-JR. ARIES MZ. H URB. MERCURIO II ETAPA", camara: "B15-JR. ARIES MZ. H URB. MERCURIO II ETAPA", urbanizacion: "URB. MERCURIO II ETAPA", zona: "SUR 3 B", sistema: "PSS", conexion: "INOPERATIVA", detalles: "FUNCIONA", estacion: "ESTACIÓN 18" },
+      { barrio: "B15-JR. ARIES MZ. H URB. MERCURIO II ETAPA", camara: "B15-JR. ARIES MZ. H URB. MERCURIO II ETAPA", urbanizacion: "URB. MERCURIO II ETAPA", zona: "SUR 3 B", sistema: "PSS", conexion: "INOPERATIVA", detalles: "FUNCIONA", estacion: "ESTACIÓN 18" },
+      { barrio: "B15-JR. ARIES MZ. H URB. MERCURIO II ETAPA", camara: "B15-JR. ARIES MZ. H URB. MERCURIO II ETAPA", urbanizacion: "URB. MERCURIO II ETAPA", zona: "SUR 3 B", sistema: "PSS", conexion: "INOPERATIVA", detalles: "FUNCIONA", estacion: "ESTACIÓN 18" },
+      { barrio: "B15-JR. ARIES MZ. H URB. MERCURIO II ETAPA", camara: "B15-JR. ARIES MZ. H URB. MERCURIO II ETAPA", urbanizacion: "URB. MERCURIO II ETAPA", zona: "SUR 3 B", sistema: "PSS", conexion: "INOPERATIVA", detalles: "FUNCIONA", estacion: "ESTACIÓN 18" },
+      { barrio: "B17 - ASOC. LA ESPERANZA", camara: "CANAL 1", urbanizacion: "ASOC. LA ESPERANZA", zona: "CENTRO 3 A", sistema: "PSS", conexion: "OPERATIVA", detalles: "FUNCIONA", estacion: "ESTACIÓN 18" },
+      { barrio: "B17 - ASOC. LA ESPERANZA", camara: "CANAL 2", urbanizacion: "ASOC. LA ESPERANZA", zona: "CENTRO 3 A", sistema: "PSS", conexion: "OPERATIVA", detalles: "FUNCIONA", estacion: "ESTACIÓN 18" },
+      { barrio: "B17 - ASOC. LA ESPERANZA", camara: "CANAL 3", urbanizacion: "ASOC. LA ESPERANZA", zona: "CENTRO 3 A", sistema: "PSS", conexion: "OPERATIVA", detalles: "FUNCIONA", estacion: "ESTACIÓN 18" },
+      { barrio: "B17 - ASOC. LA ESPERANZA", camara: "CANAL 4", urbanizacion: "ASOC. LA ESPERANZA", zona: "CENTRO 3 A", sistema: "PSS", conexion: "OPERATIVA", detalles: "FUNCIONA", estacion: "ESTACIÓN 18" },
+      { barrio: "B17 - ASOC. LA ESPERANZA", camara: "CANAL 5", urbanizacion: "ASOC. LA ESPERANZA", zona: "CENTRO 3 A", sistema: "PSS", conexion: "OPERATIVA", detalles: "FUNCIONA", estacion: "ESTACIÓN 18" },
+      { barrio: "B17 - ASOC. LA ESPERANZA", camara: "CANAL 6", urbanizacion: "ASOC. LA ESPERANZA", zona: "CENTRO 3 A", sistema: "PSS", conexion: "OPERATIVA", detalles: "FUNCIONA", estacion: "ESTACIÓN 18" },
+      { barrio: "B17 - ASOC. LA ESPERANZA", camara: "CANAL 7", urbanizacion: "ASOC. LA ESPERANZA", zona: "CENTRO 3 A", sistema: "PSS", conexion: "OPERATIVA", detalles: "FUNCIONA", estacion: "ESTACIÓN 18" },
+      { barrio: "B17 - ASOC. LA ESPERANZA", camara: "CANAL 8", urbanizacion: "ASOC. LA ESPERANZA", zona: "CENTRO 3 A", sistema: "PSS", conexion: "OPERATIVA", detalles: "FUNCIONA", estacion: "ESTACIÓN 18" },
+      { barrio: "B17 - ASOC. LA ESPERANZA", camara: "CANAL 9", urbanizacion: "ASOC. LA ESPERANZA", zona: "CENTRO 3 A", sistema: "PSS", conexion: "OPERATIVA", detalles: "FUNCIONA", estacion: "ESTACIÓN 18" },
+      { barrio: "B17 - ASOC. LA ESPERANZA", camara: "CANAL 10", urbanizacion: "ASOC. LA ESPERANZA", zona: "CENTRO 3 A", sistema: "PSS", conexion: "OPERATIVA", detalles: "FUNCIONA", estacion: "ESTACIÓN 18" },
+      { barrio: "B17 - ASOC. LA ESPERANZA", camara: "CANAL 11", urbanizacion: "ASOC. LA ESPERANZA", zona: "CENTRO 3 A", sistema: "PSS", conexion: "OPERATIVA", detalles: "FUNCIONA", estacion: "ESTACIÓN 18" },
+      { barrio: "B17 - ASOC. LA ESPERANZA", camara: "CANAL 12", urbanizacion: "ASOC. LA ESPERANZA", zona: "CENTRO 3 A", sistema: "PSS", conexion: "OPERATIVA", detalles: "FUNCIONA", estacion: "ESTACIÓN 18" },
+      { barrio: "B17 - ASOC. LA ESPERANZA", camara: "CANAL 13", urbanizacion: "ASOC. LA ESPERANZA", zona: "CENTRO 3 A", sistema: "PSS", conexion: "OPERATIVA", detalles: "FUNCIONA", estacion: "ESTACIÓN 18" },
+      { barrio: "B17 - ASOC. LA ESPERANZA", camara: "CANAL 14", urbanizacion: "ASOC. LA ESPERANZA", zona: "CENTRO 3 A", sistema: "PSS", conexion: "OPERATIVA", detalles: "FUNCIONA", estacion: "ESTACIÓN 18" },
+      { barrio: "B17 - ASOC. LA ESPERANZA", camara: "CANAL 15", urbanizacion: "ASOC. LA ESPERANZA", zona: "CENTRO 3 A", sistema: "PSS", conexion: "OPERATIVA", detalles: "FUNCIONA", estacion: "ESTACIÓN 18" },
+      { barrio: "B17 - ASOC. LA ESPERANZA", camara: "CANAL 16", urbanizacion: "ASOC. LA ESPERANZA", zona: "CENTRO 3 A", sistema: "PSS", conexion: "OPERATIVA", detalles: "FUNCIONA", estacion: "ESTACIÓN 18" },
+      { barrio: "B17 - ASOC. LA ESPERANZA", camara: "CANAL 17", urbanizacion: "ASOC. LA ESPERANZA", zona: "CENTRO 3 A", sistema: "PSS", conexion: "OPERATIVA", detalles: "FUNCIONA", estacion: "ESTACIÓN 18" },
+      { barrio: "B17 - ASOC. LA ESPERANZA", camara: "CANAL 18", urbanizacion: "ASOC. LA ESPERANZA", zona: "CENTRO 3 A", sistema: "PSS", conexion: "OPERATIVA", detalles: "FUNCIONA", estacion: "ESTACIÓN 18" },
+      { barrio: "B17 - ASOC. LA ESPERANZA", camara: "IPC", urbanizacion: "URB. SANTA ANA", zona: "NORTE 5 A", sistema: "PSS", conexion: "INOPERATIVA", detalles: "FUNCIONA", estacion: "ESTACIÓN 18" },
+      { barrio: "B17 - ASOC. LA ESPERANZA", camara: "CANAL 2", urbanizacion: "URB. SANTA ANA", zona: "NORTE 5 A", sistema: "PSS", conexion: "INOPERATIVA", detalles: "FUNCIONA", estacion: "ESTACIÓN 18" },
+      { barrio: "B17 - ASOC. LA ESPERANZA", camara: "IPC", urbanizacion: "URB. SANTA ANA", zona: "NORTE 5 A", sistema: "PSS", conexion: "INOPERATIVA", detalles: "FUNCIONA", estacion: "ESTACIÓN 18" },
+      { barrio: "B17 - ASOC. LA ESPERANZA", camara: "IPC", urbanizacion: "URB. SANTA ANA", zona: "NORTE 5 A", sistema: "PSS", conexion: "INOPERATIVA", detalles: "FUNCIONA", estacion: "ESTACIÓN 18" },
+      { barrio: "B17 - ASOC. LA ESPERANZA", camara: "IPC", urbanizacion: "URB. SANTA ANA", zona: "NORTE 5 A", sistema: "PSS", conexion: "INOPERATIVA", detalles: "FUNCIONA", estacion: "ESTACIÓN 18" },
+      { barrio: "B17 - ASOC. LA ESPERANZA", camara: "IPC", urbanizacion: "URB. SANTA ANA", zona: "NORTE 5 A", sistema: "PSS", conexion: "INOPERATIVA", detalles: "FUNCIONA", estacion: "ESTACIÓN 18" },
+      { barrio: "B19 - AA.HH. MUNICIPAL CHILLÓN", camara: "A. Mendiola (Sur) - Rio Chillón", urbanizacion: "AA.HH. MUNICIPAL CHILLÓN", zona: "NORTE 1 A", sistema: "PSS", conexion: "INOPERATIVA", detalles: "PERDIÓ CONEXIÓN CON LA 276 POR UN ROBA CABLES", estacion: "ESTACIÓN 18" },
+      { barrio: "B19 - AA.HH. MUNICIPAL CHILLÓN", camara: "Psj. Chocano - Rio Chillón (S)", urbanizacion: "AA.HH. MUNICIPAL CHILLÓN", zona: "NORTE 1 A", sistema: "PSS", conexion: "OPERATIVA", detalles: "FUNCIONA", estacion: "ESTACIÓN 18" },
+      { barrio: "B19 - AA.HH. MUNICIPAL CHILLÓN", camara: "Psj. Chocano - Rio Chillón (N)", urbanizacion: "AA.HH. MUNICIPAL CHILLÓN", zona: "NORTE 1 A", sistema: "PSS", conexion: "OPERATIVA", detalles: "FUNCIONA", estacion: "ESTACIÓN 18" },
+      { barrio: "B19 - AA.HH. MUNICIPAL CHILLÓN", camara: "A. Mendiola - Rio Chillón (N)", urbanizacion: "AA.HH. MUNICIPAL CHILLÓN", zona: "NORTE 1 A", sistema: "PSS", conexion: "INOPERATIVA", detalles: "FUNCIONA", estacion: "ESTACIÓN 18" },
+      { barrio: "B19 - AA.HH. MUNICIPAL CHILLÓN", camara: "A. Mendiola - Rio Chillón (S)", urbanizacion: "AA.HH. MUNICIPAL CHILLÓN", zona: "NORTE 1 A", sistema: "PSS", conexion: "INOPERATIVA", detalles: "FUNCIONA", estacion: "ESTACIÓN 18" },
+      { barrio: "B19 - AA.HH. MUNICIPAL CHILLÓN", camara: "J.C. Mariategui-23 Setiembre (S)", urbanizacion: "AA.HH. MUNICIPAL CHILLÓN", zona: "NORTE 1 A", sistema: "PSS", conexion: "OPERATIVA", detalles: "FUNCIONA", estacion: "ESTACIÓN 18" },
+      { barrio: "B19 - AA.HH. MUNICIPAL CHILLÓN", camara: "J.C. Mariategui-23 Setiembre (E)", urbanizacion: "AA.HH. MUNICIPAL CHILLÓN", zona: "NORTE 1 A", sistema: "PSS", conexion: "OPERATIVA", detalles: "FUNCIONA", estacion: "ESTACIÓN 18" },
+      { barrio: "B19 - AA.HH. MUNICIPAL CHILLÓN", camara: "A. Mendiola - Ca. 17 (Entrada)", urbanizacion: "AA.HH. MUNICIPAL CHILLÓN", zona: "NORTE 1 A", sistema: "PSS", conexion: "OPERATIVA", detalles: "FUNCIONA", estacion: "ESTACIÓN 18" },
+      { barrio: "B19 - AA.HH. MUNICIPAL CHILLÓN", camara: "A. Mendiola - 23 Setiembre", urbanizacion: "AA.HH. MUNICIPAL CHILLÓN", zona: "NORTE 1 A", sistema: "PSS", conexion: "OPERATIVA", detalles: "FUNCIONA", estacion: "ESTACIÓN 18" },
+      { barrio: "B19 - AA.HH. MUNICIPAL CHILLÓN", camara: "Ca. 17 - Rio Chillón (E)", urbanizacion: "AA.HH. MUNICIPAL CHILLÓN", zona: "NORTE 1 A", sistema: "PSS", conexion: "OPERATIVA", detalles: "FUNCIONA", estacion: "ESTACIÓN 18" },
+      { barrio: "B19 - AA.HH. MUNICIPAL CHILLÓN", camara: "Ca. 17 - Rio Chillón (N)", urbanizacion: "AA.HH. MUNICIPAL CHILLÓN", zona: "NORTE 1 A", sistema: "PSS", conexion: "OPERATIVA", detalles: "FUNCIONA", estacion: "ESTACIÓN 18" },
+      { barrio: "B19 - AA.HH. MUNICIPAL CHILLÓN", camara: "Ca. 17 - J.C. Mariategui (O)", urbanizacion: "AA.HH. MUNICIPAL CHILLÓN", zona: "NORTE 1 A", sistema: "PSS", conexion: "OPERATIVA", detalles: "FUNCIONA", estacion: "ESTACIÓN 18" },
+      { barrio: "B19 - AA.HH. MUNICIPAL CHILLÓN", camara: "A. Mendiola - Ca. 17 (O)", urbanizacion: "AA.HH. MUNICIPAL CHILLÓN", zona: "NORTE 1 A", sistema: "PSS", conexion: "OPERATIVA", detalles: "FUNCIONA", estacion: "ESTACIÓN 18" },
+      { barrio: "B19 - AA.HH. MUNICIPAL CHILLÓN", camara: "J.C. Mariategui-23 Setiembre (N)", urbanizacion: "AA.HH. MUNICIPAL CHILLÓN", zona: "NORTE 1 A", sistema: "PSS", conexion: "OPERATIVA", detalles: "FUNCIONA", estacion: "ESTACIÓN 18" },
+      { barrio: "B19 - AA.HH. MUNICIPAL CHILLÓN", camara: "Ca. 17 - J.C. Mariategui (N)", urbanizacion: "AA.HH. MUNICIPAL CHILLÓN", zona: "NORTE 1 A", sistema: "PSS", conexion: "OPERATIVA", detalles: "FUNCIONA", estacion: "ESTACIÓN 18" },
+      { barrio: "B19 - AA.HH. MUNICIPAL CHILLÓN", camara: "A. Mendiola - Ca. 17 (N)", urbanizacion: "AA.HH. MUNICIPAL CHILLÓN", zona: "NORTE 1 A", sistema: "PSS", conexion: "OPERATIVA", detalles: "FUNCIONA", estacion: "ESTACIÓN 18" },
+      { barrio: "B19 - AA.HH. MUNICIPAL CHILLÓN", camara: "A. Mendiola - Javier Heraud (N)", urbanizacion: "AA.HH. MUNICIPAL CHILLÓN", zona: "NORTE 1 A", sistema: "PSS", conexion: "OPERATIVA", detalles: "FUNCIONA", estacion: "ESTACIÓN 18" },
+      { barrio: "B19 - AA.HH. MUNICIPAL CHILLÓN", camara: "P. Bethania - Rio Chillón (S)", urbanizacion: "AA.HH. MUNICIPAL CHILLÓN", zona: "NORTE 1 A", sistema: "PSS", conexion: "INOPERATIVA", detalles: "FUNCIONA", estacion: "ESTACIÓN 18" },
+      { barrio: "B19 - AA.HH. MUNICIPAL CHILLÓN", camara: "P. Bethania - Rio Chillón (N)", urbanizacion: "AA.HH. MUNICIPAL CHILLÓN", zona: "NORTE 1 A", sistema: "PSS", conexion: "INOPERATIVA", detalles: "FUNCIONA", estacion: "ESTACIÓN 18" },
+      { barrio: "B19 - AA.HH. MUNICIPAL CHILLÓN", camara: "23 Setiembre - Rio Chillón (E)", urbanizacion: "AA.HH. MUNICIPAL CHILLÓN", zona: "NORTE 1 A", sistema: "PSS", conexion: "INOPERATIVA", detalles: "FUNCIONA", estacion: "ESTACIÓN 18" },
+      { barrio: "B19 - AA.HH. MUNICIPAL CHILLÓN", camara: "Parque Plaza Cívica Chillón", urbanizacion: "AA.HH. MUNICIPAL CHILLÓN", zona: "NORTE 2 A", sistema: "PSS", conexion: "OPERATIVA", detalles: "FUNCIONA", estacion: "ESTACIÓN 19" },
+      { barrio: "B19 - AA.HH. MUNICIPAL CHILLÓN", camara: "B20 - PARQUE N° 18", urbanizacion: "AA.HH. SAN MARTÍN", zona: "CENTRO 1 C", sistema: "PSS", conexion: "INOPERATIVA", detalles: "FUNCIONA", estacion: "ESTACIÓN 18" },
+      { barrio: "B19 - AA.HH. MUNICIPAL CHILLÓN", camara: "B21 - BULGARIA - CALLE POLONIA", urbanizacion: "URB. SAN ELIAS", zona: "NORTE 4 A", sistema: "PSS", conexion: "OPERATIVA", detalles: "FUNCIONA", estacion: "ESTACIÓN 18" },
+      { barrio: "B19 - AA.HH. MUNICIPAL CHILLÓN", camara: "BS105", urbanizacion: "XXXXXXXX", zona: "XXXX X X", sistema: "PSS", conexion: "INOPERATIVA", detalles: "FUNCIONA", estacion: "ESTACIÓN 18" },
+      { barrio: "B22 - PARQUE FUJIMORI", camara: "MANDARINAS-LIMONCILLOS", urbanizacion: "AAHH. LOS OLIVOS DE PRO", zona: "NORTE 5B", sistema: "PSS", conexion: "INOPERATIVA", detalles: "FUNCIONA", estacion: "ESTACIÓN 18" },
+      { barrio: "B22 - PARQUE FUJIMORI", camara: "JAZMINES-VIOLETAS", urbanizacion: "AAHH. LOS OLIVOS DE PRO", zona: "NORTE 5B", sistema: "PSS", conexion: "INOPERATIVA", detalles: "FUNCIONA", estacion: "ESTACIÓN 18" },
+      { barrio: "B22 - PARQUE FUJIMORI", camara: "BETANCOURT-MIRTOS", urbanizacion: "AAHH. LOS OLIVOS DE PRO", zona: "NORTE 5B", sistema: "PSS", conexion: "INOPERATIVA", detalles: "FUNCIONA", estacion: "ESTACIÓN 18" },
+      { barrio: "B22 - PARQUE FUJIMORI", camara: "OPALA-GLADIOLOS", urbanizacion: "AAHH. LOS OLIVOS DE PRO", zona: "NORTE 5B", sistema: "PSS", conexion: "INOPERATIVA", detalles: "FUNCIONA", estacion: "ESTACIÓN 18" },
+      { barrio: "B22 - PARQUE FUJIMORI", camara: "TURQUESAS-FRESAS", urbanizacion: "AAHH. LOS OLIVOS DE PRO", zona: "NORTE 5B", sistema: "PSS", conexion: "INOPERATIVA", detalles: "FUNCIONA", estacion: "ESTACIÓN 18" },
+      { barrio: "B22 - PARQUE FUJIMORI", camara: "FRESAS-NISPEROS", urbanizacion: "AAHH. LOS OLIVOS DE PRO", zona: "NORTE 5B", sistema: "PSS", conexion: "INOPERATIVA", detalles: "FUNCIONA", estacion: "ESTACIÓN 18" },
+      { barrio: "B22 - PARQUE FUJIMORI", camara: "BETANCOURT-CANTA CALLAO", urbanizacion: "AAHH. LOS OLIVOS DE PRO", zona: "NORTE 5B", sistema: "PSS", conexion: "INOPERATIVA", detalles: "FUNCIONA", estacion: "ESTACIÓN 18" },
+      { barrio: "B22 - PARQUE FUJIMORI", camara: "VIOLETAS-GERANIOS", urbanizacion: "AAHH. LOS OLIVOS DE PRO", zona: "NORTE 5B", sistema: "PSS", conexion: "INOPERATIVA", detalles: "FUNCIONA", estacion: "ESTACIÓN 18" },
+      { barrio: "B22 - PARQUE FUJIMORI", camara: "PARQUE SR DE LOS MILAGROS", urbanizacion: "AAHH. LOS OLIVOS DE PRO", zona: "NORTE 5B", sistema: "PSS", conexion: "INOPERATIVA", detalles: "FUNCIONA", estacion: "ESTACIÓN 18" },
+      { barrio: "B22 - PARQUE FUJIMORI", camara: "LAURELES -1 DE DICIEMBRE", urbanizacion: "AAHH. LOS OLIVOS DE PRO", zona: "NORTE 5B", sistema: "PSS", conexion: "OPERATIVA", detalles: "FUNCIONA", estacion: "ESTACIÓN 18" },
+      { barrio: "B22 - PARQUE FUJIMORI", camara: "PARQUE FUJIMORI", urbanizacion: "AAHH. LOS OLIVOS DE PRO", zona: "NORTE 5B", sistema: "PSS", conexion: "OPERATIVA", detalles: "FUNCIONA", estacion: "ESTACIÓN 18" },
+      { barrio: "B22 - PARQUE FUJIMORI", camara: "CHIRIMOYAS-C. 74", urbanizacion: "AAHH. LOS OLIVOS DE PRO", zona: "NORTE 5B", sistema: "PSS", conexion: "OPERATIVA", detalles: "FUNCIONA", estacion: "ESTACIÓN 18" },
+      { barrio: "B22 - PARQUE FUJIMORI", camara: "CASUARINAS-CANTA CALLAO", urbanizacion: "AAHH. LOS OLIVOS DE PRO", zona: "NORTE 5B", sistema: "PSS", conexion: "INOPERATIVA", detalles: "FUNCIONA", estacion: "ESTACIÓN 18" },
+      { barrio: "B22 - PARQUE FUJIMORI", camara: "CEDROS-CASUARINAS", urbanizacion: "AAHH. LOS OLIVOS DE PRO", zona: "NORTE 5B", sistema: "PSS", conexion: "INOPERATIVA", detalles: "FUNCIONA", estacion: "ESTACIÓN 18" },
+      { barrio: "B22 - PARQUE FUJIMORI", camara: "LAS TUNAS-LAS VINAS", urbanizacion: "AAHH. LOS OLIVOS DE PRO", zona: "NORTE 5B", sistema: "PSS", conexion: "INOPERATIVA", detalles: "FUNCIONA", estacion: "ESTACIÓN 18" },
+      { barrio: "B22 - PARQUE FUJIMORI", camara: "JAZMINES-GIRASOLES", urbanizacion: "AAHH. LOS OLIVOS DE PRO", zona: "NORTE 5B", sistema: "PSS", conexion: "INOPERATIVA", detalles: "FUNCIONA", estacion: "ESTACIÓN 18" },
+      { barrio: "B22 - PARQUE FUJIMORI", camara: "GARDENIAS-JAZMINES", urbanizacion: "AAHH. LOS OLIVOS DE PRO", zona: "NORTE 5B", sistema: "PSS", conexion: "INOPERATIVA", detalles: "FUNCIONA", estacion: "ESTACIÓN 18" },
+      { barrio: "B22 - PARQUE FUJIMORI", camara: "DALIAS-CANTA CALLAO", urbanizacion: "AAHH. LOS OLIVOS DE PRO", zona: "NORTE 5B", sistema: "PSS", conexion: "INOPERATIVA", detalles: "FUNCIONA", estacion: "ESTACIÓN 18" },
+      { barrio: "B22 - PARQUE FUJIMORI", camara: "CALLE 4 - CALLE 15", urbanizacion: "AAHH. LOS OLIVOS DE PRO", zona: "NORTE 5B", sistema: "PSS", conexion: "INOPERATIVA", detalles: "FUNCIONA", estacion: "ESTACIÓN 18" },
+      { barrio: "B22 - PARQUE FUJIMORI", camara: "2 DE OCTUBRE - HIGOS", urbanizacion: "AAHH. LOS OLIVOS DE PRO", zona: "NORTE 5B", sistema: "PSS", conexion: "INOPERATIVA", detalles: "FUNCIONA", estacion: "ESTACIÓN 18" },
+      { barrio: "B45 - PARQUE LA AMISTAD", camara: "IPC", urbanizacion: "COOP. MARISCAL GAMARRA", zona: "SUR 2B", sistema: "PSS", conexion: "INOPERATIVA", detalles: "FUNCIONA", estacion: "ESTACIÓN 18" },
+      { barrio: "B45 - PARQUE LA AMISTAD", camara: "IPC", urbanizacion: "COOP. MARISCAL GAMARRA", zona: "SUR 2B", sistema: "PSS", conexion: "OPERATIVA", detalles: "FUNCIONA", estacion: "ESTACIÓN 18" },
+      { barrio: "B45 - PARQUE LA AMISTAD", camara: "PARQUE LA AMISTAD", urbanizacion: "COOP. MARISCAL GAMARRA", zona: "SUR 2B", sistema: "PSS", conexion: "OPERATIVA", detalles: "FUNCIONA", estacion: "ESTACIÓN 18" },
+      { barrio: "B45 - PARQUE LA AMISTAD", camara: "IPC", urbanizacion: "COOP. MARISCAL GAMARRA", zona: "SUR 2B", sistema: "PSS", conexion: "OPERATIVA", detalles: "FUNCIONA", estacion: "ESTACIÓN 18" },
+      { barrio: "B45 - PARQUE LA AMISTAD", camara: "BS105", urbanizacion: "COOP. MARISCAL GAMARRA", zona: "SUR 2B", sistema: "PSS", conexion: "OPERATIVA", detalles: "FUNCIONA", estacion: "ESTACIÓN 18" },
+      { barrio: "B23 - Calle Acuario", camara: "IPC", urbanizacion: "URB. MERCURIO II ETAPA", zona: "SUR 3B", sistema: "PSS", conexion: "OPERATIVA", detalles: "FUNCIONA", estacion: "ESTACIÓN 18" },
+      { barrio: "B23 - Calle Acuario", camara: "IPC", urbanizacion: "URB. MERCURIO II ETAPA", zona: "SUR 3B", sistema: "PSS", conexion: "OPERATIVA", detalles: "FUNCIONA", estacion: "ESTACIÓN 18" },
+      { barrio: "B23 - Calle Acuario", camara: "IPC", urbanizacion: "URB. MERCURIO II ETAPA", zona: "SUR 3B", sistema: "PSS", conexion: "OPERATIVA", detalles: "FUNCIONA", estacion: "ESTACIÓN 18" },
+      { barrio: "B23 - Calle Acuario", camara: "Canal2", urbanizacion: "URB. MERCURIO II ETAPA", zona: "SUR 3B", sistema: "PSS", conexion: "OPERATIVA", detalles: "FUNCIONA", estacion: "ESTACIÓN 18" },
+      { barrio: "B23 - Calle Acuario", camara: "IMOU - VECINAL", urbanizacion: "CONJUNTO HABITACIONAL CARLOS CUETO FERNANDINI", zona: "SUR 2C", sistema: "IMOU", conexion: "OPERATIVA", detalles: "PARTE VECINAL", estacion: "ESTACION 15" },
+      { barrio: "B46 - JR. CHASQUITAMBO - AV. PALMERAS / JR. CHASQUITAMBO", camara: "JR. CHASQUITAMBO 543", urbanizacion: "URB. VILLA DEL NORTE", zona: "CENTRO 3D", sistema: "PSS", conexion: "OPERATIVA", detalles: "FUNCIONA", estacion: "ESTACIÓN 18" },
+      { barrio: "B46 - JR. CHASQUITAMBO - AV. PALMERAS / JR. CHASQUITAMBO", camara: "JR. CHASQUITAMBO 667", urbanizacion: "URB. VILLA DEL NORTE", zona: "CENTRO 3D", sistema: "PSS", conexion: "OPERATIVA", detalles: "FUNCIONA", estacion: "ESTACIÓN 18" },
+      { barrio: "B46 - JR. CHASQUITAMBO - AV. PALMERAS / JR. CHASQUITAMBO", camara: "CHASQUITAMBO 563", urbanizacion: "URB. VILLA DEL NORTE", zona: "CENTRO 3D", sistema: "PSS", conexion: "OPERATIVA", detalles: "FUNCIONA", estacion: "ESTACIÓN 18" },
+      { barrio: "B46 - JR. CHASQUITAMBO - AV. PALMERAS / JR. CHASQUITAMBO", camara: "CHASQUITAMBO 564 / PJ. S/N", urbanizacion: "URB. VILLA DEL NORTE", zona: "CENTRO 3D", sistema: "PSS", conexion: "OPERATIVA", detalles: "FUNCIONA", estacion: "ESTACIÓN 18" },
+      { barrio: "B46 - JR. CHASQUITAMBO - AV. PALMERAS / JR. CHASQUITAMBO", camara: "CHASQUITAMBO 601", urbanizacion: "URB. VILLA DEL NORTE", zona: "CENTRO 3D", sistema: "PSS", conexion: "OPERATIVA", detalles: "FUNCIONA", estacion: "ESTACIÓN 18" },
+      { barrio: "B46 - JR. CHASQUITAMBO - AV. PALMERAS / JR. CHASQUITAMBO", camara: "JR. CHASQUITAMBO 598", urbanizacion: "URB. VILLA DEL NORTE", zona: "CENTRO 3D", sistema: "PSS", conexion: "OPERATIVA", detalles: "FUNCIONA", estacion: "ESTACIÓN 18" },
+      { barrio: "B46 - JR. CHASQUITAMBO - AV. PALMERAS / JR. CHASQUITAMBO", camara: "JR CHASQUITAMBO 674", urbanizacion: "URB. VILLA DEL NORTE", zona: "CENTRO 3D", sistema: "PSS", conexion: "OPERATIVA", detalles: "FUNCIONA", estacion: "ESTACIÓN 18" },
+      { barrio: "PARQUE N 2 MACARENA", camara: "IPC", urbanizacion: "URB. PUERTA DE PRO", zona: "NORTE 2B", sistema: "PSS", conexion: "OPERATIVA", detalles: "FUNCIONA", estacion: "ESTACIÓN 18" },
+      { barrio: "PARQUE N 2 MACARENA", camara: "IPC", urbanizacion: "URB. PUERTA DE PRO", zona: "NORTE 2B", sistema: "PSS", conexion: "OPERATIVA", detalles: "FUNCIONA", estacion: "ESTACIÓN 18" },
+      { barrio: "PARQUE N 2 MACARENA", camara: "IPC", urbanizacion: "URB. PUERTA DE PRO", zona: "NORTE 2B", sistema: "PSS", conexion: "OPERATIVA", detalles: "FUNCIONA", estacion: "ESTACIÓN 18" },
+      { barrio: "PARQUE N 2 MACARENA", camara: "IPC", urbanizacion: "URB. PUERTA DE PRO", zona: "NORTE 2B", sistema: "PSS", conexion: "OPERATIVA", detalles: "FUNCIONA", estacion: "ESTACIÓN 18" },
+      { barrio: "PARQUE N 2 MACARENA", camara: "IPC", urbanizacion: "URB. PUERTA DE PRO", zona: "NORTE 2B", sistema: "PSS", conexion: "OPERATIVA", detalles: "FUNCIONA", estacion: "ESTACIÓN 18" },
+      { barrio: "PARQUE N 2 MACARENA", camara: "IPC", urbanizacion: "URB. PUERTA DE PRO", zona: "NORTE 2B", sistema: "PSS", conexion: "OPERATIVA", detalles: "FUNCIONA", estacion: "ESTACIÓN 18" },
+      { barrio: "PARQUE N 2 MACARENA", camara: "IPC", urbanizacion: "URB. PUERTA DE PRO", zona: "NORTE 2B", sistema: "PSS", conexion: "OPERATIVA", detalles: "FUNCIONA", estacion: "ESTACIÓN 18" },
+      { barrio: "PARQUE N 2 MACARENA", camara: "IPC", urbanizacion: "URB. PUERTA DE PRO", zona: "NORTE 2B", sistema: "PSS", conexion: "OPERATIVA", detalles: "FUNCIONA", estacion: "ESTACIÓN 18" },
+      { barrio: "PARQUE N 2 MACARENA", camara: "IPC", urbanizacion: "URB. PUERTA DE PRO", zona: "NORTE 2B", sistema: "PSS", conexion: "OPERATIVA", detalles: "FUNCIONA", estacion: "ESTACIÓN 18" },
+      { barrio: "PARQUE N 2 MACARENA", camara: "IPC", urbanizacion: "URB. PUERTA DE PRO", zona: "NORTE 2B", sistema: "PSS", conexion: "OPERATIVA", detalles: "FUNCIONA", estacion: "ESTACIÓN 18" },
+      { barrio: "PARQUE N 2 MACARENA", camara: "IPC", urbanizacion: "URB. PUERTA DE PRO", zona: "NORTE 2B", sistema: "PSS", conexion: "OPERATIVA", detalles: "FUNCIONA", estacion: "ESTACIÓN 18" },
+      { barrio: "PARQUE N 2 MACARENA", camara: "IPC", urbanizacion: "URB. PUERTA DE PRO", zona: "NORTE 2B", sistema: "PSS", conexion: "OPERATIVA", detalles: "FUNCIONA", estacion: "ESTACIÓN 18" },
+      { barrio: "PARQUE N 2 MACARENA", camara: "IPC", urbanizacion: "URB. PUERTA DE PRO", zona: "NORTE 2B", sistema: "PSS", conexion: "OPERATIVA", detalles: "FUNCIONA", estacion: "ESTACIÓN 18" },
+      { barrio: "TREBOL 2DA ETAPA", camara: "IPC", urbanizacion: "URB. EL TREBOL II ETAPA", zona: "SUR 4B", sistema: "PSS", conexion: "OPERATIVA", detalles: "FUNCIONA", estacion: "ESTACIÓN 18" },
+      { barrio: "TREBOL 2DA ETAPA", camara: "IPC", urbanizacion: "URB. EL TREBOL II ETAPA", zona: "SUR 4B", sistema: "PSS", conexion: "OPERATIVA", detalles: "FUNCIONA", estacion: "ESTACIÓN 18" },
+      { barrio: "TREBOL 2DA ETAPA", camara: "IPC", urbanizacion: "URB. EL TREBOL II ETAPA", zona: "SUR 4B", sistema: "PSS", conexion: "OPERATIVA", detalles: "FUNCIONA", estacion: "ESTACIÓN 18" },
+      { barrio: "TREBOL 2DA ETAPA", camara: "IPC", urbanizacion: "URB. EL TREBOL II ETAPA", zona: "SUR 4B", sistema: "PSS", conexion: "OPERATIVA", detalles: "FUNCIONA", estacion: "ESTACIÓN 18" },
+      { barrio: "TREBOL 2DA ETAPA", camara: "IPC", urbanizacion: "URB. EL TREBOL II ETAPA", zona: "SUR 4B", sistema: "PSS", conexion: "OPERATIVA", detalles: "FUNCIONA", estacion: "ESTACIÓN 18" },
+      { barrio: "TREBOL 2DA ETAPA", camara: "IPC", urbanizacion: "URB. EL TREBOL II ETAPA", zona: "SUR 4B", sistema: "PSS", conexion: "OPERATIVA", detalles: "FUNCIONA", estacion: "ESTACIÓN 18" },
+      { barrio: "TREBOL 2DA ETAPA", camara: "IPC", urbanizacion: "URB. EL TREBOL II ETAPA", zona: "SUR 4B", sistema: "PSS", conexion: "OPERATIVA", detalles: "FUNCIONA", estacion: "ESTACIÓN 18" },
+      { barrio: "TREBOL 2DA ETAPA", camara: "IPC", urbanizacion: "URB. EL TREBOL II ETAPA", zona: "SUR 4B", sistema: "PSS", conexion: "OPERATIVA", detalles: "FUNCIONA", estacion: "ESTACIÓN 18" },
+      { barrio: "TREBOL 2DA ETAPA", camara: "IPC", urbanizacion: "URB. EL TREBOL II ETAPA", zona: "SUR 4B", sistema: "PSS", conexion: "OPERATIVA", detalles: "FUNCIONA", estacion: "ESTACIÓN 18" },
+      { barrio: "TREBOL 2DA ETAPA", camara: "IPC", urbanizacion: "URB. EL TREBOL II ETAPA", zona: "SUR 4B", sistema: "PSS", conexion: "OPERATIVA", detalles: "FUNCIONA", estacion: "ESTACIÓN 18" },
+      { barrio: "TREBOL 2DA ETAPA", camara: "IPC", urbanizacion: "URB. EL TREBOL II ETAPA", zona: "SUR 4B", sistema: "PSS", conexion: "OPERATIVA", detalles: "FUNCIONA", estacion: "ESTACIÓN 18" },
+      { barrio: "TREBOL 2DA ETAPA", camara: "IPC", urbanizacion: "URB. EL TREBOL II ETAPA", zona: "SUR 4B", sistema: "PSS", conexion: "OPERATIVA", detalles: "FUNCIONA", estacion: "ESTACIÓN 18" },
+      { barrio: "TREBOL 2DA ETAPA", camara: "IPC", urbanizacion: "URB. EL TREBOL II ETAPA", zona: "SUR 4B", sistema: "PSS", conexion: "OPERATIVA", detalles: "FUNCIONA", estacion: "ESTACIÓN 18" },
+      { barrio: "TREBOL 2DA ETAPA", camara: "IPC", urbanizacion: "URB. EL TREBOL II ETAPA", zona: "SUR 4B", sistema: "PSS", conexion: "OPERATIVA", detalles: "FUNCIONA", estacion: "ESTACIÓN 18" },
+      { barrio: "TREBOL 2DA ETAPA", camara: "IPC", urbanizacion: "URB. EL TREBOL II ETAPA", zona: "SUR 4B", sistema: "PSS", conexion: "OPERATIVA", detalles: "FUNCIONA", estacion: "ESTACIÓN 18" },
+      { barrio: "B16 SANTA ANA 2", camara: "IPC", urbanizacion: "URB. SANTA ANA", zona: "NORTE 5A", sistema: "PSS", conexion: "OPERATIVA", detalles: "FUNCIONA", estacion: "ESTACIÓN 18" },
+      { barrio: "B16 SANTA ANA 2", camara: "CANAL2", urbanizacion: "URB. SANTA ANA", zona: "NORTE 5A", sistema: "PSS", conexion: "OPERATIVA", detalles: "FUNCIONA", estacion: "ESTACIÓN 18" },
+      { barrio: "B16 SANTA ANA 2", camara: "IPC", urbanizacion: "URB. SANTA ANA", zona: "NORTE 5A", sistema: "PSS", conexion: "OPERATIVA", detalles: "FUNCIONA", estacion: "ESTACIÓN 18" },
+      { barrio: "B16 SANTA ANA 2", camara: "IPC", urbanizacion: "URB. SANTA ANA", zona: "NORTE 5A", sistema: "PSS", conexion: "OPERATIVA", detalles: "FUNCIONA", estacion: "ESTACIÓN 18" },
+      { barrio: "B16 SANTA ANA 2", camara: "IPC", urbanizacion: "URB. SANTA ANA", zona: "NORTE 5A", sistema: "PSS", conexion: "OPERATIVA", detalles: "FUNCIONA", estacion: "ESTACIÓN 18" },
+      { barrio: "B16 SANTA ANA 2", camara: "IPC", urbanizacion: "URB. SANTA ANA", zona: "NORTE 5A", sistema: "PSS", conexion: "OPERATIVA", detalles: "FUNCIONA", estacion: "ESTACIÓN 18" },
+      { barrio: "CAMARAS DE PROLIMA - B6 - URB. PRO LIMA II ETAPA", camara: "IPC", urbanizacion: "URB. PRO LIMA II ETAPA", zona: "NORTE 1A", sistema: "PSS", conexion: "INOPERATIVA", detalles: "NO FUNCIONA", estacion: "ESTACIÓN 18" },
+      { barrio: "CAMARAS DE PROLIMA - B6 - URB. PRO LIMA II ETAPA", camara: "IPC", urbanizacion: "URB. PRO LIMA II ETAPA", zona: "NORTE 1A", sistema: "PSS", conexion: "INOPERATIVA", detalles: "NO FUNCIONA", estacion: "ESTACIÓN 18" },
+      { barrio: "CAMARAS DE PROLIMA - B6 - URB. PRO LIMA II ETAPA", camara: "IPC", urbanizacion: "URB. PRO LIMA II ETAPA", zona: "NORTE 1A", sistema: "PSS", conexion: "INOPERATIVA", detalles: "NO FUNCIONA", estacion: "ESTACIÓN 18" },
+      { barrio: "CAMARAS DE PROLIMA - B6 - URB. PRO LIMA II ETAPA", camara: "IPC", urbanizacion: "URB. PRO LIMA II ETAPA", zona: "NORTE 1A", sistema: "PSS", conexion: "INOPERATIVA", detalles: "NO FUNCIONA", estacion: "ESTACIÓN 18" },
+      { barrio: "CAMARAS DE PROLIMA - B6 - URB. PRO LIMA II ETAPA", camara: "IPC", urbanizacion: "URB. PRO LIMA II ETAPA", zona: "NORTE 1A", sistema: "PSS", conexion: "INOPERATIVA", detalles: "NO FUNCIONA", estacion: "ESTACIÓN 18" },
+      { barrio: "CAMARAS DE PROLIMA - B6 - URB. PRO LIMA II ETAPA", camara: "IPC", urbanizacion: "URB. PRO LIMA II ETAPA", zona: "NORTE 1A", sistema: "PSS", conexion: "INOPERATIVA", detalles: "NO FUNCIONA", estacion: "ESTACIÓN 18" },
+      { barrio: "CAMARAS DE PROLIMA - B6 - URB. PRO LIMA II ETAPA", camara: "IPC", urbanizacion: "URB. PRO LIMA II ETAPA", zona: "NORTE 1A", sistema: "PSS", conexion: "INOPERATIVA", detalles: "NO FUNCIONA", estacion: "ESTACIÓN 18" },
+      { barrio: "CAMARAS DE PROLIMA - B6 - URB. PRO LIMA II ETAPA", camara: "IPC", urbanizacion: "URB. PRO LIMA II ETAPA", zona: "NORTE 1A", sistema: "PSS", conexion: "INOPERATIVA", detalles: "NO FUNCIONA", estacion: "ESTACIÓN 18" },
+      { barrio: "CAMARAS DE PROLIMA - B6 - URB. PRO LIMA II ETAPA", camara: "IPC", urbanizacion: "URB. PRO LIMA II ETAPA", zona: "NORTE 1A", sistema: "PSS", conexion: "INOPERATIVA", detalles: "NO FUNCIONA", estacion: "ESTACIÓN 18" },
+      { barrio: "CAMARAS DE PROLIMA - B6 - URB. PRO LIMA II ETAPA", camara: "IPC", urbanizacion: "URB. PRO LIMA II ETAPA", zona: "NORTE 1A", sistema: "PSS", conexion: "INOPERATIVA", detalles: "NO FUNCIONA", estacion: "ESTACIÓN 18" },
+      { barrio: "CAMARAS DE PROLIMA - B6 - URB. PRO LIMA II ETAPA", camara: "IPC", urbanizacion: "URB. PRO LIMA II ETAPA", zona: "NORTE 1A", sistema: "PSS", conexion: "INOPERATIVA", detalles: "NO FUNCIONA", estacion: "ESTACIÓN 18" },
+      { barrio: "CAMARAS DE PROLIMA - B6 - URB. PRO LIMA II ETAPA", camara: "IPC", urbanizacion: "URB. PRO LIMA II ETAPA", zona: "NORTE 1A", sistema: "PSS", conexion: "INOPERATIVA", detalles: "NO FUNCIONA", estacion: "ESTACIÓN 18" },
+      { barrio: "CAMARAS DE PROLIMA - B6 - URB. PRO LIMA II ETAPA", camara: "IPC", urbanizacion: "URB. PRO LIMA II ETAPA", zona: "NORTE 1A", sistema: "PSS", conexion: "INOPERATIVA", detalles: "NO FUNCIONA", estacion: "ESTACIÓN 18" },
+      { barrio: "CAMARAS DE PROLIMA - B6 - URB. PRO LIMA II ETAPA", camara: "IPC", urbanizacion: "URB. PRO LIMA II ETAPA", zona: "NORTE 1A", sistema: "PSS", conexion: "INOPERATIVA", detalles: "NO FUNCIONA", estacion: "ESTACIÓN 18" },
+      { barrio: "CAMARAS DE PROLIMA - B6 - URB. PRO LIMA II ETAPA", camara: "IPC", urbanizacion: "URB. PRO LIMA II ETAPA", zona: "NORTE 1A", sistema: "PSS", conexion: "INOPERATIVA", detalles: "NO FUNCIONA", estacion: "ESTACIÓN 18" },
+      { barrio: "B47 - PARQUE LA LIBERTAD LAS PALMERAS", camara: "PARQUE LA LIBERTAD LAS PALMERAS", urbanizacion: "URB. LAS PALMERAS II ETAPA", zona: "SUR 2D", sistema: "PSS", conexion: "OPERATIVA", detalles: "FUNCIONA", estacion: "ESTACIÓN 18" },
+      { barrio: "ASOC. ALAMEDA VILLASOL", camara: "IPC", urbanizacion: "ASOC. ALAMEDA VILLA SOL", zona: "CENTRO 1A", sistema: "PSS", conexion: "OPERATIVA", detalles: "", estacion: "" },
+      { barrio: "ASOC. ALAMEDA VILLASOL", camara: "IPC", urbanizacion: "ASOC. ALAMEDA VILLA SOL", zona: "CENTRO 1A", sistema: "PSS", conexion: "OPERATIVA", detalles: "", estacion: "" },
+      { barrio: "ASOC. ALAMEDA VILLASOL", camara: "IPC", urbanizacion: "ASOC. ALAMEDA VILLA SOL", zona: "CENTRO 1A", sistema: "PSS", conexion: "OPERATIVA", detalles: "", estacion: "" },
+      { barrio: "ASOC. ALAMEDA VILLASOL", camara: "IPC", urbanizacion: "ASOC. ALAMEDA VILLA SOL", zona: "CENTRO 1A", sistema: "PSS", conexion: "OPERATIVA", detalles: "", estacion: "" },
+      { barrio: "ASOC. ALAMEDA VILLASOL", camara: "IPC", urbanizacion: "ASOC. ALAMEDA VILLA SOL", zona: "CENTRO 1A", sistema: "PSS", conexion: "OPERATIVA", detalles: "", estacion: "" },
+      { barrio: "ASOC. ALAMEDA VILLASOL", camara: "IPC", urbanizacion: "ASOC. ALAMEDA VILLA SOL", zona: "CENTRO 1A", sistema: "PSS", conexion: "OPERATIVA", detalles: "", estacion: "" },
+      { barrio: "ASOC. ALAMEDA VILLASOL", camara: "IPC", urbanizacion: "ASOC. ALAMEDA VILLA SOL", zona: "CENTRO 1A", sistema: "PSS", conexion: "OPERATIVA", detalles: "", estacion: "" },
+      { barrio: "ASOC. ALAMEDA VILLASOL", camara: "IPC", urbanizacion: "ASOC. ALAMEDA VILLA SOL", zona: "CENTRO 1A", sistema: "PSS", conexion: "OPERATIVA", detalles: "", estacion: "" },
+      { barrio: "ASOC. ALAMEDA VILLASOL", camara: "IPC", urbanizacion: "ASOC. ALAMEDA VILLA SOL", zona: "CENTRO 1A", sistema: "PSS", conexion: "OPERATIVA", detalles: "", estacion: "" }
+    ];
+
     function formatCamName(num) {
       return `CAMARA-${String(num).padStart(2, '0')}`;
     }
@@ -3129,8 +3386,26 @@ body.cioe-custom-theme #themeCustomizerBtn{background-color:var(--cioe-accent)!i
     try {
       const rawVecinales = localStorage.getItem("cioe_vecinales_v300");
       vecinalCameras = rawVecinales ? JSON.parse(rawVecinales) : INITIAL_VECINAL_CAMERAS;
+
+      // Importación 06/10/2026: conserva lo existente y añade solo registros faltantes.
+      const importKey = "cioe_vecinales_import_20261006_v1";
+      if (localStorage.getItem(importKey) !== "1") {
+        const norm = v => String(v || "").toUpperCase().replace(/\s+/g, " ").trim();
+        const existing = new Set(vecinalCameras.map(v =>
+          [norm(v.barrio), norm(v.camara), norm(v.urbanizacion), norm(v.zona)].join("|")
+        ));
+        IMPORTED_VECINAL_CAMERAS_20261006.forEach(v => {
+          const key = [norm(v.barrio), norm(v.camara), norm(v.urbanizacion), norm(v.zona)].join("|");
+          if (!existing.has(key)) {
+            vecinalCameras.push({...v});
+            existing.add(key);
+          }
+        });
+        localStorage.setItem("cioe_vecinales_v300", JSON.stringify(vecinalCameras));
+        localStorage.setItem(importKey, "1");
+      }
     } catch (e) {
-      vecinalCameras = INITIAL_VECINAL_CAMERAS;
+      vecinalCameras = [...INITIAL_VECINAL_CAMERAS, ...IMPORTED_VECINAL_CAMERAS_20261006];
     }
 
     let dailyLogs = (storedDailyLogs && typeof storedDailyLogs === 'object') ? storedDailyLogs : INITIAL_LOGS;
@@ -5291,6 +5566,89 @@ body.cioe-custom-theme #themeCustomizerBtn{background-color:var(--cioe-accent)!i
       navigator.clipboard.writeText(summary).then(() => {
         alert(`¡Resumen del reporte del día (${selectedDateStr}) copiado al portapapeles!`);
       });
+    }
+
+    let vecinalExcelReportFilter = 'ALL';
+
+    function toggleVecinalExcelReportPanel(e) {
+      if (e) e.stopPropagation();
+      const panel = document.getElementById('vecinalExcelReportPanel');
+      if (!panel) return;
+      panel.classList.toggle('hidden');
+      updateVecinalExcelReportCount();
+    }
+
+    function closeVecinalExcelReportPanel() {
+      const panel = document.getElementById('vecinalExcelReportPanel');
+      if (panel) panel.classList.add('hidden');
+    }
+
+    function setVecinalExcelReportFilter(filter) {
+      vecinalExcelReportFilter = filter;
+      document.querySelectorAll('.vecinal-excel-report-filter').forEach(btn => {
+        const active = btn.dataset.vecinalExcelFilter === filter;
+        btn.className = active
+          ? 'vecinal-excel-report-filter px-3 py-2 rounded-lg text-[10px] font-black bg-amber-500 text-black'
+          : 'vecinal-excel-report-filter px-3 py-2 rounded-lg text-[10px] font-bold text-slate-400 hover:text-white';
+      });
+      updateVecinalExcelReportCount();
+    }
+
+    function getVecinalExcelReportCameras() {
+      return vecinalCameras.filter(c =>
+        vecinalExcelReportFilter === 'ALL' || String(c.conexion || '').toUpperCase() === vecinalExcelReportFilter
+      );
+    }
+
+    function updateVecinalExcelReportCount() {
+      const count = getVecinalExcelReportCameras().length;
+      const el = document.getElementById('vecinalExcelReportCount');
+      if (el) el.textContent = `${count} ${count === 1 ? 'cámara seleccionada' : 'cámaras seleccionadas'}`;
+    }
+
+    function downloadVecinalExcelReport() {
+      const rows = getVecinalExcelReportCameras();
+      if (!rows.length) {
+        alert('No hay cámaras vecinales para el estado seleccionado.');
+        return;
+      }
+
+      const headers = ['BARRIO','N° CÁMARA / DETALLE','URBANIZACIÓN','ZONA/SECTOR','SISTEMA','CONEXIÓN','REPORTES','ESTACIÓN'];
+      const tableRows = rows.map(c => [
+        c.barrio || '',
+        c.camara || '',
+        c.urbanizacion || '',
+        c.zona || '',
+        c.sistema || '',
+        c.conexion || '',
+        c.detalles || '',
+        c.estacion || ''
+      ]);
+
+      const tableHtml =
+        '<table border="1"><thead><tr>' +
+        headers.map(h => `<th style="background:#111827;color:#ffffff;font-weight:bold">${excelXmlEscape(h)}</th>`).join('') +
+        '</tr></thead><tbody>' +
+        tableRows.map(row => '<tr>' + row.map(v => `<td>${excelXmlEscape(v)}</td>`).join('') + '</tr>').join('') +
+        '</tbody></table>';
+
+      const excelHtml =
+        '<html xmlns:o="urn:schemas-microsoft-com:office:office" ' +
+        'xmlns:x="urn:schemas-microsoft-com:office:excel" ' +
+        'xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="UTF-8"></head><body>' +
+        tableHtml + '</body></html>';
+
+      const blob = new Blob(['\ufeff', excelHtml], {type:'application/vnd.ms-excel;charset=utf-8;'});
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      const label = vecinalExcelReportFilter === 'ALL' ? 'TODAS' : vecinalExcelReportFilter;
+      link.href = url;
+      link.download = `Reporte_Camaras_Vecinales_${label}_${new Date().toISOString().slice(0,10)}.xls`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+      closeVecinalExcelReportPanel();
     }
 
     let excelReportFilter = 'ALL';
