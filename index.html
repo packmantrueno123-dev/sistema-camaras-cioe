@@ -1213,6 +1213,64 @@ body.cioe-custom-theme #themeCustomizerBtn{background-color:var(--cioe-accent)!i
 }
 </style>
 
+
+<style id="cioePetPanelArrowLandscapeFinalFix2026">
+/* ===== CORRECCIÓN FINAL: SELECTORES DE MASCOTAS ===== */
+
+/* Cada mascota ocupa el ancho disponible; evita que el select se reduzca a un óvalo. */
+#themeCustomizerModal #dogIndividualVariants,
+#themeCustomizerModal #catIndividualVariants{
+  grid-template-columns:1fr!important;
+  width:100%!important;
+}
+
+#themeCustomizerModal .individual-pet-variant{
+  width:100%!important;
+  min-width:0!important;
+  display:grid!important;
+  grid-template-columns:82px minmax(140px,1fr)!important;
+  gap:8px!important;
+  align-items:center!important;
+  box-sizing:border-box!important;
+  overflow:visible!important;
+}
+
+/* Flecha nativa del navegador: clara, centrada y funcional. */
+#themeCustomizerModal .individual-pet-variant select{
+  -webkit-appearance:auto!important;
+  appearance:auto!important;
+  width:100%!important;
+  min-width:140px!important;
+  height:34px!important;
+  padding:0 8px!important;
+  background:#0b1627!important;
+  background-image:none!important;
+  border:1px solid #344a65!important;
+  border-radius:9px!important;
+  color:#e9f0f8!important;
+  font-size:8px!important;
+  font-weight:850!important;
+  box-sizing:border-box!important;
+  cursor:pointer!important;
+}
+
+/* Cantidad y paisaje conservan una flecha normal y visible. */
+#themeCustomizerModal #dogCountSelect,
+#themeCustomizerModal #catCountSelect,
+#themeCustomizerModal #petLandscapeSelect{
+  -webkit-appearance:auto!important;
+  appearance:auto!important;
+  background-image:none!important;
+  padding-right:8px!important;
+}
+
+/* Sin paisaje deja la franja limpia; las mascotas siguen visibles. */
+#headerPixelArtWrap.cioe-no-landscape #headerPixelArt,
+#headerPixelArtWrap.cioe-no-landscape #headerLandscapeForeground{
+  display:none!important;
+}
+</style>
+
 </head>
 <body class="min-h-screen flex flex-col p-3 md:p-5 space-y-4 w-full">
 
@@ -7576,6 +7634,7 @@ document.addEventListener('DOMContentLoaded', function(){
     if(wrap){
       wrap.classList.toggle('autumn-scene', scene==='autumn');
       wrap.classList.toggle('winter-scene', scene==='winter');
+      wrap.classList.toggle('cioe-no-landscape', scene==='none');
     }
     if(select) select.value=scene;
 
@@ -7583,16 +7642,26 @@ document.addEventListener('DOMContentLoaded', function(){
       if(bg){
         bg.onerror=null;
         bg.onload=null;
-        bg.src='pets/background-dark-small.png';
-        bg.style.opacity='.92';
+        bg.removeAttribute('src');
+        bg.style.opacity='0';
+        bg.style.display='none';
       }
       if(fg){
         fg.onerror=null;
         fg.onload=null;
         fg.removeAttribute('src');
         fg.style.display='none';
+        fg.style.opacity='0';
       }
       return;
+    }
+
+    if(bg){
+      bg.style.display='block';
+      bg.style.opacity='1';
+    }
+    if(fg){
+      fg.style.opacity='1';
     }
 
     if(bg){
