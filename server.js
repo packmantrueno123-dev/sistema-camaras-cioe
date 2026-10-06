@@ -399,6 +399,52 @@ function getClientIp(req) {
   return raw.replace(/^::ffff:/,"")||"No disponible";
 }
 
+const providerCache = new Map();
+
+function isPublicIpForLookup(ip){
+  ip=String(ip||"").trim();
+  if(!ip || ip==="No disponible") return false;
+  if(ip==="::1" || ip==="127.0.0.1") return false;
+  if(/^10\./.test(ip) || /^192\.168\./.test(ip)) return false;
+  const m=ip.match(/^172\.(\d+)\./);
+  if(m && Number(m[1])>=16 && Number(m[1])<=31) return false;
+  return true;
+}
+
+async function getNetworkProvider(ip){
+  ip=String(ip||"").trim();
+  if(!isPublicIpForLookup(ip)) return "No disponible";
+
+  const cached=providerCache.get(ip);
+  if(cached && cached.expires>Date.now()) return cached.value;
+
+  try{
+    const controller=new AbortController();
+    const timer=setTimeout(()=>controller.abort(),2500);
+    const response=await fetch(
+      `https://ipwho.is/${encodeURIComponent(ip)}?fields=success,connection`,
+      {signal:controller.signal}
+    );
+    clearTimeout(timer);
+
+    if(!response.ok) throw new Error(`HTTP ${response.status}`);
+    const data=await response.json();
+
+    const provider=String(
+      data?.connection?.isp ||
+      data?.connection?.org ||
+      "No disponible"
+    ).trim() || "No disponible";
+
+    providerCache.set(ip,{value:provider,expires:Date.now()+6*60*60*1000});
+    return provider;
+  }catch(err){
+    console.warn("No se pudo consultar proveedor para",ip,err?.message||err);
+    providerCache.set(ip,{value:"No disponible",expires:Date.now()+10*60*1000});
+    return "No disponible";
+  }
+}
+
 function deviceInfoFromUA(ua){
   ua=String(ua||"");
   let device="PC";
@@ -784,7 +830,11 @@ app.get("/api/users/:id/sessions",auth,adminOnly,async(req,res)=>{
   if(!target.rowCount)return res.status(404).json({ok:false,error:"Usuario no encontrado"});
   await pool.query(`DELETE FROM user_sessions WHERE user_id=$1 AND last_seen <= NOW() - INTERVAL '5 minutes'`,[userId]);
   const q=await pool.query(`SELECT session_id,device_id,created_at,last_seen,COALESCE(ip_address,'No disponible') ip_address,COALESCE(user_agent,'') user_agent FROM user_sessions WHERE user_id=$1 AND last_seen > NOW() - INTERVAL '5 minutes' ORDER BY created_at DESC`,[userId]);
-  res.json({ok:true,username:target.rows[0].username,limit:target.rows[0].role==="admin"?null:2,sessions:q.rows});
+  const sessions=await Promise.all(q.rows.map(async s=>({
+    ...s,
+    provider:await getNetworkProvider(s.ip_address)
+  })));
+  res.json({ok:true,username:target.rows[0].username,limit:target.rows[0].role==="admin"?null:2,sessions});
  }catch(err){console.error(err);res.status(500).json({ok:false,error:"No se pudieron consultar las sesiones"});}
 });
 app.get("/api/users/:id/devices",auth,adminOnly,async(req,res)=>{
