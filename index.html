@@ -1582,6 +1582,10 @@ body.cioe-custom-theme #themeCustomizerBtn{background-color:var(--cioe-accent)!i
               <i class="fa-solid fa-tower-observation text-orange-400"></i>
               <span>Tótems de cámaras - Municipalidad de Los Olivos</span>
             </button>
+            <button type="button" onclick="showCameraStatisticsView(event)" class="w-full text-left px-3.5 py-2.5 rounded-xl hover:bg-amber-500 hover:text-black font-bold text-slate-200 transition flex items-center gap-2">
+              <i class="fa-solid fa-chart-pie text-cyan-400"></i>
+              <span>Ver estadística de cámaras</span>
+            </button>
           </div>
         </div>
 
@@ -2145,6 +2149,88 @@ body.cioe-custom-theme #themeCustomizerBtn{background-color:var(--cioe-accent)!i
   </div>
 
   <!-- ==================== VISTA 3: CÁMARAS VECINALES / BARRIO SEGURO ==================== -->
+
+  <!-- ===== ESTADÍSTICA GENERAL DE CÁMARAS ===== -->
+  <div id="cameraStatisticsView" class="hidden space-y-4 flex-col flex-1">
+    <section class="bg-[#0a0f1d] border border-cyan-500/20 rounded-2xl p-4 shadow-xl">
+      <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
+        <div class="flex items-center gap-3">
+          <div class="w-11 h-11 rounded-xl bg-cyan-500/15 border border-cyan-500/25 text-cyan-400 flex items-center justify-center">
+            <i class="fa-solid fa-chart-pie text-xl"></i>
+          </div>
+          <div>
+            <h2 class="text-xl font-black text-white uppercase">ESTADÍSTICA GENERAL DE CÁMARAS</h2>
+            <p class="text-[10px] text-slate-400">Resumen dinámico de todos los módulos de cámaras del sistema</p>
+          </div>
+        </div>
+        <button type="button" onclick="showMainDashboardView()" class="bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 self-start lg:self-auto">
+          <i class="fa-solid fa-arrow-left text-amber-400"></i> Volver al Centro de Control
+        </button>
+      </div>
+    </section>
+
+    <section class="grid grid-cols-2 lg:grid-cols-5 gap-3">
+      <div class="bg-[#0a0f1d] border border-cyan-500/30 rounded-2xl p-4 shadow-xl">
+        <span class="text-[10px] text-cyan-400 font-black uppercase">Total general</span>
+        <div id="statsGrandTotal" class="text-3xl font-black text-white mt-1">0</div>
+        <div class="text-[9px] text-slate-500 mt-1">100% del sistema</div>
+      </div>
+      <div class="bg-[#0a0f1d] border border-slate-800 rounded-2xl p-4">
+        <span class="text-[10px] text-amber-400 font-black uppercase">Centro de Control</span>
+        <div id="statsCentroTotal" class="text-2xl font-black text-white mt-1">0</div>
+        <div id="statsCentroPct" class="text-[10px] text-amber-400 font-bold mt-1">0%</div>
+      </div>
+      <div class="bg-[#0a0f1d] border border-slate-800 rounded-2xl p-4">
+        <span class="text-[10px] text-emerald-400 font-black uppercase">Cámaras vecinales</span>
+        <div id="statsVecinalTotal" class="text-2xl font-black text-white mt-1">0</div>
+        <div id="statsVecinalPct" class="text-[10px] text-emerald-400 font-bold mt-1">0%</div>
+      </div>
+      <div class="bg-[#0a0f1d] border border-slate-800 rounded-2xl p-4">
+        <span class="text-[10px] text-blue-400 font-black uppercase">Cámaras fijas DSS</span>
+        <div id="statsFijasTotal" class="text-2xl font-black text-white mt-1">0</div>
+        <div id="statsFijasPct" class="text-[10px] text-blue-400 font-bold mt-1">0%</div>
+      </div>
+      <div class="bg-[#0a0f1d] border border-slate-800 rounded-2xl p-4">
+        <span class="text-[10px] text-orange-400 font-black uppercase">Tótems M.D.L.O.</span>
+        <div id="statsTotemsTotal" class="text-2xl font-black text-white mt-1">0</div>
+        <div id="statsTotemsPct" class="text-[10px] text-orange-400 font-bold mt-1">0%</div>
+      </div>
+    </section>
+
+    <section class="grid grid-cols-1 xl:grid-cols-2 gap-4">
+      <div class="bg-[#0a0f1d] border border-slate-800 rounded-2xl p-5 shadow-xl">
+        <div class="flex items-center justify-between mb-5">
+          <div>
+            <h3 class="text-sm font-black text-white uppercase">Distribución por módulo</h3>
+            <p class="text-[10px] text-slate-500 mt-1">Porcentaje que representa cada grupo sobre el total general</p>
+          </div>
+          <i class="fa-solid fa-chart-column text-cyan-400"></i>
+        </div>
+        <div id="statsBars" class="space-y-4"></div>
+      </div>
+
+      <div class="bg-[#0a0f1d] border border-slate-800 rounded-2xl p-5 shadow-xl">
+        <div class="flex items-center justify-between mb-4">
+          <div>
+            <h3 class="text-sm font-black text-white uppercase">Gráfico general</h3>
+            <p class="text-[10px] text-slate-500 mt-1">Composición visual de todas las cámaras registradas</p>
+          </div>
+          <i class="fa-solid fa-chart-pie text-violet-400"></i>
+        </div>
+        <div class="flex flex-col sm:flex-row items-center justify-center gap-8 py-3">
+          <div id="statsDonut" class="relative w-56 h-56 rounded-full flex items-center justify-center" style="background:conic-gradient(#f59e0b 0 25%,#10b981 25% 50%,#3b82f6 50% 75%,#f97316 75% 100%)">
+            <div class="w-36 h-36 rounded-full bg-[#0a0f1d] border border-slate-800 flex flex-col items-center justify-center shadow-inner">
+              <span class="text-[9px] text-slate-500 font-black uppercase">Total cámaras</span>
+              <strong id="statsDonutTotal" class="text-3xl text-white font-black">0</strong>
+              <span class="text-[10px] text-cyan-400 font-bold">100%</span>
+            </div>
+          </div>
+          <div id="statsLegend" class="w-full sm:w-auto space-y-3"></div>
+        </div>
+      </div>
+    </section>
+  </div>
+
   <div id="vecinalesView" class="hidden space-y-4 flex-col flex-1">
     <header class="bg-[#0a0f1d] border border-slate-800 rounded-2xl p-4 shadow-xl flex flex-col sm:flex-row justify-between items-center gap-4 w-full">
       <div class="flex items-center gap-3">
@@ -4283,6 +4369,11 @@ body.cioe-custom-theme #themeCustomizerBtn{background-color:var(--cioe-accent)!i
       if (totemsView) {
         totemsView.classList.add('hidden');
         totemsView.classList.remove('flex');
+      }
+      const cameraStatisticsView = document.getElementById('cameraStatisticsView');
+      if (cameraStatisticsView) {
+        cameraStatisticsView.classList.add('hidden');
+        cameraStatisticsView.classList.remove('flex');
       }
       document.getElementById('mainDashboardView').classList.remove('hidden');
       renderTable();
@@ -6814,7 +6905,7 @@ body.cioe-custom-theme #themeCustomizerBtn{background-color:var(--cioe-accent)!i
     }
     function saveTotems(){ localStorage.setItem('cioe_totems_v36', JSON.stringify(totems)); updateTotalGeneral(); }
     function updateTotalGeneral(){ const el=document.getElementById('stat-total-general'); if(el) el.textContent='532'; }
-    function hideAllViewsV36(){ ['mainDashboardView','searchReportView','camarasFijasView','vecinalesView','estacionesParesView','creacionTurnoView','totemsView'].forEach(id=>{const x=document.getElementById(id); if(x){x.classList.add('hidden');x.classList.remove('flex')}}); }
+    function hideAllViewsV36(){ ['mainDashboardView','searchReportView','camarasFijasView','vecinalesView','estacionesParesView','creacionTurnoView','totemsView','cameraStatisticsView'].forEach(id=>{const x=document.getElementById(id); if(x){x.classList.add('hidden');x.classList.remove('flex')}}); }
     function showTotemsView(e){ if(e)e.stopPropagation(); const m=document.getElementById('ocurrenciasMenu'); if(m)m.classList.add('hidden'); hideAllViewsV36(); const v=document.getElementById('totemsView'); v.classList.remove('hidden');v.classList.add('flex'); renderTotems(); }
     function escTot(v){ return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
     function renderTotems(){
@@ -6936,7 +7027,7 @@ body.cioe-custom-theme #themeCustomizerBtn{background-color:var(--cioe-accent)!i
 // ===== APERTURA ROBUSTA DEL MODULO TURNOS =====
 (function(){
   function ocultarVistasTurnos(){
-    ['mainDashboardView','searchReportView','camarasFijasView','vecinalesView','estacionesParesView','totemsView','creacionTurnoView'].forEach(function(id){
+    ['mainDashboardView','searchReportView','camarasFijasView','vecinalesView','estacionesParesView','totemsView','creacionTurnoView','cameraStatisticsView'].forEach(function(id){
       var el=document.getElementById(id);
       if(el){ el.classList.add('hidden'); el.classList.remove('flex'); }
     });
@@ -8124,7 +8215,108 @@ document.addEventListener('DOMContentLoaded', function(){
 <script id="cioeNavigationButtonsFix">
 (function(){
   'use strict';
-  const VIEW_IDS=['mainDashboardView','searchReportView','camarasFijasView','vecinalesView','estacionesParesView','creacionTurnoView','totemsView'];
+
+  function getCameraStatisticsData(){
+    const centro = Array.isArray(cameras) ? cameras.length : 0;
+    const vecinales = Array.isArray(vecinalCameras) ? vecinalCameras.length : 0;
+    const fijas = (typeof getTotalCamarasFijasGeneral === 'function')
+      ? Number(getTotalCamarasFijasGeneral() || 0)
+      : 0;
+    const totalTotems = Array.isArray(totems) ? totems.length : 0;
+    const total = centro + vecinales + fijas + totalTotems;
+    return {centro, vecinales, fijas, totems: totalTotems, total};
+  }
+
+  function renderCameraStatistics(){
+    const d = getCameraStatisticsData();
+    const pct = n => d.total ? (n * 100 / d.total) : 0;
+    const fmt = n => `${pct(n).toFixed(1)}%`;
+
+    const setText = (id, value) => {
+      const el = document.getElementById(id);
+      if(el) el.textContent = value;
+    };
+
+    setText('statsGrandTotal', d.total);
+    setText('statsCentroTotal', d.centro);
+    setText('statsVecinalTotal', d.vecinales);
+    setText('statsFijasTotal', d.fijas);
+    setText('statsTotemsTotal', d.totems);
+    setText('statsCentroPct', fmt(d.centro));
+    setText('statsVecinalPct', fmt(d.vecinales));
+    setText('statsFijasPct', fmt(d.fijas));
+    setText('statsTotemsPct', fmt(d.totems));
+    setText('statsDonutTotal', d.total);
+
+    const items = [
+      {label:'Centro de Control', value:d.centro, pct:pct(d.centro), color:'#f59e0b'},
+      {label:'Cámaras vecinales', value:d.vecinales, pct:pct(d.vecinales), color:'#10b981'},
+      {label:'Cámaras fijas DSS', value:d.fijas, pct:pct(d.fijas), color:'#3b82f6'},
+      {label:'Tótems M.D.L.O.', value:d.totems, pct:pct(d.totems), color:'#f97316'}
+    ];
+
+    const bars = document.getElementById('statsBars');
+    if(bars){
+      bars.innerHTML = items.map(x => `
+        <div>
+          <div class="flex items-center justify-between gap-3 mb-1.5">
+            <span class="text-[11px] text-slate-200 font-bold">${x.label}</span>
+            <span class="text-[11px] font-black" style="color:${x.color}">${x.value} · ${x.pct.toFixed(1)}%</span>
+          </div>
+          <div class="h-3 bg-[#030712] border border-slate-800 rounded-full overflow-hidden">
+            <div class="h-full rounded-full transition-all duration-500" style="width:${x.pct}%;background:${x.color}"></div>
+          </div>
+        </div>`).join('');
+    }
+
+    const legend = document.getElementById('statsLegend');
+    if(legend){
+      legend.innerHTML = items.map(x => `
+        <div class="flex items-center justify-between gap-8">
+          <div class="flex items-center gap-2">
+            <span class="w-3 h-3 rounded-full" style="background:${x.color}"></span>
+            <span class="text-[11px] text-slate-300 font-bold">${x.label}</span>
+          </div>
+          <span class="text-[11px] text-white font-black">${x.pct.toFixed(1)}%</span>
+        </div>`).join('');
+    }
+
+    const donut = document.getElementById('statsDonut');
+    if(donut){
+      let acc = 0;
+      const segments = items.map(x => {
+        const start = acc;
+        acc += x.pct;
+        return `${x.color} ${start.toFixed(3)}% ${acc.toFixed(3)}%`;
+      });
+      donut.style.background = d.total
+        ? `conic-gradient(${segments.join(',')})`
+        : '#1e293b';
+    }
+  }
+
+  function showCameraStatisticsView(event){
+    if(event) event.stopPropagation();
+    const menu = document.getElementById('ocurrenciasMenu');
+    if(menu) menu.classList.add('hidden');
+
+    [
+      'mainDashboardView','searchReportView','camarasFijasView','vecinalesView',
+      'estacionesParesView','creacionTurnoView','totemsView','cameraStatisticsView'
+    ].forEach(id => {
+      const el = document.getElementById(id);
+      if(el){ el.classList.add('hidden'); el.classList.remove('flex'); }
+    });
+
+    const view = document.getElementById('cameraStatisticsView');
+    if(view){
+      view.classList.remove('hidden');
+      view.classList.add('flex');
+      renderCameraStatistics();
+    }
+  }
+
+  const VIEW_IDS=['mainDashboardView','searchReportView','camarasFijasView','vecinalesView','estacionesParesView','creacionTurnoView','totemsView','cameraStatisticsView'];
 
   function el(id){ return document.getElementById(id); }
   function hideMenu(){ const m=el('ocurrenciasMenu'); if(m) m.classList.add('hidden'); }
