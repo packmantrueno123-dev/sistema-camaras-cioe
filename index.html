@@ -5982,7 +5982,7 @@ body.cioe-custom-theme #themeCustomizerBtn{background-color:var(--cioe-accent)!i
       }
     }
 
-    function formatSessionDate(v){if(!v)return "—";try{return new Intl.DateTimeFormat("es-PE",{dateStyle:"short",timeStyle:"medium"}).format(new Date(v));}catch(_){return String(v);}}
+    function formatSessionDate(v){if(!v)return "—";try{return new Intl.DateTimeFormat("es-PE",{timeZone:"America/Lima",dateStyle:"short",timeStyle:"medium"}).format(new Date(v));}catch(_){return String(v);}}
     function sessionBrowserName(ua){
       ua=String(ua||"");
       if(/Edg\//i.test(ua)) return "Microsoft Edge";
