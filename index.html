@@ -2575,7 +2575,13 @@ body.cioe-custom-theme #themeCustomizerBtn{background-color:var(--cioe-accent)!i
   <!-- SESIONES ACTIVAS - SOLO ADMIN -->
   <div id="activeSessionsModal" class="hidden fixed inset-0 z-[180] bg-black/80 backdrop-blur-sm items-center justify-center p-4">
     <div class="w-full max-w-3xl bg-[#0a0f1d] border border-slate-700 rounded-2xl shadow-2xl overflow-hidden">
-      <div class="flex items-center justify-between px-5 py-4 border-b border-slate-800"><div><h3 id="activeSessionsTitle" class="text-sm font-black text-white">SESIONES ACTIVAS</h3><p class="text-[10px] text-slate-500 mt-1">Visible únicamente para el administrador.</p></div><button type="button" onclick="closeActiveSessionsModal()" class="w-9 h-9 rounded-xl bg-slate-800 text-slate-300"><i class="fa-solid fa-xmark"></i></button></div>
+      <div class="flex items-center justify-between gap-3 px-5 py-4 border-b border-slate-800">
+        <div><h3 id="activeSessionsTitle" class="text-sm font-black text-white">SESIONES ACTIVAS</h3><p class="text-[10px] text-slate-500 mt-1">Visible únicamente para el administrador.</p></div>
+        <div class="flex items-center gap-2">
+          <button id="closeAllSessionsBtn" type="button" onclick="closeAllRemoteSessions()" class="hidden bg-rose-600/20 border border-rose-500/40 text-rose-300 hover:bg-rose-600 hover:text-white px-3 py-2 rounded-xl text-[10px] font-black transition"><i class="fa-solid fa-right-from-bracket mr-1"></i>CERRAR EN TODOS LOS DISPOSITIVOS</button>
+          <button type="button" onclick="closeActiveSessionsModal()" class="w-9 h-9 rounded-xl bg-slate-800 text-slate-300"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+      </div>
       <div id="activeSessionsBody" class="p-5 space-y-3 max-h-[70vh] overflow-y-auto"></div>
     </div>
   </div>
@@ -5989,9 +5995,13 @@ body.cioe-custom-theme #themeCustomizerBtn{background-color:var(--cioe-accent)!i
       if(/Linux/i.test(ua)) return "Linux";
       return "No disponible";
     }
+    let activeSessionsTargetUserId=null;
     async function openActiveSessionsModal(index){
       if(!isAdminUser())return;
       const user=cachedSystemUsers[index];if(!user||user.role==="admin")return;
+      activeSessionsTargetUserId=Number(user.id);
+      const closeAllBtn=document.getElementById("closeAllSessionsBtn");
+      if(closeAllBtn)closeAllBtn.classList.remove("hidden");
       const m=document.getElementById("activeSessionsModal"),t=document.getElementById("activeSessionsTitle"),b=document.getElementById("activeSessionsBody");
       t.textContent="SESIONES ACTIVAS — "+String(user.username).toUpperCase();b.innerHTML='<div class="text-center text-slate-400 py-8"><i class="fa-solid fa-spinner fa-spin mr-2"></i>Cargando...</div>';m.classList.remove("hidden");m.classList.add("flex");
       stopActiveSessionsLiveRefresh();
@@ -6015,8 +6025,36 @@ body.cioe-custom-theme #themeCustomizerBtn{background-color:var(--cioe-accent)!i
     }
     let activeSessionsLiveTimer=null;
     function stopActiveSessionsLiveRefresh(){if(activeSessionsLiveTimer){clearInterval(activeSessionsLiveTimer);activeSessionsLiveTimer=null;}}
-    function closeActiveSessionsModal(){stopActiveSessionsLiveRefresh();const m=document.getElementById("activeSessionsModal");m.classList.add("hidden");m.classList.remove("flex");}
-    async function closeRemoteSession(uid,sid){if(!isAdminUser()||!confirm("¿Cerrar esta sesión?"))return;try{await apiRequest(`/api/users/${uid}/sessions/${sid}`,{method:"DELETE"});await renderSystemUsers();const i=cachedSystemUsers.findIndex(u=>Number(u.id)===Number(uid));if(i>=0)await openActiveSessionsModal(i);}catch(e){alert(e.message||"No se pudo cerrar la sesión.");}}
+    function closeActiveSessionsModal(){
+      stopActiveSessionsLiveRefresh();
+      activeSessionsTargetUserId=null;
+      const btn=document.getElementById("closeAllSessionsBtn");
+      if(btn)btn.classList.add("hidden");
+      const m=document.getElementById("activeSessionsModal");
+      m.classList.add("hidden");m.classList.remove("flex");
+    }
+    async function closeRemoteSession(uid,sid){
+      if(!isAdminUser()||!confirm("¿Cerrar esta sesión?"))return;
+      try{
+        await apiRequest(`/api/users/${uid}/sessions/${sid}`,{method:"DELETE"});
+        await renderSystemUsers();
+        const i=cachedSystemUsers.findIndex(u=>Number(u.id)===Number(uid));
+        if(i>=0)await openActiveSessionsModal(i);
+      }catch(e){alert(e.message||"No se pudo cerrar la sesión.");}
+    }
+    async function closeAllRemoteSessions(){
+      if(!isAdminUser()||!activeSessionsTargetUserId)return;
+      const uid=Number(activeSessionsTargetUserId);
+      const user=cachedSystemUsers.find(u=>Number(u.id)===uid);
+      const name=user?String(user.username).toUpperCase():"ESTE USUARIO";
+      if(!confirm(`¿Cerrar TODAS las sesiones activas de ${name}?\n\nTodos sus dispositivos volverán al inicio de sesión.`))return;
+      try{
+        await apiRequest(`/api/users/${uid}/sessions`,{method:"DELETE"});
+        await renderSystemUsers();
+        const i=cachedSystemUsers.findIndex(u=>Number(u.id)===uid);
+        if(i>=0)await openActiveSessionsModal(i);
+      }catch(e){alert(e.message||"No se pudieron cerrar todas las sesiones.");}
+    }
 
     function openPermissionsModal(index) {
       if (!isAdminUser()) return;
