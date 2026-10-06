@@ -743,6 +743,17 @@ app.delete("/api/users/:id/sessions/:sessionId",auth,adminOnly,async(req,res)=>{
   res.json({ok:true});
  }catch(err){console.error(err);res.status(500).json({ok:false,error:"No se pudo cerrar la sesión"});}
 });
+app.delete("/api/users/:id/sessions",auth,adminOnly,async(req,res)=>{
+ try{
+  const userId=Number(req.params.id);
+  if(!Number.isInteger(userId))return res.status(400).json({ok:false,error:"Usuario inválido"});
+  const target=await pool.query(`SELECT id,username,role FROM users WHERE id=$1`,[userId]);
+  if(!target.rowCount)return res.status(404).json({ok:false,error:"Usuario no encontrado"});
+  if(target.rows[0].role==="admin")return res.status(400).json({ok:false,error:"No se puede cerrar masivamente la sesión del administrador desde aquí"});
+  const q=await pool.query(`DELETE FROM user_sessions WHERE user_id=$1 RETURNING session_id`,[userId]);
+  res.json({ok:true,closed:q.rowCount});
+ }catch(err){console.error(err);res.status(500).json({ok:false,error:"No se pudieron cerrar todas las sesiones"});}
+});
 
 // ======================================================
 // CREAR USUARIO
