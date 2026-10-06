@@ -2582,7 +2582,14 @@ body.cioe-custom-theme #themeCustomizerBtn{background-color:var(--cioe-accent)!i
           <button type="button" onclick="closeActiveSessionsModal()" class="w-9 h-9 rounded-xl bg-slate-800 text-slate-300"><i class="fa-solid fa-xmark"></i></button>
         </div>
       </div>
-      <div id="activeSessionsBody" class="p-5 space-y-3 max-h-[70vh] overflow-y-auto"></div>
+      <div id="activeSessionsBody" class="p-5 space-y-3 max-h-[48vh] overflow-y-auto"></div>
+      <div class="px-5 pb-5">
+        <div class="border-t border-slate-800 pt-4">
+          <h4 class="text-xs font-black text-white">DISPOSITIVOS REGISTRADOS</h4>
+          <p class="text-[9px] text-slate-500 mt-1 mb-3">Historial de dispositivos que iniciaron sesión.</p>
+          <div id="registeredDevicesBody" class="space-y-3 max-h-[28vh] overflow-y-auto"></div>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -5985,6 +5992,16 @@ body.cioe-custom-theme #themeCustomizerBtn{background-color:var(--cioe-accent)!i
       if(/Safari\//i.test(ua) && !/Chrome\//i.test(ua)) return "Safari";
       return ua ? "Navegador web" : "No disponible";
     }
+    function sessionDeviceName(ua){
+      ua=String(ua||"");
+      if(/iPhone/i.test(ua))return "iPhone";
+      if(/iPad/i.test(ua))return "iPad";
+      if(/Android/i.test(ua)&&/Mobile/i.test(ua))return "Android";
+      if(/Android/i.test(ua))return "Tablet Android";
+      if(/Windows/i.test(ua))return "PC Windows";
+      if(/Macintosh|Mac OS X/i.test(ua))return "Mac";
+      return "Dispositivo";
+    }
     function sessionOSName(ua){
       ua=String(ua||"");
       if(/Windows NT 10\.0/i.test(ua)) return "Windows 10/11";
@@ -5995,6 +6012,19 @@ body.cioe-custom-theme #themeCustomizerBtn{background-color:var(--cioe-accent)!i
       if(/Linux/i.test(ua)) return "Linux";
       return "No disponible";
     }
+    async function renderRegisteredDevices(userId){
+      const box=document.getElementById("registeredDevicesBody");if(!box)return;
+      try{
+        const r=await apiRequest(`/api/users/${userId}/devices`),ds=r.devices||[];
+        if(!ds.length){box.innerHTML='<div class="text-center text-slate-500 text-xs py-4">No hay dispositivos registrados.</div>';return;}
+        box.innerHTML=ds.map(d=>`<div class="bg-[#030712] border border-slate-800 rounded-xl p-4 flex flex-col md:flex-row md:items-center justify-between gap-3"><div><div class="text-sm font-black text-white">${/iPhone|iPad|Android/i.test(d.device_name||"")?"📱":"🖥️"} ${escapeHtml(d.device_name||sessionDeviceName(d.user_agent))}</div><div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-1 text-[11px] mt-2"><div><span class="text-slate-500">Primera conexión:</span> ${escapeHtml(formatSessionDate(d.first_seen))}</div><div><span class="text-slate-500">Última conexión:</span> ${escapeHtml(formatSessionDate(d.last_seen))}</div><div><span class="text-slate-500">Estado:</span> <span class="${Number(d.active_sessions)>0?"text-emerald-300":"text-slate-400"}">${Number(d.active_sessions)>0?"Conectado":"Sin sesión activa"}</span></div></div></div><button type="button" onclick="revokeRegisteredDevice(${userId},'${String(d.device_id).replace(/'/g,"")}')" class="shrink-0 bg-rose-600/20 border border-rose-500/40 text-rose-300 hover:bg-rose-600 hover:text-white px-3 py-2 rounded-lg text-xs font-black">Revocar dispositivo</button></div>`).join("");
+      }catch(e){box.innerHTML=`<div class="text-center text-rose-400 text-xs py-4">${escapeHtml(e.message||"Error")}</div>`;}
+    }
+    async function revokeRegisteredDevice(uid,did){
+      if(!isAdminUser()||!confirm("¿Revocar este dispositivo?\n\nSi está conectado, volverá al login."))return;
+      try{await apiRequest(`/api/users/${uid}/devices/${did}`,{method:"DELETE"});await renderSystemUsers();await renderRegisteredDevices(uid);const i=cachedSystemUsers.findIndex(u=>Number(u.id)===Number(uid));if(i>=0)await openActiveSessionsModal(i);}catch(e){alert(e.message||"No se pudo revocar el dispositivo.");}
+    }
+
     let activeSessionsTargetUserId=null;
     async function openActiveSessionsModal(index){
       if(!isAdminUser())return;
@@ -6002,6 +6032,7 @@ body.cioe-custom-theme #themeCustomizerBtn{background-color:var(--cioe-accent)!i
       activeSessionsTargetUserId=Number(user.id);
       const closeAllBtn=document.getElementById("closeAllSessionsBtn");
       if(closeAllBtn)closeAllBtn.classList.remove("hidden");
+      renderRegisteredDevices(user.id);
       const m=document.getElementById("activeSessionsModal"),t=document.getElementById("activeSessionsTitle"),b=document.getElementById("activeSessionsBody");
       t.textContent="SESIONES ACTIVAS — "+String(user.username).toUpperCase();b.innerHTML='<div class="text-center text-slate-400 py-8"><i class="fa-solid fa-spinner fa-spin mr-2"></i>Cargando...</div>';m.classList.remove("hidden");m.classList.add("flex");
       stopActiveSessionsLiveRefresh();
@@ -6013,14 +6044,14 @@ body.cioe-custom-theme #themeCustomizerBtn{background-color:var(--cioe-accent)!i
           if(liveIndex>=0){
             const r=await apiRequest(`/api/users/${user.id}/sessions`),ss=r.sessions||[];
             if(!ss.length){b.innerHTML='<div class="text-center text-slate-500 py-8">No hay sesiones activas.</div>';return;}
-            b.innerHTML=ss.map((s,i)=>`<div class="bg-[#030712] border border-slate-800 rounded-xl p-4"><div class="flex justify-between mb-3"><b class="text-white"><i class="fa-solid fa-computer text-cyan-400 mr-2"></i>SESIÓN ${i+1}</b><span class="text-[10px] font-black text-emerald-300">● CONECTADO</span></div><div class="grid grid-cols-1 md:grid-cols-2 gap-2 text-xs"><div><span class="text-slate-500">IP pública:</span> <b class="text-cyan-300">${escapeHtml(String(s.ip_address||"No disponible"))}</b></div><div><span class="text-slate-500">Inicio:</span> ${escapeHtml(formatSessionDate(s.created_at))}</div><div><span class="text-slate-500">Última actividad:</span> ${escapeHtml(formatSessionDate(s.last_seen))}</div><div title="${escapeHtml(String(s.user_agent||""))}"><span class="text-slate-500">Navegador:</span> <span class="text-slate-200">${escapeHtml(sessionBrowserName(s.user_agent))}</span></div><div><span class="text-slate-500">Sistema:</span> <span class="text-slate-200">${escapeHtml(sessionOSName(s.user_agent))}</span></div></div><div class="mt-3 text-right"><button type="button" onclick="closeRemoteSession(${user.id},'${String(s.session_id).replace(/'/g,"")}')" class="bg-rose-600/20 border border-rose-500/40 text-rose-300 hover:bg-rose-600 hover:text-white px-3 py-1.5 rounded-lg text-xs font-black">Cerrar esta sesión</button></div></div>`).join("");
+            b.innerHTML=ss.map((s,i)=>`<div class="bg-[#030712] border border-slate-800 rounded-xl p-4"><div class="flex justify-between mb-3"><b class="text-white"><i class="fa-solid fa-computer text-cyan-400 mr-2"></i>SESIÓN ${i+1}</b><span class="text-[10px] font-black text-emerald-300">● CONECTADO</span></div><div class="grid grid-cols-1 md:grid-cols-2 gap-2 text-xs"><div><span class="text-slate-500">IP pública:</span> <b class="text-cyan-300">${escapeHtml(String(s.ip_address||"No disponible"))}</b></div><div><span class="text-slate-500">Inicio:</span> ${escapeHtml(formatSessionDate(s.created_at))}</div><div><span class="text-slate-500">Última actividad:</span> ${escapeHtml(formatSessionDate(s.last_seen))}</div><div title="${escapeHtml(String(s.user_agent||""))}"><span class="text-slate-500">Navegador:</span> <span class="text-slate-200">${escapeHtml(sessionBrowserName(s.user_agent))}</span></div><div><span class="text-slate-500">Dispositivo:</span> <span class="text-slate-200">${escapeHtml(sessionDeviceName(s.user_agent))}</span></div><div><span class="text-slate-500">Sistema:</span> <span class="text-slate-200">${escapeHtml(sessionOSName(s.user_agent))}</span></div><div><span class="text-slate-500">Proveedor:</span> <span class="text-slate-400">No disponible de forma fiable</span></div></div><div class="mt-3 text-right"><button type="button" onclick="closeRemoteSession(${user.id},'${String(s.session_id).replace(/'/g,"")}')" class="bg-rose-600/20 border border-rose-500/40 text-rose-300 hover:bg-rose-600 hover:text-white px-3 py-1.5 rounded-lg text-xs font-black">Cerrar esta sesión</button></div></div>`).join("");
           }
         }catch(_){}
       },3000);
       try{
         const r=await apiRequest(`/api/users/${user.id}/sessions`),ss=r.sessions||[];
         if(!ss.length){b.innerHTML='<div class="text-center text-slate-500 py-8">No hay sesiones activas.</div>';return;}
-        b.innerHTML=ss.map((s,i)=>`<div class="bg-[#030712] border border-slate-800 rounded-xl p-4"><div class="flex justify-between mb-3"><b class="text-white"><i class="fa-solid fa-computer text-cyan-400 mr-2"></i>SESIÓN ${i+1}</b><span class="text-[10px] font-black text-emerald-300">● CONECTADO</span></div><div class="grid grid-cols-1 md:grid-cols-2 gap-2 text-xs"><div><span class="text-slate-500">IP pública:</span> <b class="text-cyan-300">${escapeHtml(String(s.ip_address||"No disponible"))}</b></div><div><span class="text-slate-500">Inicio:</span> ${escapeHtml(formatSessionDate(s.created_at))}</div><div><span class="text-slate-500">Última actividad:</span> ${escapeHtml(formatSessionDate(s.last_seen))}</div><div title="${escapeHtml(String(s.user_agent||""))}"><span class="text-slate-500">Navegador:</span> <span class="text-slate-200">${escapeHtml(sessionBrowserName(s.user_agent))}</span></div><div><span class="text-slate-500">Sistema:</span> <span class="text-slate-200">${escapeHtml(sessionOSName(s.user_agent))}</span></div></div><div class="mt-3 text-right"><button type="button" onclick="closeRemoteSession(${user.id},'${String(s.session_id).replace(/'/g,"")}')" class="bg-rose-600/20 border border-rose-500/40 text-rose-300 hover:bg-rose-600 hover:text-white px-3 py-1.5 rounded-lg text-xs font-black">Cerrar esta sesión</button></div></div>`).join("");
+        b.innerHTML=ss.map((s,i)=>`<div class="bg-[#030712] border border-slate-800 rounded-xl p-4"><div class="flex justify-between mb-3"><b class="text-white"><i class="fa-solid fa-computer text-cyan-400 mr-2"></i>SESIÓN ${i+1}</b><span class="text-[10px] font-black text-emerald-300">● CONECTADO</span></div><div class="grid grid-cols-1 md:grid-cols-2 gap-2 text-xs"><div><span class="text-slate-500">IP pública:</span> <b class="text-cyan-300">${escapeHtml(String(s.ip_address||"No disponible"))}</b></div><div><span class="text-slate-500">Inicio:</span> ${escapeHtml(formatSessionDate(s.created_at))}</div><div><span class="text-slate-500">Última actividad:</span> ${escapeHtml(formatSessionDate(s.last_seen))}</div><div title="${escapeHtml(String(s.user_agent||""))}"><span class="text-slate-500">Navegador:</span> <span class="text-slate-200">${escapeHtml(sessionBrowserName(s.user_agent))}</span></div><div><span class="text-slate-500">Dispositivo:</span> <span class="text-slate-200">${escapeHtml(sessionDeviceName(s.user_agent))}</span></div><div><span class="text-slate-500">Sistema:</span> <span class="text-slate-200">${escapeHtml(sessionOSName(s.user_agent))}</span></div><div><span class="text-slate-500">Proveedor:</span> <span class="text-slate-400">No disponible de forma fiable</span></div></div><div class="mt-3 text-right"><button type="button" onclick="closeRemoteSession(${user.id},'${String(s.session_id).replace(/'/g,"")}')" class="bg-rose-600/20 border border-rose-500/40 text-rose-300 hover:bg-rose-600 hover:text-white px-3 py-1.5 rounded-lg text-xs font-black">Cerrar esta sesión</button></div></div>`).join("");
       }catch(e){b.innerHTML=`<div class="text-center text-rose-400 py-8">${escapeHtml(e.message||"Error")}</div>`;}
     }
     let activeSessionsLiveTimer=null;
