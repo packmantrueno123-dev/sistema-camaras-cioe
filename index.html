@@ -1271,6 +1271,51 @@ body.cioe-custom-theme #themeCustomizerBtn{background-color:var(--cioe-accent)!i
 }
 </style>
 
+
+<style id="cioePetVariantPositionFinalFix2026">
+/* Alineación final PERRO/GATO: etiqueta + selector en una sola línea */
+#themeCustomizerModal .individual-pet-variant{
+  display:flex!important;
+  align-items:center!important;
+  justify-content:flex-start!important;
+  gap:10px!important;
+  width:100%!important;
+  min-width:0!important;
+  padding:0!important;
+  margin:0!important;
+  overflow:visible!important;
+}
+
+#themeCustomizerModal .individual-pet-variant .individual-pet-label{
+  flex:0 0 86px!important;
+  width:86px!important;
+  min-width:86px!important;
+  height:34px!important;
+  display:flex!important;
+  align-items:center!important;
+  padding:0 9px!important;
+  margin:0!important;
+  box-sizing:border-box!important;
+}
+
+#themeCustomizerModal .individual-pet-variant select{
+  flex:0 0 140px!important;
+  width:140px!important;
+  min-width:140px!important;
+  max-width:140px!important;
+  height:34px!important;
+  margin:0!important;
+  box-sizing:border-box!important;
+}
+
+/* Evita que pseudo-elementos o decoraciones antiguas aparezcan debajo */
+#themeCustomizerModal .individual-pet-variant::before,
+#themeCustomizerModal .individual-pet-variant::after{
+  content:none!important;
+  display:none!important;
+}
+</style>
+
 </head>
 <body class="min-h-screen flex flex-col p-3 md:p-5 space-y-4 w-full">
 
