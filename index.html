@@ -5861,7 +5861,7 @@ body.cioe-custom-theme #themeCustomizerBtn{background-color:var(--cioe-accent)!i
       // Admin no necesita ocupar/controlar cupos.
       if (!getApiToken() || isAdminUser()) return;
 
-      sessionHeartbeatTimer = setInterval(async () => {
+      const checkCurrentSession = async () => {
         if (!getApiToken()) return;
 
         try {
@@ -5878,7 +5878,12 @@ body.cioe-custom-theme #themeCustomizerBtn{background-color:var(--cioe-accent)!i
             location.reload();
           }
         }
-      }, 60000);
+      };
+
+      // Comprobar de inmediato y después cada 3 segundos.
+      // Así, si el administrador cierra esta sesión, la pestaña vuelve al login sin recargar manualmente.
+      checkCurrentSession();
+      sessionHeartbeatTimer = setInterval(checkCurrentSession, 3000);
     }
 
     function startServerPolling() {
@@ -5955,13 +5960,28 @@ body.cioe-custom-theme #themeCustomizerBtn{background-color:var(--cioe-accent)!i
       const user=cachedSystemUsers[index];if(!user||user.role==="admin")return;
       const m=document.getElementById("activeSessionsModal"),t=document.getElementById("activeSessionsTitle"),b=document.getElementById("activeSessionsBody");
       t.textContent="SESIONES ACTIVAS — "+String(user.username).toUpperCase();b.innerHTML='<div class="text-center text-slate-400 py-8"><i class="fa-solid fa-spinner fa-spin mr-2"></i>Cargando...</div>';m.classList.remove("hidden");m.classList.add("flex");
+      stopActiveSessionsLiveRefresh();
+      activeSessionsLiveTimer=setInterval(async()=>{
+        if(m.classList.contains("hidden")){stopActiveSessionsLiveRefresh();return;}
+        try{
+          await renderSystemUsers();
+          const liveIndex=cachedSystemUsers.findIndex(u=>Number(u.id)===Number(user.id));
+          if(liveIndex>=0){
+            const r=await apiRequest(`/api/users/${user.id}/sessions`),ss=r.sessions||[];
+            if(!ss.length){b.innerHTML='<div class="text-center text-slate-500 py-8">No hay sesiones activas.</div>';return;}
+            b.innerHTML=ss.map((s,i)=>`<div class="bg-[#030712] border border-slate-800 rounded-xl p-4"><div class="flex justify-between mb-3"><b class="text-white"><i class="fa-solid fa-computer text-cyan-400 mr-2"></i>SESIÓN ${i+1}</b><span class="text-[10px] font-black text-emerald-300">● CONECTADO</span></div><div class="grid grid-cols-1 md:grid-cols-2 gap-2 text-xs"><div><span class="text-slate-500">IP pública:</span> <b class="text-cyan-300">${escapeHtml(String(s.ip_address||"No disponible"))}</b></div><div><span class="text-slate-500">Inicio:</span> ${escapeHtml(formatSessionDate(s.created_at))}</div><div><span class="text-slate-500">Última actividad:</span> ${escapeHtml(formatSessionDate(s.last_seen))}</div><div title="${escapeHtml(String(s.user_agent||""))}"><span class="text-slate-500">Navegador:</span> <span class="text-slate-200">${escapeHtml(sessionBrowserName(s.user_agent))}</span></div><div><span class="text-slate-500">Sistema:</span> <span class="text-slate-200">${escapeHtml(sessionOSName(s.user_agent))}</span></div></div><div class="mt-3 text-right"><button type="button" onclick="closeRemoteSession(${user.id},'${String(s.session_id).replace(/'/g,"")}')" class="bg-rose-600/20 border border-rose-500/40 text-rose-300 hover:bg-rose-600 hover:text-white px-3 py-1.5 rounded-lg text-xs font-black">Cerrar esta sesión</button></div></div>`).join("");
+          }
+        }catch(_){}
+      },3000);
       try{
         const r=await apiRequest(`/api/users/${user.id}/sessions`),ss=r.sessions||[];
         if(!ss.length){b.innerHTML='<div class="text-center text-slate-500 py-8">No hay sesiones activas.</div>';return;}
         b.innerHTML=ss.map((s,i)=>`<div class="bg-[#030712] border border-slate-800 rounded-xl p-4"><div class="flex justify-between mb-3"><b class="text-white"><i class="fa-solid fa-computer text-cyan-400 mr-2"></i>SESIÓN ${i+1}</b><span class="text-[10px] font-black text-emerald-300">● CONECTADO</span></div><div class="grid grid-cols-1 md:grid-cols-2 gap-2 text-xs"><div><span class="text-slate-500">IP pública:</span> <b class="text-cyan-300">${escapeHtml(String(s.ip_address||"No disponible"))}</b></div><div><span class="text-slate-500">Inicio:</span> ${escapeHtml(formatSessionDate(s.created_at))}</div><div><span class="text-slate-500">Última actividad:</span> ${escapeHtml(formatSessionDate(s.last_seen))}</div><div title="${escapeHtml(String(s.user_agent||""))}"><span class="text-slate-500">Navegador:</span> <span class="text-slate-200">${escapeHtml(sessionBrowserName(s.user_agent))}</span></div><div><span class="text-slate-500">Sistema:</span> <span class="text-slate-200">${escapeHtml(sessionOSName(s.user_agent))}</span></div></div><div class="mt-3 text-right"><button type="button" onclick="closeRemoteSession(${user.id},'${String(s.session_id).replace(/'/g,"")}')" class="bg-rose-600/20 border border-rose-500/40 text-rose-300 hover:bg-rose-600 hover:text-white px-3 py-1.5 rounded-lg text-xs font-black">Cerrar esta sesión</button></div></div>`).join("");
       }catch(e){b.innerHTML=`<div class="text-center text-rose-400 py-8">${escapeHtml(e.message||"Error")}</div>`;}
     }
-    function closeActiveSessionsModal(){const m=document.getElementById("activeSessionsModal");m.classList.add("hidden");m.classList.remove("flex");}
+    let activeSessionsLiveTimer=null;
+    function stopActiveSessionsLiveRefresh(){if(activeSessionsLiveTimer){clearInterval(activeSessionsLiveTimer);activeSessionsLiveTimer=null;}}
+    function closeActiveSessionsModal(){stopActiveSessionsLiveRefresh();const m=document.getElementById("activeSessionsModal");m.classList.add("hidden");m.classList.remove("flex");}
     async function closeRemoteSession(uid,sid){if(!isAdminUser()||!confirm("¿Cerrar esta sesión?"))return;try{await apiRequest(`/api/users/${uid}/sessions/${sid}`,{method:"DELETE"});await renderSystemUsers();const i=cachedSystemUsers.findIndex(u=>Number(u.id)===Number(uid));if(i>=0)await openActiveSessionsModal(i);}catch(e){alert(e.message||"No se pudo cerrar la sesión.");}}
 
     function openPermissionsModal(index) {
