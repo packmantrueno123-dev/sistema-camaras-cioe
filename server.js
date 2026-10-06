@@ -269,6 +269,13 @@ async function initDb() {
     NOT NULL DEFAULT '{}'::jsonb;
   `);
 
+  // Metadatos de seguridad para sesiones.
+  await pool.query(`
+    ALTER TABLE user_sessions
+      ADD COLUMN IF NOT EXISTS ip_address TEXT,
+      ADD COLUMN IF NOT EXISTS user_agent TEXT;
+  `);
+
   // ====================================================
   // CREAR ADMIN SI NO EXISTE
   // ====================================================
@@ -366,6 +373,12 @@ app.get("/", (_req, res) => {
     service: "CIOE API"
   });
 });
+
+function getClientIp(req) {
+  const forwarded=String(req.headers["x-forwarded-for"]||"").split(",")[0].trim();
+  const raw=forwarded||req.socket?.remoteAddress||"";
+  return raw.replace(/^::ffff:/,"")||"No disponible";
+}
 
 // ======================================================
 // LOGIN
@@ -465,14 +478,9 @@ app.post("/api/login", async (req, res) => {
       sessionId = randomUUID();
 
       await client.query(
-        `INSERT INTO user_sessions(
-          session_id,
-          user_id,
-          created_at,
-          last_seen
-        )
-        VALUES($1,$2,NOW(),NOW())`,
-        [sessionId, u.id]
+        `INSERT INTO user_sessions(session_id,user_id,created_at,last_seen,ip_address,user_agent)
+         VALUES($1,$2,NOW(),NOW(),$3,$4)`,
+        [sessionId,u.id,getClientIp(req),String(req.headers["user-agent"]||"").slice(0,500)]
       );
 
       await client.query("COMMIT");
@@ -682,16 +690,13 @@ app.get(
   adminOnly,
   async (_req, res) => {
     try {
-      const q = await pool.query(
-        `SELECT
-          id,
-          username,
-          role,
-          active,
-          permissions,
-          created_at
-         FROM users
-         ORDER BY id`
+      await pool.query(`DELETE FROM user_sessions WHERE last_seen <= NOW() - INTERVAL '5 minutes'`);
+      const q=await pool.query(
+        `SELECT u.id,u.username,u.role,u.active,u.permissions,u.created_at,
+          CASE WHEN u.role='admin' THEN NULL ELSE COUNT(s.session_id)::int END AS active_sessions
+         FROM users u LEFT JOIN user_sessions s
+         ON s.user_id=u.id AND s.last_seen > NOW() - INTERVAL '5 minutes'
+         GROUP BY u.id ORDER BY u.id`
       );
 
       const users = q.rows.map((u) => ({
@@ -716,6 +721,28 @@ app.get(
     }
   }
 );
+
+// ======================================================
+// SESIONES ACTIVAS - SOLO ADMIN
+// ======================================================
+app.get("/api/users/:id/sessions",auth,adminOnly,async(req,res)=>{
+ try{
+  const userId=Number(req.params.id);
+  if(!Number.isInteger(userId))return res.status(400).json({ok:false,error:"Usuario inválido"});
+  const target=await pool.query(`SELECT id,username,role FROM users WHERE id=$1`,[userId]);
+  if(!target.rowCount)return res.status(404).json({ok:false,error:"Usuario no encontrado"});
+  await pool.query(`DELETE FROM user_sessions WHERE user_id=$1 AND last_seen <= NOW() - INTERVAL '5 minutes'`,[userId]);
+  const q=await pool.query(`SELECT session_id,created_at,last_seen,COALESCE(ip_address,'No disponible') ip_address,COALESCE(user_agent,'') user_agent FROM user_sessions WHERE user_id=$1 AND last_seen > NOW() - INTERVAL '5 minutes' ORDER BY created_at DESC`,[userId]);
+  res.json({ok:true,username:target.rows[0].username,limit:target.rows[0].role==="admin"?null:2,sessions:q.rows});
+ }catch(err){console.error(err);res.status(500).json({ok:false,error:"No se pudieron consultar las sesiones"});}
+});
+app.delete("/api/users/:id/sessions/:sessionId",auth,adminOnly,async(req,res)=>{
+ try{
+  const q=await pool.query(`DELETE FROM user_sessions WHERE user_id=$1 AND session_id=$2 RETURNING session_id`,[req.params.id,req.params.sessionId]);
+  if(!q.rowCount)return res.status(404).json({ok:false,error:"La sesión ya no está activa"});
+  res.json({ok:true});
+ }catch(err){console.error(err);res.status(500).json({ok:false,error:"No se pudo cerrar la sesión"});}
+});
 
 // ======================================================
 // CREAR USUARIO
