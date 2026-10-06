@@ -8684,5 +8684,49 @@ window.addEventListener('load',function(){
 },{once:true});
 </script>
 
+
+<script id="cioeCameraStatisticsOpenFix">
+(function(){
+  function hideCioeViewsForStats(){
+    [
+      'mainDashboardView','searchReportView','camarasFijasView','vecinalesView',
+      'estacionesParesView','creacionTurnoView','totemsView','cameraStatisticsView'
+    ].forEach(function(id){
+      var el=document.getElementById(id);
+      if(el){ el.classList.add('hidden'); el.classList.remove('flex'); }
+    });
+  }
+
+  window.showCameraStatisticsView = function(event){
+    if(event){
+      event.preventDefault();
+      event.stopPropagation();
+    }
+
+    var menu=document.getElementById('ocurrenciasMenu');
+    if(menu) menu.classList.add('hidden');
+
+    hideCioeViewsForStats();
+
+    var view=document.getElementById('cameraStatisticsView');
+    if(!view){
+      console.error('No se encontró cameraStatisticsView');
+      return;
+    }
+
+    view.classList.remove('hidden');
+    view.classList.add('flex');
+
+    if(typeof window.renderCameraStatistics==='function'){
+      window.renderCameraStatistics();
+    }else if(typeof renderCameraStatistics==='function'){
+      renderCameraStatistics();
+    }
+
+    window.scrollTo({top:0,behavior:'smooth'});
+  };
+})();
+</script>
+
 </body>
 </html>
