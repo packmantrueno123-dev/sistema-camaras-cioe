@@ -2535,7 +2535,7 @@ body.cioe-custom-theme #themeCustomizerBtn{background-color:var(--cioe-accent)!i
   
   <!-- ==================== ADMINISTRACIÓN DE USUARIOS ==================== -->
   <div id="userManagerModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm hidden items-center justify-center z-[120] p-4">
-    <div class="bg-[#0a0f1d] border border-violet-500/40 rounded-2xl w-full max-w-3xl shadow-2xl overflow-hidden">
+    <div class="bg-[#0a0f1d] border border-violet-500/40 rounded-2xl w-full max-w-6xl shadow-2xl overflow-hidden">
       <div class="p-5 border-b border-slate-800 flex justify-between items-center">
         <div>
           <h2 class="text-lg font-black text-white"><i class="fa-solid fa-users-gear text-violet-400 mr-2"></i>ADMINISTRAR USUARIOS</h2>
@@ -2561,9 +2561,9 @@ body.cioe-custom-theme #themeCustomizerBtn{background-color:var(--cioe-accent)!i
           <p id="userManagerMessage" class="md:col-span-4 text-[11px] min-h-4"></p>
         </form>
 
-        <div class="overflow-x-auto border border-slate-800 rounded-xl">
-          <table class="w-full text-xs">
-            <thead class="bg-black text-white uppercase"><tr><th class="p-3 text-left">Usuario</th><th class="p-3">Rol</th><th class="p-3">Estado</th><th class="p-3">Conectados</th><th class="p-3">Permisos</th><th class="p-3">Acciones</th></tr></thead>
+        <div class="overflow-x-hidden border border-slate-800 rounded-xl">
+          <table class="w-full table-fixed text-[11px]">
+            <thead class="bg-black text-white uppercase"><tr><th class="p-3 text-left w-[13%]">Usuario</th><th class="p-3 w-[15%]">Rol</th><th class="p-3 w-[11%]">Estado</th><th class="p-3 w-[13%]">Conectados</th><th class="p-3 w-[15%]">Permisos</th><th class="p-3 w-[33%]">Acciones</th></tr></thead>
             <tbody id="usersTableBody" class="divide-y divide-slate-800"></tbody>
           </table>
         </div>
@@ -5931,6 +5931,25 @@ body.cioe-custom-theme #themeCustomizerBtn{background-color:var(--cioe-accent)!i
     }
 
     function formatSessionDate(v){if(!v)return "—";try{return new Intl.DateTimeFormat("es-PE",{dateStyle:"short",timeStyle:"medium"}).format(new Date(v));}catch(_){return String(v);}}
+    function sessionBrowserName(ua){
+      ua=String(ua||"");
+      if(/Edg\//i.test(ua)) return "Microsoft Edge";
+      if(/OPR\//i.test(ua)) return "Opera";
+      if(/Firefox\//i.test(ua)) return "Mozilla Firefox";
+      if(/Chrome\//i.test(ua) && !/Edg\//i.test(ua)) return "Google Chrome";
+      if(/Safari\//i.test(ua) && !/Chrome\//i.test(ua)) return "Safari";
+      return ua ? "Navegador web" : "No disponible";
+    }
+    function sessionOSName(ua){
+      ua=String(ua||"");
+      if(/Windows NT 10\.0/i.test(ua)) return "Windows 10/11";
+      if(/Windows/i.test(ua)) return "Windows";
+      if(/Android/i.test(ua)) return "Android";
+      if(/iPhone|iPad|iPod/i.test(ua)) return "iOS/iPadOS";
+      if(/Mac OS X/i.test(ua)) return "macOS";
+      if(/Linux/i.test(ua)) return "Linux";
+      return "No disponible";
+    }
     async function openActiveSessionsModal(index){
       if(!isAdminUser())return;
       const user=cachedSystemUsers[index];if(!user||user.role==="admin")return;
@@ -5939,7 +5958,7 @@ body.cioe-custom-theme #themeCustomizerBtn{background-color:var(--cioe-accent)!i
       try{
         const r=await apiRequest(`/api/users/${user.id}/sessions`),ss=r.sessions||[];
         if(!ss.length){b.innerHTML='<div class="text-center text-slate-500 py-8">No hay sesiones activas.</div>';return;}
-        b.innerHTML=ss.map((s,i)=>`<div class="bg-[#030712] border border-slate-800 rounded-xl p-4"><div class="flex justify-between mb-3"><b class="text-white"><i class="fa-solid fa-computer text-cyan-400 mr-2"></i>SESIÓN ${i+1}</b><span class="text-[10px] font-black text-emerald-300">● CONECTADO</span></div><div class="grid grid-cols-1 md:grid-cols-2 gap-2 text-xs"><div><span class="text-slate-500">IP pública:</span> <b class="text-cyan-300">${escapeHtml(String(s.ip_address||"No disponible"))}</b></div><div><span class="text-slate-500">Inicio:</span> ${escapeHtml(formatSessionDate(s.created_at))}</div><div><span class="text-slate-500">Última actividad:</span> ${escapeHtml(formatSessionDate(s.last_seen))}</div><div class="truncate" title="${escapeHtml(String(s.user_agent||""))}"><span class="text-slate-500">Navegador:</span> ${escapeHtml(String(s.user_agent||"No disponible"))}</div></div><div class="mt-3 text-right"><button type="button" onclick="closeRemoteSession(${user.id},'${String(s.session_id).replace(/'/g,"")}')" class="bg-rose-600/20 border border-rose-500/40 text-rose-300 hover:bg-rose-600 hover:text-white px-3 py-1.5 rounded-lg text-xs font-black">Cerrar esta sesión</button></div></div>`).join("");
+        b.innerHTML=ss.map((s,i)=>`<div class="bg-[#030712] border border-slate-800 rounded-xl p-4"><div class="flex justify-between mb-3"><b class="text-white"><i class="fa-solid fa-computer text-cyan-400 mr-2"></i>SESIÓN ${i+1}</b><span class="text-[10px] font-black text-emerald-300">● CONECTADO</span></div><div class="grid grid-cols-1 md:grid-cols-2 gap-2 text-xs"><div><span class="text-slate-500">IP pública:</span> <b class="text-cyan-300">${escapeHtml(String(s.ip_address||"No disponible"))}</b></div><div><span class="text-slate-500">Inicio:</span> ${escapeHtml(formatSessionDate(s.created_at))}</div><div><span class="text-slate-500">Última actividad:</span> ${escapeHtml(formatSessionDate(s.last_seen))}</div><div title="${escapeHtml(String(s.user_agent||""))}"><span class="text-slate-500">Navegador:</span> <span class="text-slate-200">${escapeHtml(sessionBrowserName(s.user_agent))}</span></div><div><span class="text-slate-500">Sistema:</span> <span class="text-slate-200">${escapeHtml(sessionOSName(s.user_agent))}</span></div></div><div class="mt-3 text-right"><button type="button" onclick="closeRemoteSession(${user.id},'${String(s.session_id).replace(/'/g,"")}')" class="bg-rose-600/20 border border-rose-500/40 text-rose-300 hover:bg-rose-600 hover:text-white px-3 py-1.5 rounded-lg text-xs font-black">Cerrar esta sesión</button></div></div>`).join("");
       }catch(e){b.innerHTML=`<div class="text-center text-rose-400 py-8">${escapeHtml(e.message||"Error")}</div>`;}
     }
     function closeActiveSessionsModal(){const m=document.getElementById("activeSessionsModal");m.classList.add("hidden");m.classList.remove("flex");}
