@@ -7132,7 +7132,7 @@ document.addEventListener('DOMContentLoaded', function(){
   const DK='cioe_header_dog_count_v1', CK='cioe_header_cat_count_v1';
   const DVK='cioe_header_dog_individual_variants_v1', CVK='cioe_header_cat_individual_variants_v1';
   const DOGS=[['akita','🟠 Akita'],['black','⚫ Negro'],['brown','🟤 Marrón'],['red','🔴 Rojo'],['white','⚪ Blanco']];
-  const CATS=[['blanco_negro_ojos_dorados','⚫⚪ Blanco + negro'],['blanco_ojos_celestes','⚪ Blanco · ojos celestes'],['gris_ojos_azules','🩶 Gris · ojos azules'],['marron_ojos_ambar','🟤 Marrón · ojos ámbar'],['naranja_ojos_verdes','🟠 Naranja · ojos verdes'],['negro_ojos_amarillos','⚫ Negro · ojos amarillos'],['luizmelo_cat1','🐱 Cat-1 · LuizMelo'],['luizmelo_cat2','🐈‍⬛ Cat-2 · Michi'],['luizmelo_cat3','🐱 Cat-3 · Micha'],['luizmelo_cat4','🐱 Cat-4 · Papita'],['luizmelo_cat5','🐱 Cat-5 · Bloom'],['luizmelo_cat6','🐱 Cat-6 · Anacleta']];
+  const CATS=[['luizmelo_cat1','🐱 Cat-1 · LuizMelo'],['luizmelo_cat2','🐈‍⬛ Cat-2 · Michi'],['luizmelo_cat3','🐱 Cat-3 · Micha'],['luizmelo_cat4','🐱 Cat-4 · Papita'],['luizmelo_cat5','🐱 Cat-5 · Bloom'],['luizmelo_cat6','🐱 Cat-6 · Anacleta']];
 
   const clamp=(v,d)=>{v=parseInt(v,10);return Number.isFinite(v)?Math.max(0,Math.min(5,v)):d};
   const arr=(k,n,f)=>{let a=[];try{a=JSON.parse(localStorage.getItem(k)||'[]')}catch(_){}
