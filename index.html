@@ -8687,43 +8687,110 @@ window.addEventListener('load',function(){
 
 <script id="cioeCameraStatisticsOpenFix">
 (function(){
-  function hideCioeViewsForStats(){
-    [
-      'mainDashboardView','searchReportView','camarasFijasView','vecinalesView',
-      'estacionesParesView','creacionTurnoView','totemsView','cameraStatisticsView'
-    ].forEach(function(id){
-      var el=document.getElementById(id);
-      if(el){ el.classList.add('hidden'); el.classList.remove('flex'); }
-    });
+  function readArrayLength(key, fallbackId){
+    try{
+      const v=JSON.parse(localStorage.getItem(key) || 'null');
+      if(Array.isArray(v)) return v.length;
+    }catch(_){}
+    const el=document.getElementById(fallbackId);
+    const n=Number(String(el?.textContent||'').replace(/[^\d]/g,''));
+    return Number.isFinite(n) ? n : 0;
   }
 
-  window.showCameraStatisticsView = function(event){
-    if(event){
-      event.preventDefault();
-      event.stopPropagation();
+  function readFijasTotal(){
+    try{
+      const ov=JSON.parse(localStorage.getItem('cioe_fijas_overrides_v1') || 'null');
+      if(ov && typeof ov==='object' && !Array.isArray(ov)){
+        return Object.values(ov).reduce(function(total,item){
+          return total + (Array.isArray(item?.subStatuses) && item.subStatuses.length ? item.subStatuses.length : 1);
+        },0);
+      }
+    }catch(_){}
+    const el=document.getElementById('fijas-stat-total');
+    const n=Number(String(el?.textContent||'').replace(/[^\d]/g,''));
+    return Number.isFinite(n) ? n : 0;
+  }
+
+  function getStats(){
+    const centro=readArrayLength('cioe_cameras_v101','stat-total');
+    const vecinales=readArrayLength('cioe_vecinales_v300','vec-stat-total');
+    const fijas=readFijasTotal();
+    const totems=readArrayLength('cioe_totems_v36','totStatTotal');
+    return {centro,vecinales,fijas,totems,total:centro+vecinales+fijas+totems};
+  }
+
+  window.renderCameraStatistics=function(){
+    const d=getStats();
+    const pct=n=>d.total ? n*100/d.total : 0;
+    const set=(id,v)=>{const el=document.getElementById(id);if(el)el.textContent=v;};
+
+    set('statsGrandTotal',d.total);
+    set('statsCentroTotal',d.centro);
+    set('statsVecinalTotal',d.vecinales);
+    set('statsFijasTotal',d.fijas);
+    set('statsTotemsTotal',d.totems);
+    set('statsCentroPct',pct(d.centro).toFixed(1)+'%');
+    set('statsVecinalPct',pct(d.vecinales).toFixed(1)+'%');
+    set('statsFijasPct',pct(d.fijas).toFixed(1)+'%');
+    set('statsTotemsPct',pct(d.totems).toFixed(1)+'%');
+    set('statsDonutTotal',d.total);
+
+    const items=[
+      {label:'Centro de Control',value:d.centro,p:pct(d.centro),color:'#f59e0b'},
+      {label:'Cámaras vecinales',value:d.vecinales,p:pct(d.vecinales),color:'#10b981'},
+      {label:'Cámaras fijas DSS',value:d.fijas,p:pct(d.fijas),color:'#3b82f6'},
+      {label:'Tótems M.D.L.O.',value:d.totems,p:pct(d.totems),color:'#f97316'}
+    ];
+
+    const bars=document.getElementById('statsBars');
+    if(bars) bars.innerHTML=items.map(x=>`
+      <div>
+        <div class="flex items-center justify-between gap-3 mb-1.5">
+          <span class="text-[11px] text-slate-200 font-bold">${x.label}</span>
+          <span class="text-[11px] font-black" style="color:${x.color}">${x.value} · ${x.p.toFixed(1)}%</span>
+        </div>
+        <div class="h-3 bg-[#030712] border border-slate-800 rounded-full overflow-hidden">
+          <div class="h-full rounded-full transition-all duration-500" style="width:${x.p}%;background:${x.color}"></div>
+        </div>
+      </div>`).join('');
+
+    const legend=document.getElementById('statsLegend');
+    if(legend) legend.innerHTML=items.map(x=>`
+      <div class="flex items-center justify-between gap-8">
+        <div class="flex items-center gap-2">
+          <span class="w-3 h-3 rounded-full" style="background:${x.color}"></span>
+          <span class="text-[11px] text-slate-300 font-bold">${x.label}</span>
+        </div>
+        <span class="text-[11px] text-white font-black">${x.value} · ${x.p.toFixed(1)}%</span>
+      </div>`).join('');
+
+    const donut=document.getElementById('statsDonut');
+    if(donut){
+      let a=0;
+      const parts=items.map(x=>{const s=a;a+=x.p;return `${x.color} ${s.toFixed(3)}% ${a.toFixed(3)}%`;});
+      donut.style.background=d.total ? `conic-gradient(${parts.join(',')})` : '#1e293b';
     }
+  };
 
-    var menu=document.getElementById('ocurrenciasMenu');
-    if(menu) menu.classList.add('hidden');
+  window.showCameraStatisticsView=function(event){
+    if(event){event.preventDefault();event.stopPropagation();}
+    const menu=document.getElementById('ocurrenciasMenu');
+    if(menu)menu.classList.add('hidden');
 
-    hideCioeViewsForStats();
+    ['mainDashboardView','searchReportView','camarasFijasView','vecinalesView',
+     'estacionesParesView','creacionTurnoView','totemsView','cameraStatisticsView']
+      .forEach(id=>{
+        const el=document.getElementById(id);
+        if(el){el.classList.add('hidden');el.classList.remove('flex');}
+      });
 
-    var view=document.getElementById('cameraStatisticsView');
-    if(!view){
-      console.error('No se encontró cameraStatisticsView');
-      return;
-    }
-
-    view.classList.remove('hidden');
-    view.classList.add('flex');
-
-    if(typeof window.renderCameraStatistics==='function'){
+    const view=document.getElementById('cameraStatisticsView');
+    if(view){
+      view.classList.remove('hidden');
+      view.classList.add('flex');
       window.renderCameraStatistics();
-    }else if(typeof renderCameraStatistics==='function'){
-      renderCameraStatistics();
+      window.scrollTo({top:0,behavior:'smooth'});
     }
-
-    window.scrollTo({top:0,behavior:'smooth'});
   };
 })();
 </script>
