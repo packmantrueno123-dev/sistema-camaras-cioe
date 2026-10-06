@@ -3479,7 +3479,7 @@ body.cioe-custom-theme #themeCustomizerBtn{background-color:var(--cioe-accent)!i
       vecinalCameras = rawVecinales ? JSON.parse(rawVecinales) : INITIAL_VECINAL_CAMERAS;
 
       // Importación 06/10/2026: conserva lo existente y añade solo registros faltantes.
-      const importKey = "cioe_vecinales_import_20261006_v1";
+      const importKey = "cioe_vecinales_import_20261006_v2";
       if (localStorage.getItem(importKey) !== "1") {
         const norm = v => String(v || "").toUpperCase().replace(/\s+/g, " ").trim();
         const existing = new Set(vecinalCameras.map(v =>
