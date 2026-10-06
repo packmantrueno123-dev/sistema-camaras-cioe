@@ -5874,8 +5874,16 @@ body.cioe-custom-theme #themeCustomizerBtn{background-color:var(--cioe-accent)!i
             sessionStorage.removeItem(CIOE_TOKEN_KEY);
             sessionStorage.removeItem(CIOE_USER_KEY);
             currentSystemUser = null;
-            alert(e.message || "Tu sesión terminó. Inicia sesión nuevamente.");
-            location.reload();
+
+            // Cierre remoto: bloquear TODO el sistema inmediatamente.
+            // restoreApiSession() ya contiene la lógica original del proyecto
+            // para ocultar la aplicación y volver a mostrar el LOGIN cuando
+            // no existe una sesión válida.
+            try {
+              await restoreApiSession();
+            } catch (_) {}
+
+            alert(e.message || "Tu sesión fue cerrada por el administrador. Inicia sesión nuevamente.");
           }
         }
       };
