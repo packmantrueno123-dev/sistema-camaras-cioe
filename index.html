@@ -2163,9 +2163,14 @@ body.cioe-custom-theme #themeCustomizerBtn{background-color:var(--cioe-accent)!i
             <p class="text-[10px] text-slate-400">Resumen dinámico de todos los módulos de cámaras del sistema</p>
           </div>
         </div>
-        <button type="button" onclick="showMainDashboardView()" class="bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 self-start lg:self-auto">
-          <i class="fa-solid fa-arrow-left text-amber-400"></i> Volver al Centro de Control
-        </button>
+        <div class="flex items-center gap-2 self-start lg:self-auto">
+          <button type="button" onclick="downloadCameraStatisticsExcel()" class="bg-emerald-500 hover:bg-emerald-400 text-black px-4 py-2 rounded-xl text-xs font-black transition flex items-center gap-2">
+            <i class="fa-solid fa-file-excel"></i> Descargar Excel
+          </button>
+          <button type="button" onclick="showMainDashboardView()" class="bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2">
+            <i class="fa-solid fa-arrow-left text-amber-400"></i> Volver al Centro de Control
+          </button>
+        </div>
       </div>
     </section>
 
@@ -8687,28 +8692,40 @@ window.addEventListener('load',function(){
 
 <script id="cioeCameraStatisticsOpenFix">
 (function(){
-  function readArrayLength(key, fallbackId){
-    try{
-      const v=JSON.parse(localStorage.getItem(key) || 'null');
-      if(Array.isArray(v)) return v.length;
-    }catch(_){}
-    const el=document.getElementById(fallbackId);
+  function numberFromElement(id){
+    const el=document.getElementById(id);
     const n=Number(String(el?.textContent||'').replace(/[^\d]/g,''));
     return Number.isFinite(n) ? n : 0;
   }
 
-  function readFijasTotal(){
+  function readArrayLength(key,fallbackId){
     try{
-      const ov=JSON.parse(localStorage.getItem('cioe_fijas_overrides_v1') || 'null');
-      if(ov && typeof ov==='object' && !Array.isArray(ov)){
-        return Object.values(ov).reduce(function(total,item){
-          return total + (Array.isArray(item?.subStatuses) && item.subStatuses.length ? item.subStatuses.length : 1);
-        },0);
+      const v=JSON.parse(localStorage.getItem(key)||'null');
+      if(Array.isArray(v)) return v.length;
+    }catch(_){}
+    return numberFromElement(fallbackId);
+  }
+
+  function readFijasTotal(){
+    // El módulo DSS ya calcula correctamente su total general (p. ej. 184).
+    // Usamos ese mismo contador para que Estadística coincida exactamente.
+    const visible=numberFromElement('fijas-stat-total');
+    if(visible>0) return visible;
+
+    const totalLabel=[...document.querySelectorAll('#camarasFijasView *')]
+      .find(el=>/^\s*\d+\s*Cámaras\s*$/i.test(String(el.textContent||'')));
+    if(totalLabel){
+      const n=Number(String(totalLabel.textContent).replace(/[^\d]/g,''));
+      if(Number.isFinite(n)&&n>0) return n;
+    }
+
+    try{
+      if(typeof window.getTotalCamarasFijasGeneral==='function'){
+        const n=Number(window.getTotalCamarasFijasGeneral());
+        if(Number.isFinite(n)&&n>=0) return n;
       }
     }catch(_){}
-    const el=document.getElementById('fijas-stat-total');
-    const n=Number(String(el?.textContent||'').replace(/[^\d]/g,''));
-    return Number.isFinite(n) ? n : 0;
+    return 0;
   }
 
   function getStats(){
@@ -8718,6 +8735,8 @@ window.addEventListener('load',function(){
     const totems=readArrayLength('cioe_totems_v36','totStatTotal');
     return {centro,vecinales,fijas,totems,total:centro+vecinales+fijas+totems};
   }
+
+  window.getCameraStatisticsData=getStats;
 
   window.renderCameraStatistics=function(){
     const d=getStats();
@@ -8770,6 +8789,52 @@ window.addEventListener('load',function(){
       const parts=items.map(x=>{const s=a;a+=x.p;return `${x.color} ${s.toFixed(3)}% ${a.toFixed(3)}%`;});
       donut.style.background=d.total ? `conic-gradient(${parts.join(',')})` : '#1e293b';
     }
+  };
+
+  window.downloadCameraStatisticsExcel=function(){
+    const d=getStats();
+    const pct=n=>d.total ? (n*100/d.total).toFixed(1)+'%' : '0.0%';
+    const rows=[
+      ['Centro de Control',d.centro,pct(d.centro)],
+      ['Cámaras vecinales / Barrio Seguro',d.vecinales,pct(d.vecinales)],
+      ['Cámaras fijas DSS',d.fijas,pct(d.fijas)],
+      ['Tótems M.D.L.O.',d.totems,pct(d.totems)],
+      ['TOTAL GENERAL',d.total,'100%']
+    ];
+
+    const esc=v=>String(v??'')
+      .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+      .replace(/"/g,'&quot;');
+
+    const table=`
+      <table border="1">
+        <thead>
+          <tr>
+            <th style="background:#111827;color:#fff;font-weight:bold">MÓDULO</th>
+            <th style="background:#111827;color:#fff;font-weight:bold">TOTAL CÁMARAS</th>
+            <th style="background:#111827;color:#fff;font-weight:bold">PORCENTAJE DEL TOTAL</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${rows.map((r,i)=>`<tr>${r.map(v=>`<td${i===rows.length-1?' style="font-weight:bold;background:#d1fae5"':''}>${esc(v)}</td>`).join('')}</tr>`).join('')}
+        </tbody>
+      </table>`;
+
+    const html=`<html xmlns:o="urn:schemas-microsoft-com:office:office"
+      xmlns:x="urn:schemas-microsoft-com:office:excel"
+      xmlns="http://www.w3.org/TR/REC-html40">
+      <head><meta charset="UTF-8"></head><body>
+      <h2>ESTADÍSTICA GENERAL DE CÁMARAS</h2>${table}</body></html>`;
+
+    const blob=new Blob(['\ufeff',html],{type:'application/vnd.ms-excel;charset=utf-8;'});
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement('a');
+    a.href=url;
+    a.download=`Estadistica_General_Camaras_${new Date().toISOString().slice(0,10)}.xls`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
   };
 
   window.showCameraStatisticsView=function(event){
