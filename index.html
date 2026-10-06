@@ -5871,19 +5871,45 @@ body.cioe-custom-theme #themeCustomizerBtn{background-color:var(--cioe-accent)!i
         } catch (e) {
           if (e.status === 401) {
             stopSessionHeartbeat();
+
+            // La sesión ya fue eliminada por el administrador en el servidor.
+            // Limpiamos únicamente esta pestaña y regresamos directamente al LOGIN.
             sessionStorage.removeItem(CIOE_TOKEN_KEY);
             sessionStorage.removeItem(CIOE_USER_KEY);
             currentSystemUser = null;
+            applyUserPermissions();
 
-            // Cierre remoto: bloquear TODO el sistema inmediatamente.
-            // restoreApiSession() ya contiene la lógica original del proyecto
-            // para ocultar la aplicación y volver a mostrar el LOGIN cuando
-            // no existe una sesión válida.
-            try {
-              await restoreApiSession();
-            } catch (_) {}
+            // Cerrar modales administrativos si estuvieran abiertos.
+            try { closeUserManager(); } catch (_) {}
+            try { closePermissionsModal(); } catch (_) {}
+            try { closeActiveSessionsModal(); } catch (_) {}
 
-            alert(e.message || "Tu sesión fue cerrada por el administrador. Inicia sesión nuevamente.");
+            // Ocultar TODAS las vistas internas del sistema.
+            ["mainDashboardView","searchReportView","vecinalesView","camarasFijasView",
+             "estacionesParesView","creacionTurnoView","totemsView"].forEach(id => {
+              const el = document.getElementById(id);
+              if (el) {
+                el.classList.add("hidden");
+                el.classList.remove("flex");
+              }
+            });
+
+            // Mostrar directamente la pantalla de inicio de sesión.
+            const loginView = document.getElementById("loginView");
+            if (loginView) {
+              loginView.classList.remove("hidden");
+              loginView.classList.add("flex");
+            }
+
+            const loginUser = document.getElementById("loginUser");
+            const loginPass = document.getElementById("loginPass");
+            if (loginUser) loginUser.value = "";
+            if (loginPass) {
+              loginPass.value = "";
+              setTimeout(() => loginUser?.focus(), 50);
+            }
+
+            // Sin alert: el usuario pasa directamente al LOGIN.
           }
         }
       };
