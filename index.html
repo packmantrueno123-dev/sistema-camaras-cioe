@@ -1316,6 +1316,118 @@ body.cioe-custom-theme #themeCustomizerBtn{background-color:var(--cioe-accent)!i
 }
 </style>
 
+
+<style id="cioePetPanelDefinitiveAlignmentAndFlashFix2026">
+/* =========================================================
+   CORRECCIÓN DEFINITIVA DEL PANEL DE MASCOTAS
+   ========================================================= */
+
+/* 1) Oculta desde el PRIMER render las mascotas antiguas.
+      El controlador .cioe-life-pet es el único que debe dibujar
+      la cantidad seleccionada. Evita el perro que aparece ~1 s. */
+#headerPixelArtWrap #headerDogPet,
+#headerPixelArtWrap .header-extra-pet[alt="cat"],
+#headerPixelArtWrap [data-count-pet="dog"],
+#headerPixelArtWrap [data-count-pet="cat"]{
+  visibility:hidden!important;
+}
+
+/* Las mascotas nuevas del controlador permanecen visibles. */
+#headerPixelArtWrap .cioe-life-pet{
+  visibility:visible!important;
+}
+
+/* 2) Cada fila PERRO/GATO: etiqueta y selector perfectamente alineados. */
+#themeCustomizerModal #dogIndividualVariants,
+#themeCustomizerModal #catIndividualVariants{
+  display:grid!important;
+  grid-template-columns:1fr!important;
+  gap:7px!important;
+  width:100%!important;
+  min-width:0!important;
+}
+
+#themeCustomizerModal .individual-pet-variant{
+  display:grid!important;
+  grid-template-columns:88px 140px!important;
+  align-items:center!important;
+  justify-content:start!important;
+  column-gap:10px!important;
+  width:max-content!important;
+  max-width:100%!important;
+  min-width:0!important;
+  height:36px!important;
+  padding:0!important;
+  margin:0!important;
+  border:0!important;
+  background:transparent!important;
+  overflow:visible!important;
+  box-sizing:border-box!important;
+}
+
+/* El HTML real usa <label>, no .individual-pet-label. */
+#themeCustomizerModal .individual-pet-variant > label{
+  width:88px!important;
+  min-width:88px!important;
+  height:34px!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:flex-start!important;
+  padding:0 9px!important;
+  margin:0!important;
+  border:1px solid #344a65!important;
+  border-radius:9px!important;
+  background:#0b1627!important;
+  color:#e9f0f8!important;
+  font-size:8px!important;
+  font-weight:850!important;
+  line-height:1!important;
+  box-sizing:border-box!important;
+  white-space:nowrap!important;
+}
+
+/* Selector: mismo alto y posición que la etiqueta. */
+#themeCustomizerModal .individual-pet-variant > select{
+  -webkit-appearance:auto!important;
+  appearance:auto!important;
+  width:140px!important;
+  min-width:140px!important;
+  max-width:140px!important;
+  height:34px!important;
+  padding:0 7px!important;
+  margin:0!important;
+  border:1px solid #344a65!important;
+  border-radius:9px!important;
+  background:#0b1627!important;
+  background-image:none!important;
+  color:#e9f0f8!important;
+  font-size:8px!important;
+  font-weight:850!important;
+  line-height:normal!important;
+  box-sizing:border-box!important;
+  vertical-align:middle!important;
+  cursor:pointer!important;
+}
+
+/* Quita cualquier decoración heredada que pueda verse como flecha/óvalo extra. */
+#themeCustomizerModal .individual-pet-variant::before,
+#themeCustomizerModal .individual-pet-variant::after,
+#themeCustomizerModal .individual-pet-variant > label::before,
+#themeCustomizerModal .individual-pet-variant > label::after{
+  content:none!important;
+  display:none!important;
+}
+
+/* Cantidad y paisaje: flecha nativa, centrada por el navegador. */
+#themeCustomizerModal #dogCountSelect,
+#themeCustomizerModal #catCountSelect,
+#themeCustomizerModal #petLandscapeSelect{
+  -webkit-appearance:auto!important;
+  appearance:auto!important;
+  background-image:none!important;
+}
+</style>
+
 </head>
 <body class="min-h-screen flex flex-col p-3 md:p-5 space-y-4 w-full">
 
