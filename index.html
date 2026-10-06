@@ -2563,7 +2563,7 @@ body.cioe-custom-theme #themeCustomizerBtn{background-color:var(--cioe-accent)!i
 
         <div class="overflow-x-auto border border-slate-800 rounded-xl">
           <table class="w-full text-xs">
-            <thead class="bg-black text-white uppercase"><tr><th class="p-3 text-left">Usuario</th><th class="p-3">Rol</th><th class="p-3">Estado</th><th class="p-3">Permisos</th><th class="p-3">Acciones</th></tr></thead>
+            <thead class="bg-black text-white uppercase"><tr><th class="p-3 text-left">Usuario</th><th class="p-3">Rol</th><th class="p-3">Estado</th><th class="p-3">Conectados</th><th class="p-3">Permisos</th><th class="p-3">Acciones</th></tr></thead>
             <tbody id="usersTableBody" class="divide-y divide-slate-800"></tbody>
           </table>
         </div>
@@ -2571,6 +2571,14 @@ body.cioe-custom-theme #themeCustomizerBtn{background-color:var(--cioe-accent)!i
     </div>
   </div>
 
+
+  <!-- SESIONES ACTIVAS - SOLO ADMIN -->
+  <div id="activeSessionsModal" class="hidden fixed inset-0 z-[180] bg-black/80 backdrop-blur-sm items-center justify-center p-4">
+    <div class="w-full max-w-3xl bg-[#0a0f1d] border border-slate-700 rounded-2xl shadow-2xl overflow-hidden">
+      <div class="flex items-center justify-between px-5 py-4 border-b border-slate-800"><div><h3 id="activeSessionsTitle" class="text-sm font-black text-white">SESIONES ACTIVAS</h3><p class="text-[10px] text-slate-500 mt-1">Visible únicamente para el administrador.</p></div><button type="button" onclick="closeActiveSessionsModal()" class="w-9 h-9 rounded-xl bg-slate-800 text-slate-300"><i class="fa-solid fa-xmark"></i></button></div>
+      <div id="activeSessionsBody" class="p-5 space-y-3 max-h-[70vh] overflow-y-auto"></div>
+    </div>
+  </div>
 
   <!-- ==================== PERMISOS POR USUARIO ==================== -->
   <div id="permissionsModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm hidden items-center justify-center z-[130] p-4">
@@ -5904,6 +5912,9 @@ body.cioe-custom-theme #themeCustomizerBtn{background-color:var(--cioe-accent)!i
             <td class="p-3 text-center ${u.role === "admin" ? "text-violet-400" : "text-cyan-400"} font-bold">${u.role === "admin" ? "ADMINISTRADOR" : "USUARIO"}</td>
             <td class="p-3 text-center font-bold ${u.active !== false ? "text-emerald-400" : "text-rose-400"}">${u.active !== false ? "ACTIVO" : "INACTIVO"}</td>
             <td class="p-3 text-center">
+              ${u.role === "admin" ? '<span class="text-slate-500 font-bold">SIN LÍMITE</span>' : `<button type="button" onclick="openActiveSessionsModal(${i})" class="${Number(u.active_sessions||0)>0?'bg-emerald-500/15 border-emerald-500/40 text-emerald-300':'bg-slate-800 border-slate-700 text-slate-400'} border px-3 py-1.5 rounded-lg font-black hover:border-cyan-400"><i class="fa-solid fa-desktop mr-1"></i>${Number(u.active_sessions||0)} / 2</button>`}
+            </td>
+            <td class="p-3 text-center">
               ${u.role === "admin" ? '<span class="text-emerald-400 font-bold"><i class="fa-solid fa-shield-halved mr-1"></i>Todos</span>' :
                 `<button type="button" onclick="openPermissionsModal(${i})" class="bg-violet-600/20 border border-violet-500/40 text-violet-300 hover:bg-violet-600 hover:text-white px-3 py-1.5 rounded-lg font-bold"><i class="fa-solid fa-sliders mr-1"></i>Configurar</button>`}
             </td>
@@ -5915,9 +5926,24 @@ body.cioe-custom-theme #themeCustomizerBtn{background-color:var(--cioe-accent)!i
             </td>
           </tr>`).join("");
       } catch (e) {
-        body.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-rose-400">No se pudieron cargar los usuarios.</td></tr>`;
+        body.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-rose-400">No se pudieron cargar los usuarios.</td></tr>`;
       }
     }
+
+    function formatSessionDate(v){if(!v)return "—";try{return new Intl.DateTimeFormat("es-PE",{dateStyle:"short",timeStyle:"medium"}).format(new Date(v));}catch(_){return String(v);}}
+    async function openActiveSessionsModal(index){
+      if(!isAdminUser())return;
+      const user=cachedSystemUsers[index];if(!user||user.role==="admin")return;
+      const m=document.getElementById("activeSessionsModal"),t=document.getElementById("activeSessionsTitle"),b=document.getElementById("activeSessionsBody");
+      t.textContent="SESIONES ACTIVAS — "+String(user.username).toUpperCase();b.innerHTML='<div class="text-center text-slate-400 py-8"><i class="fa-solid fa-spinner fa-spin mr-2"></i>Cargando...</div>';m.classList.remove("hidden");m.classList.add("flex");
+      try{
+        const r=await apiRequest(`/api/users/${user.id}/sessions`),ss=r.sessions||[];
+        if(!ss.length){b.innerHTML='<div class="text-center text-slate-500 py-8">No hay sesiones activas.</div>';return;}
+        b.innerHTML=ss.map((s,i)=>`<div class="bg-[#030712] border border-slate-800 rounded-xl p-4"><div class="flex justify-between mb-3"><b class="text-white"><i class="fa-solid fa-computer text-cyan-400 mr-2"></i>SESIÓN ${i+1}</b><span class="text-[10px] font-black text-emerald-300">● CONECTADO</span></div><div class="grid grid-cols-1 md:grid-cols-2 gap-2 text-xs"><div><span class="text-slate-500">IP pública:</span> <b class="text-cyan-300">${escapeHtml(String(s.ip_address||"No disponible"))}</b></div><div><span class="text-slate-500">Inicio:</span> ${escapeHtml(formatSessionDate(s.created_at))}</div><div><span class="text-slate-500">Última actividad:</span> ${escapeHtml(formatSessionDate(s.last_seen))}</div><div class="truncate" title="${escapeHtml(String(s.user_agent||""))}"><span class="text-slate-500">Navegador:</span> ${escapeHtml(String(s.user_agent||"No disponible"))}</div></div><div class="mt-3 text-right"><button type="button" onclick="closeRemoteSession(${user.id},'${String(s.session_id).replace(/'/g,"")}')" class="bg-rose-600/20 border border-rose-500/40 text-rose-300 hover:bg-rose-600 hover:text-white px-3 py-1.5 rounded-lg text-xs font-black">Cerrar esta sesión</button></div></div>`).join("");
+      }catch(e){b.innerHTML=`<div class="text-center text-rose-400 py-8">${escapeHtml(e.message||"Error")}</div>`;}
+    }
+    function closeActiveSessionsModal(){const m=document.getElementById("activeSessionsModal");m.classList.add("hidden");m.classList.remove("flex");}
+    async function closeRemoteSession(uid,sid){if(!isAdminUser()||!confirm("¿Cerrar esta sesión?"))return;try{await apiRequest(`/api/users/${uid}/sessions/${sid}`,{method:"DELETE"});await renderSystemUsers();const i=cachedSystemUsers.findIndex(u=>Number(u.id)===Number(uid));if(i>=0)await openActiveSessionsModal(i);}catch(e){alert(e.message||"No se pudo cerrar la sesión.");}}
 
     function openPermissionsModal(index) {
       if (!isAdminUser()) return;
