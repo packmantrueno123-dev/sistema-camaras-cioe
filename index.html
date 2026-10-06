@@ -6987,6 +6987,16 @@ document.addEventListener('DOMContentLoaded', function(){
 })();
 </script>
 
+<style id="cioeLuizCat1SizeFix2026">
+#headerPixelArtWrap .cioe-life-pet[data-luiz-cat1="1"]{
+  height:64px!important;
+  max-height:64px!important;
+  width:auto!important;
+  max-width:96px!important;
+  bottom:1px!important;
+}
+</style>
+
 <script id="cioePetLifeController2026">
 (function(){
   const DK='cioe_header_dog_count_v1', CK='cioe_header_cat_count_v1';
@@ -7051,6 +7061,7 @@ document.addEventListener('DOMContentLoaded', function(){
     function add(kind,variant,i,total){
       const el=document.createElement('img');
       el.className='cioe-life-pet';
+      if(kind==='cat' && variant==='luizmelo_cat1') el.dataset.luizCat1='1';
       el.alt=kind==='dog'?`Perro ${i+1}`:`Gato ${i+1}`;
       const spread=kind==='dog' ? 70+i*(Math.max(90,(W-180)/Math.max(1,total))) : W-120-i*(Math.max(85,(W-220)/Math.max(1,total)));
       const x=Math.max(18,Math.min(W-82,spread));
