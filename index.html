@@ -6887,7 +6887,7 @@ document.addEventListener('DOMContentLoaded', function(){
       marron_ojos_ambar:'pets/cat/cat_marron_ojos_ambar_walk_x2.gif',
       naranja_ojos_verdes:'pets/cat/cat_naranja_ojos_verdes_walk_x2.gif',
       negro_ojos_amarillos:'pets/cat/cat_negro_ojos_amarillos_walk_x2.gif',
-      luizmelo_cat1:'pets/cat/luizmelo/Cat-1-Walk.png'
+      luizmelo_cat1:'pets/cat/luizmelo/Cat-1-Walk.gif'
     };
     return map[variant] || map.blanco_negro_ojos_dorados;
   }
@@ -6932,10 +6932,6 @@ document.addEventListener('DOMContentLoaded', function(){
   filter:drop-shadow(0 2px 2px rgba(0,0,0,.55));transform-origin:center bottom!important;
 }
 #headerPixelArtWrap .cioe-life-pet.pet-resting{filter:drop-shadow(0 2px 2px rgba(0,0,0,.55)) brightness(.94)}
-#headerPixelArtWrap .cioe-life-pet.luizmelo-sprite{
-  width:44px!important;height:44px!important;max-width:44px!important;max-height:44px!important;
-  object-fit:none!important;object-position:0 0!important;
-}
 </style>
 
 
@@ -7010,7 +7006,7 @@ document.addEventListener('DOMContentLoaded', function(){
   }
   function catSrc(v,mode){
     if(v==='luizmelo_cat1'){
-      const file=mode==='run'?'Cat-1-Run.png':mode==='idle'?'Cat-1-Idle.png':'Cat-1-Walk.png';
+      const file=mode==='run'?'Cat-1-Run.gif':mode==='idle'?'Cat-1-Idle.gif':'Cat-1-Walk.gif';
       return `pets/cat/luizmelo/${file}`;
     }
     // Los gatos GIF existentes mantienen exactamente sus rutas actuales.
@@ -7023,15 +7019,11 @@ document.addEventListener('DOMContentLoaded', function(){
     p.mode=mode;p.el.dataset.petMode=mode;
     const src=srcFor(p,mode);
     if(!p.el.src.endsWith(src))p.el.src=src;
-    if(p.variant==='luizmelo_cat1'){
-      p.el.classList.add('luizmelo-sprite');
-      p.spriteFrame=0;p.spriteLast=0;
-    }
     p.el.classList.toggle('pet-resting',mode==='idle');
   }
   function face(p){
     // Dog GIF faces right; cat GIF faces left.
-    const flip=p.kind==='dog' ? p.dir<0 : p.dir>0;
+    const flip=(p.kind==='dog' || p.variant==='luizmelo_cat1') ? p.dir<0 : p.dir>0;
     p.el.style.transform=flip?'scaleX(-1)':'scaleX(1)';
   }
   function clear(){
@@ -7066,17 +7058,6 @@ document.addEventListener('DOMContentLoaded', function(){
                mode:'walk',nextRest:performance.now()+3200+i*850,nextRun:performance.now()+6500+i*1100,
                restUntil:0,runUntil:0};
       el.style.left=x+'px';el.src=srcFor(p,'walk');
-      if(kind==='cat' && variant==='luizmelo_cat1'){
-        el.classList.add('luizmelo-sprite');
-        p.spriteFrame=0;p.spriteFrames=1;p.spriteLast=0;
-        el.onload=()=>{
-          const h=el.naturalHeight||32,w=el.naturalWidth||h;
-          p.spriteFrames=Math.max(1,Math.round(w/h));
-          el.style.width='44px';el.style.height='44px';
-          el.style.objectFit='none';
-          el.style.objectPosition='0 0';
-        };
-      }
       el.onerror=()=>{el.style.display='none'};
       wrap.appendChild(el);pets.push(p);face(p);
     }
@@ -7140,12 +7121,6 @@ document.addEventListener('DOMContentLoaded', function(){
             if(p.x>=max){p.x=max;p.dir=-1}
             if(p.x<=18){p.x=18;p.dir=1}
           }
-        }
-        if(p.variant==='luizmelo_cat1' && p.spriteFrames>1 && now-(p.spriteLast||0)>=120){
-          p.spriteFrame=((p.spriteFrame||0)+1)%p.spriteFrames;
-          const framePx=44;
-          p.el.style.objectPosition=(-p.spriteFrame*framePx)+'px 0px';
-          p.spriteLast=now;
         }
         p.el.style.left=p.x+'px';face(p);
       });
