@@ -5034,117 +5034,7 @@ body.cioe-custom-theme #themeCustomizerBtn{background-color:var(--cioe-accent)!i
         'xmlns:x="urn:schemas-microsoft-com:office:excel" ' +
         'xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="UTF-8"></head><body>' +
         tableHtml +
-        '
-<!-- ===== CIOE: LUIZMELO CAT-1 - INTEGRACIÓN AISLADA ===== -->
-<style id="cioeLuizMeloCat1OnlyCSS">
-#cioeLuizCat1{
-  position:absolute;
-  left:52%;
-  bottom:4px;
-  width:32px;
-  height:32px;
-  overflow:hidden;
-  z-index:12;
-  pointer-events:none;
-  image-rendering:pixelated;
-}
-#cioeLuizCat1 > img{
-  position:absolute;
-  left:0;
-  top:0;
-  height:32px;
-  width:auto;
-  max-width:none !important;
-  image-rendering:pixelated;
-}
-</style>
-
-<script id="cioeLuizMeloCat1OnlyJS">
-(function(){
-  'use strict';
-
-  function iniciarLuizCat1(){
-    const wrap=document.getElementById('headerPixelArtWrap');
-    if(!wrap || document.getElementById('cioeLuizCat1')) return;
-
-    const box=document.createElement('div');
-    box.id='cioeLuizCat1';
-    box.setAttribute('aria-hidden','true');
-
-    const img=document.createElement('img');
-    img.alt='';
-    img.src='pets/cat/luizmelo/Cat-1-Walk.png';
-
-    box.appendChild(img);
-    wrap.appendChild(box);
-
-    img.addEventListener('load',function(){
-      const naturalW=img.naturalWidth;
-      const naturalH=img.naturalHeight;
-      if(!naturalW || !naturalH) return;
-
-      // El sprite sheet de LuizMelo es horizontal.
-      const frames=Math.max(1,Math.round(naturalW/naturalH));
-      const frameSize=32;
-
-      box.style.width=frameSize+'px';
-      box.style.height=frameSize+'px';
-      img.style.height=frameSize+'px';
-      img.style.width=(frames*frameSize)+'px';
-
-      let frame=0;
-      let x=Math.max(18,Math.min(wrap.clientWidth-frameSize-18,wrap.clientWidth*0.52));
-      let direction=1;
-      let previousFrame=0;
-      let previousMove=performance.now();
-
-      function animate(now){
-        // Cambio de cuadro del sprite.
-        if(now-previousFrame>=120){
-          frame=(frame+1)%frames;
-          img.style.left=(-frame*frameSize)+'px';
-          previousFrame=now;
-        }
-
-        // Movimiento suave e independiente del resto del sistema.
-        const elapsed=Math.min(40,now-previousMove);
-        previousMove=now;
-        x += direction * 0.035 * elapsed;
-
-        const minX=18;
-        const maxX=Math.max(minX,wrap.clientWidth-frameSize-18);
-        if(x>=maxX){x=maxX;direction=-1;}
-        else if(x<=minX){x=minX;direction=1;}
-
-        box.style.left=x+'px';
-        box.style.transform=direction===1?'scaleX(1)':'scaleX(-1)';
-        requestAnimationFrame(animate);
-      }
-
-      requestAnimationFrame(animate);
-    });
-
-    img.addEventListener('error',function(){
-      // Si el recurso no existe, se elimina solo esta mascota.
-      // No afecta login, panel, usuarios ni demás mascotas.
-      box.remove();
-      console.warn('[CIOE] No se encontró pets/cat/luizmelo/Cat-1-Walk.png');
-    });
-  }
-
-  // Se inicia después de que la página y el sistema existente hayan cargado.
-  if(document.readyState==='complete'){
-    setTimeout(iniciarLuizCat1,1200);
-  }else{
-    window.addEventListener('load',function(){
-      setTimeout(iniciarLuizCat1,1200);
-    },{once:true});
-  }
-})();
-</script>
-<!-- ===== FIN LUIZMELO CAT-1 ===== -->
-
-</body></html>';
+        '</body></html>';
 
       const blob = new Blob(['\ufeff', excelHtml], { type: 'application/vnd.ms-excel;charset=utf-8;' });
       const url = URL.createObjectURL(blob);
@@ -6946,7 +6836,7 @@ document.addEventListener('DOMContentLoaded', function(){
   const DK='cioe_header_dog_count_v1', CK='cioe_header_cat_count_v1';
   const DVK='cioe_header_dog_individual_variants_v1', CVK='cioe_header_cat_individual_variants_v1';
   const DOGS=[['akita','🟠 Akita'],['black','⚫ Negro'],['brown','🟤 Marrón'],['red','🔴 Rojo'],['white','⚪ Blanco']];
-  const CATS=[['blanco_negro_ojos_dorados','⚫⚪ Blanco + negro'],['blanco_ojos_celestes','⚪ Blanco · ojos celestes'],['gris_ojos_azules','🩶 Gris · ojos azules'],['marron_ojos_ambar','🟤 Marrón · ojos ámbar'],['naranja_ojos_verdes','🟠 Naranja · ojos verdes'],['negro_ojos_amarillos','⚫ Negro · ojos amarillos']];
+  const CATS=[['blanco_negro_ojos_dorados','⚫⚪ Blanco + negro'],['blanco_ojos_celestes','⚪ Blanco · ojos celestes'],['gris_ojos_azules','🩶 Gris · ojos azules'],['marron_ojos_ambar','🟤 Marrón · ojos ámbar'],['naranja_ojos_verdes','🟠 Naranja · ojos verdes'],['negro_ojos_amarillos','⚫ Negro · ojos amarillos'],['luizmelo_cat1','🐱 Cat-1 · LuizMelo']];
 
   const clamp=(v,d)=>{v=parseInt(v,10);return Number.isFinite(v)?Math.max(0,Math.min(5,v)):d};
   const arr=(k,n,f)=>{let a=[];try{a=JSON.parse(localStorage.getItem(k)||'[]')}catch(_){}
@@ -6996,7 +6886,8 @@ document.addEventListener('DOMContentLoaded', function(){
       gris_ojos_azules:'pets/cat/cat_gris_ojos_azules_walk_x2.gif',
       marron_ojos_ambar:'pets/cat/cat_marron_ojos_ambar_walk_x2.gif',
       naranja_ojos_verdes:'pets/cat/cat_naranja_ojos_verdes_walk_x2.gif',
-      negro_ojos_amarillos:'pets/cat/cat_negro_ojos_amarillos_walk_x2.gif'
+      negro_ojos_amarillos:'pets/cat/cat_negro_ojos_amarillos_walk_x2.gif',
+      luizmelo_cat1:'pets/cat/luizmelo/Cat-1-Walk.png'
     };
     return map[variant] || map.blanco_negro_ojos_dorados;
   }
@@ -7041,6 +6932,10 @@ document.addEventListener('DOMContentLoaded', function(){
   filter:drop-shadow(0 2px 2px rgba(0,0,0,.55));transform-origin:center bottom!important;
 }
 #headerPixelArtWrap .cioe-life-pet.pet-resting{filter:drop-shadow(0 2px 2px rgba(0,0,0,.55)) brightness(.94)}
+#headerPixelArtWrap .cioe-life-pet.luizmelo-sprite{
+  width:44px!important;height:44px!important;max-width:44px!important;max-height:44px!important;
+  object-fit:none!important;object-position:0 0!important;
+}
 </style>
 
 
@@ -7114,7 +7009,11 @@ document.addEventListener('DOMContentLoaded', function(){
     return `pets/dog/${v}_${suffix}`;
   }
   function catSrc(v,mode){
-    // Los gatos disponibles tienen walk/run. Para descanso se mantiene walk sin desplazamiento.
+    if(v==='luizmelo_cat1'){
+      const file=mode==='run'?'Cat-1-Run.png':mode==='idle'?'Cat-1-Idle.png':'Cat-1-Walk.png';
+      return `pets/cat/luizmelo/${file}`;
+    }
+    // Los gatos GIF existentes mantienen exactamente sus rutas actuales.
     const suffix=mode==='run'?'run_x2.gif':'walk_x2.gif';
     return `pets/cat/cat_${v}_${suffix}`;
   }
@@ -7124,6 +7023,10 @@ document.addEventListener('DOMContentLoaded', function(){
     p.mode=mode;p.el.dataset.petMode=mode;
     const src=srcFor(p,mode);
     if(!p.el.src.endsWith(src))p.el.src=src;
+    if(p.variant==='luizmelo_cat1'){
+      p.el.classList.add('luizmelo-sprite');
+      p.spriteFrame=0;p.spriteLast=0;
+    }
     p.el.classList.toggle('pet-resting',mode==='idle');
   }
   function face(p){
@@ -7163,6 +7066,17 @@ document.addEventListener('DOMContentLoaded', function(){
                mode:'walk',nextRest:performance.now()+3200+i*850,nextRun:performance.now()+6500+i*1100,
                restUntil:0,runUntil:0};
       el.style.left=x+'px';el.src=srcFor(p,'walk');
+      if(kind==='cat' && variant==='luizmelo_cat1'){
+        el.classList.add('luizmelo-sprite');
+        p.spriteFrame=0;p.spriteFrames=1;p.spriteLast=0;
+        el.onload=()=>{
+          const h=el.naturalHeight||32,w=el.naturalWidth||h;
+          p.spriteFrames=Math.max(1,Math.round(w/h));
+          el.style.width='44px';el.style.height='44px';
+          el.style.objectFit='none';
+          el.style.objectPosition='0 0';
+        };
+      }
       el.onerror=()=>{el.style.display='none'};
       wrap.appendChild(el);pets.push(p);face(p);
     }
@@ -7226,6 +7140,12 @@ document.addEventListener('DOMContentLoaded', function(){
             if(p.x>=max){p.x=max;p.dir=-1}
             if(p.x<=18){p.x=18;p.dir=1}
           }
+        }
+        if(p.variant==='luizmelo_cat1' && p.spriteFrames>1 && now-(p.spriteLast||0)>=120){
+          p.spriteFrame=((p.spriteFrame||0)+1)%p.spriteFrames;
+          const framePx=44;
+          p.el.style.objectPosition=(-p.spriteFrame*framePx)+'px 0px';
+          p.spriteLast=now;
         }
         p.el.style.left=p.x+'px';face(p);
       });
