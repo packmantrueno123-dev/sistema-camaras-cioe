@@ -30,6 +30,8 @@ const DEFAULT_PERMISSIONS = {
   reporte_whatsapp: true,
   exportar_csv: true,
   personalizar_colores: true,
+  diseno_colores: true,
+  mascotas_encabezado: true,
   telefono_perifoneo: true,
   editar_perifoneo: true,
   estado_perifoneo: true,
