@@ -6836,7 +6836,7 @@ document.addEventListener('DOMContentLoaded', function(){
   const DK='cioe_header_dog_count_v1', CK='cioe_header_cat_count_v1';
   const DVK='cioe_header_dog_individual_variants_v1', CVK='cioe_header_cat_individual_variants_v1';
   const DOGS=[['akita','🟠 Akita'],['black','⚫ Negro'],['brown','🟤 Marrón'],['red','🔴 Rojo'],['white','⚪ Blanco']];
-  const CATS=[['blanco_negro_ojos_dorados','⚫⚪ Blanco + negro'],['blanco_ojos_celestes','⚪ Blanco · ojos celestes'],['gris_ojos_azules','🩶 Gris · ojos azules'],['marron_ojos_ambar','🟤 Marrón · ojos ámbar'],['naranja_ojos_verdes','🟠 Naranja · ojos verdes'],['negro_ojos_amarillos','⚫ Negro · ojos amarillos'],['luizmelo_cat1','🐱 Cat-1 · LuizMelo'],['luizmelo_cat2','🐈‍⬛ Cat-2 · Michi']];
+  const CATS=[['blanco_negro_ojos_dorados','⚫⚪ Blanco + negro'],['blanco_ojos_celestes','⚪ Blanco · ojos celestes'],['gris_ojos_azules','🩶 Gris · ojos azules'],['marron_ojos_ambar','🟤 Marrón · ojos ámbar'],['naranja_ojos_verdes','🟠 Naranja · ojos verdes'],['negro_ojos_amarillos','⚫ Negro · ojos amarillos'],['luizmelo_cat1','🐱 Cat-1 · LuizMelo'],['luizmelo_cat2','🐈‍⬛ Cat-2 · Michi'],['luizmelo_cat3','🐱 Cat-3 · Micha']];
 
   const clamp=(v,d)=>{v=parseInt(v,10);return Number.isFinite(v)?Math.max(0,Math.min(5,v)):d};
   const arr=(k,n,f)=>{let a=[];try{a=JSON.parse(localStorage.getItem(k)||'[]')}catch(_){}
@@ -6888,7 +6888,8 @@ document.addEventListener('DOMContentLoaded', function(){
       naranja_ojos_verdes:'pets/cat/cat_naranja_ojos_verdes_walk_x2.gif',
       negro_ojos_amarillos:'pets/cat/cat_negro_ojos_amarillos_walk_x2.gif',
       luizmelo_cat1:'pets/cat/luizmelo/Cat-1-Walk.gif',
-      luizmelo_cat2:'pets/cat/michi/Cat-2-Walk.gif'
+      luizmelo_cat2:'pets/cat/michi/Cat-2-Walk.gif',
+      luizmelo_cat3:'pets/cat/micha/Cat-3-Walk.gif'
     };
     return map[variant] || map.blanco_negro_ojos_dorados;
   }
@@ -7027,6 +7028,10 @@ document.addEventListener('DOMContentLoaded', function(){
       const file=mode==='run'?'Cat-2-Run.gif':mode==='idle'?'Cat-2-Idle.gif':'Cat-2-Walk.gif';
       return `pets/cat/michi/${file}`;
     }
+    if(v==='luizmelo_cat3'){
+      const file=mode==='run'?'Cat-3-Run.gif':mode==='idle'?'Cat-3-Idle.gif':'Cat-3-Walk.gif';
+      return `pets/cat/micha/${file}`;
+    }
     // Los gatos GIF existentes mantienen exactamente sus rutas actuales.
     const suffix=mode==='run'?'run_x2.gif':'walk_x2.gif';
     return `pets/cat/cat_${v}_${suffix}`;
@@ -7041,7 +7046,7 @@ document.addEventListener('DOMContentLoaded', function(){
   }
   function face(p){
     // Dog GIF faces right; cat GIF faces left.
-    const flip=(p.kind==='dog' || (p.variant==='luizmelo_cat1' || p.variant==='luizmelo_cat2')) ? p.dir<0 : p.dir>0;
+    const flip=(p.kind==='dog' || (p.variant==='luizmelo_cat1' || p.variant==='luizmelo_cat2' || p.variant==='luizmelo_cat3')) ? p.dir<0 : p.dir>0;
     p.el.style.transform=flip?'scaleX(-1)':'scaleX(1)';
   }
   function clear(){
@@ -7069,7 +7074,7 @@ document.addEventListener('DOMContentLoaded', function(){
     function add(kind,variant,i,total){
       const el=document.createElement('img');
       el.className='cioe-life-pet';
-      if(kind==='cat' && (variant==='luizmelo_cat1' || variant==='luizmelo_cat2')) el.dataset.luizCat1='1';
+      if(kind==='cat' && (variant==='luizmelo_cat1' || variant==='luizmelo_cat2' || variant==='luizmelo_cat3')) el.dataset.luizCat1='1';
       el.alt=kind==='dog'?`Perro ${i+1}`:`Gato ${i+1}`;
       const spread=kind==='dog' ? 70+i*(Math.max(90,(W-180)/Math.max(1,total))) : W-120-i*(Math.max(85,(W-220)/Math.max(1,total)));
       const x=Math.max(18,Math.min(W-82,spread));
