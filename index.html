@@ -9213,7 +9213,10 @@ window.addEventListener('load',function(){
    <section class="flex-1 min-w-0 flex flex-col">
     <div class="h-12 px-4 border-b border-slate-800 flex items-center justify-between bg-slate-950/20">
      <div><div id="cioeChatTitle" class="text-xs font-black text-white">Administrador</div><div id="cioeChatSubtitle" class="text-[9px] text-emerald-400">Chat privado</div></div>
-     <button onclick="loadCioeMessages(false)" class="text-[10px] text-cyan-400"><i class="fa-solid fa-rotate mr-1"></i>Actualizar</button>
+     <div class="flex items-center gap-3">
+      <button id="cioeDeleteChatBtn" onclick="deleteCioeConversation()" class="hidden text-[10px] text-rose-400 hover:text-rose-300"><i class="fa-solid fa-trash mr-1"></i>Eliminar chat</button>
+      <button onclick="loadCioeMessages(false)" class="text-[10px] text-cyan-400"><i class="fa-solid fa-rotate mr-1"></i>Actualizar</button>
+     </div>
     </div>
     <div id="cioeChatMessages" class="flex-1 overflow-y-auto px-4 py-3 bg-[#050914]"></div>
     <div class="p-3 border-t border-slate-800 bg-[#0b1120] flex items-end gap-2">
@@ -9237,18 +9240,35 @@ window.addEventListener('load',function(){
    m.classList.remove('hidden');m.classList.add('flex');
    const side=document.getElementById('cioeChatSidebar');if(side)side.classList.toggle('hidden',!isAdm());
    if(!isAdm())activeChatUser='admin';
+   const del=document.getElementById('cioeDeleteChatBtn');if(del)del.classList.toggle('hidden',!isAdm());
+   if(isAdm()) await loadCioeChatUsers();
    await loadCioeMessages(true);scrollBottom();
  };
  window.closeCioeMessages=function(){const m=document.getElementById('cioeMessagesModal');m?.classList.add('hidden');m?.classList.remove('flex')};
+ let cioeChatUsers=[];
+ window.loadCioeChatUsers=async function(){
+   if(!isAdm())return;
+   try{
+     const r=await apiRequest('/api/users');
+     cioeChatUsers=(r.users||[]).filter(u=>u.active&&u.role!=='admin').map(u=>({username:u.username,online:Number(u.active_sessions||0)>0}));
+     if((!activeChatUser||activeChatUser==='admin')&&cioeChatUsers.length)activeChatUser=cioeChatUsers[0].username;
+     renderUsers();
+     renderConversation(false);
+   }catch(e){console.warn('Usuarios del chat:',e)}
+ };
  function renderUsers(){
    if(!isAdm())return;
-   const users=[...new Set(allMsgs.map(chatPeer).filter(Boolean))];
+   const known=new Map(cioeChatUsers.map(u=>[u.username,u]));
+   allMsgs.map(chatPeer).filter(Boolean).forEach(username=>{if(!known.has(username))known.set(username,{username,online:false})});
+   const users=[...known.values()];
    const holder=document.getElementById('cioeChatUsers');if(!holder)return;
-   if(!users.length){holder.innerHTML='<div class="text-[10px] text-slate-600 px-2 py-4">Aún no hay conversaciones.</div>';return}
-   if(!users.includes(activeChatUser))activeChatUser=users[0];
+   if(!users.length){holder.innerHTML='<div class="text-[10px] text-slate-600 px-2 py-4">No hay usuarios disponibles.</div>';return}
+   if(!users.some(u=>u.username===activeChatUser))activeChatUser=users[0].username;
    holder.innerHTML=users.map(u=>{
-     const unread=allMsgs.filter(m=>chatPeer(m)===u&&!m.sent_by_me&&!m.read_at).length;
-     return `<button onclick="selectCioeChat('${esc(u)}')" class="cioe-chat-user ${u===activeChatUser?'active':''} w-full border border-transparent rounded-xl px-3 py-2 text-left flex items-center justify-between gap-2"><span class="text-xs font-bold text-slate-200"><i class="fa-solid fa-user text-cyan-400 mr-2"></i>${esc(u)}</span>${unread?`<span class="min-w-5 h-5 px-1 inline-flex items-center justify-center rounded-full bg-red-600 text-white text-[9px] font-black">${unread}</span>`:''}</button>`
+     const unread=allMsgs.filter(m=>chatPeer(m)===u.username&&!m.sent_by_me&&!m.read_at).length;
+     const dot=u.online?'bg-emerald-400':'bg-red-500';
+     const state=u.online?'Conectado':'Desconectado';
+     return `<button onclick="selectCioeChat('${esc(u.username)}')" class="cioe-chat-user ${u.username===activeChatUser?'active':''} w-full border border-transparent rounded-xl px-3 py-2 text-left flex items-center justify-between gap-2"><span class="min-w-0"><span class="text-xs font-bold text-slate-200 block truncate"><span class="inline-block w-2 h-2 rounded-full ${dot} mr-2"></span>${esc(u.username)}</span><span class="text-[8px] text-slate-500 ml-4">${state}</span></span>${unread?`<span class="min-w-5 h-5 px-1 inline-flex items-center justify-center rounded-full bg-red-600 text-white text-[9px] font-black">${unread}</span>`:''}</button>`
    }).join('');
  }
  window.selectCioeChat=function(u){activeChatUser=u;renderUsers();renderConversation(true)};
@@ -9271,6 +9291,14 @@ window.addEventListener('load',function(){
    if(!recipient){alert('Selecciona un usuario.');return}
    try{await apiRequest('/api/messages',{method:'POST',body:JSON.stringify({recipient,body})});document.getElementById('cioeMessageText').value='';await loadCioeMessages(false);scrollBottom()}catch(e){alert(e.message||'No se pudo enviar el mensaje.')}
  };
+ window.deleteCioeConversation=async function(){
+   if(!isAdm()||!activeChatUser)return;
+   if(!confirm(`¿Eliminar todo el chat con ${activeChatUser}? Esta acción borrará todos los mensajes de esta conversación.`))return;
+   try{
+     await apiRequest('/api/messages/conversation/'+encodeURIComponent(activeChatUser),{method:'DELETE'});
+     await loadCioeMessages(false);
+   }catch(e){alert(e.message||'No se pudo eliminar el chat.')}
+ };
  window.deleteCioeMessage=async function(id){if(!confirm('¿Eliminar este mensaje?'))return;try{await apiRequest('/api/messages/'+encodeURIComponent(id),{method:'DELETE'});await loadCioeMessages(false)}catch(e){alert(e.message||'No se pudo eliminar.')}}
  window.loadCioeMessages=async function(markRead){
    if(!currentSystemUser)return;
@@ -9281,7 +9309,7 @@ window.addEventListener('load',function(){
      renderUsers();renderConversation(!!markRead);
    }catch(e){if(e.status!==401)console.warn('Chat:',e)}
  };
- function start(){if(messagePoll)clearInterval(messagePoll);setTimeout(()=>loadCioeMessages(false),800);messagePoll=setInterval(()=>loadCioeMessages(false),5000)}
+ function start(){if(messagePoll)clearInterval(messagePoll);setTimeout(()=>{if(isAdm())loadCioeChatUsers();loadCioeMessages(false)},800);messagePoll=setInterval(()=>{if(isAdm())loadCioeChatUsers();loadCioeMessages(false)},5000)}
  document.addEventListener('DOMContentLoaded',start,{once:true});
  window.addEventListener('focus',()=>setTimeout(()=>loadCioeMessages(false),150));
  document.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey&&document.activeElement?.id==='cioeMessageText'){e.preventDefault();sendCioeMessage()}});
