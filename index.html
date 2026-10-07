@@ -1546,6 +1546,12 @@ body.cioe-custom-theme #themeCustomizerBtn{background-color:var(--cioe-accent)!i
       </div>
 
       <div class="flex flex-wrap items-center gap-2.5 w-full lg:w-auto justify-end">
+        <button type="button" id="cioeMessagesBtn" onclick="openCioeMessages()" class="relative flex items-center gap-2 bg-[#030712] border border-slate-800 px-3.5 py-2 rounded-xl text-xs font-bold text-cyan-300 hover:border-cyan-500/50 hover:bg-slate-900/60 transition select-none" title="Mensajería interna">
+          <i class="fa-solid fa-message text-cyan-400"></i>
+          <span class="uppercase tracking-wider">Mensajería</span>
+          <span id="cioeMessagesBadge" class="hidden absolute -top-2 -right-2 min-w-[20px] h-5 px-1 rounded-full bg-rose-500 text-white text-[10px] font-black items-center justify-center border-2 border-[#0a0f1d]">0</span>
+        </button>
+
         <div class="relative">
           <button type="button" id="ocurrenciasBtn" onclick="toggleOcurrenciasMenu(event)" class="flex items-center gap-2 bg-[#030712] border border-slate-800 px-3.5 py-2 rounded-xl text-xs font-bold text-amber-400 hover:border-slate-700 hover:bg-slate-900/60 transition select-none">
             <i class="fa-solid fa-clipboard-list text-amber-500 text-sm pointer-events-none"></i>
@@ -9176,6 +9182,66 @@ window.addEventListener('load',function(){
       window.scrollTo({top:0,behavior:'smooth'});
     }
   };
+})();
+</script>
+
+
+<style id="cioeMessagingStyles">
+#cioeMessagesModal{backdrop-filter:blur(5px)}
+.cioe-msg-card{border:1px solid #1e293b;background:#030712;border-radius:14px;padding:12px}
+.cioe-msg-card.unread{border-color:rgba(34,211,238,.55);box-shadow:inset 3px 0 0 #22d3ee}
+</style>
+<div id="cioeMessagesModal" class="hidden fixed inset-0 z-[10050] bg-black/70 p-4 items-center justify-center">
+  <div class="w-full max-w-2xl max-h-[86vh] bg-[#0a0f1d] border border-slate-700 rounded-2xl shadow-2xl overflow-hidden flex flex-col">
+    <div class="px-5 py-4 border-b border-slate-800 flex items-center justify-between gap-3">
+      <div><h3 class="text-sm font-black text-white"><i class="fa-solid fa-message text-cyan-400 mr-2"></i>MENSAJERÍA INTERNA</h3><p class="text-[10px] text-slate-500 mt-1">Los mensajes se eliminan automáticamente después de 24 horas.</p></div>
+      <button type="button" onclick="closeCioeMessages()" class="w-9 h-9 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div id="cioeMessageComposer" class="hidden p-4 border-b border-slate-800 bg-slate-950/30">
+      <div class="grid grid-cols-1 sm:grid-cols-[180px_1fr_auto] gap-2 items-end">
+        <label class="text-[10px] font-black text-slate-400">DESTINATARIO<select id="cioeMessageRecipient" class="mt-1 w-full bg-[#030712] border border-slate-700 rounded-xl px-3 py-2 text-xs text-white outline-none"></select></label>
+        <label class="text-[10px] font-black text-slate-400">MENSAJE<textarea id="cioeMessageText" maxlength="1000" rows="2" placeholder="Escribe un mensaje..." class="mt-1 w-full resize-none bg-[#030712] border border-slate-700 rounded-xl px-3 py-2 text-xs text-white outline-none focus:border-cyan-500"></textarea></label>
+        <button type="button" onclick="sendCioeMessage()" class="h-9 px-4 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-black text-xs font-black"><i class="fa-solid fa-paper-plane mr-1"></i> Enviar</button>
+      </div>
+    </div>
+    <div class="px-5 py-3 flex items-center justify-between border-b border-slate-800"><span class="text-[11px] font-black text-slate-300">MENSAJES DE LAS ÚLTIMAS 24 HORAS</span><button onclick="loadCioeMessages(true)" class="text-[10px] text-cyan-400 hover:text-cyan-300"><i class="fa-solid fa-rotate mr-1"></i>Actualizar</button></div>
+    <div id="cioeMessagesList" class="p-4 space-y-2 overflow-y-auto min-h-[180px]"><div class="text-center text-xs text-slate-500 py-8">Cargando...</div></div>
+  </div>
+</div>
+<script id="cioeMessagingScript">
+(function(){
+ let messagePoll=null;
+ function limaDate(v){try{return new Intl.DateTimeFormat('es-PE',{timeZone:'America/Lima',dateStyle:'short',timeStyle:'medium'}).format(new Date(v));}catch(_){return String(v||'—')}}
+ function esc(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+ window.openCioeMessages=async function(){
+   const m=document.getElementById('cioeMessagesModal'); if(!m)return;
+   m.classList.remove('hidden');m.classList.add('flex');
+   document.getElementById('cioeMessageComposer')?.classList.toggle('hidden',!(typeof isAdminUser==='function'&&isAdminUser()));
+   if(typeof isAdminUser==='function'&&isAdminUser()) await loadCioeMessageUsers();
+   await loadCioeMessages(true);
+ };
+ window.closeCioeMessages=function(){const m=document.getElementById('cioeMessagesModal');m?.classList.add('hidden');m?.classList.remove('flex')};
+ window.loadCioeMessageUsers=async function(){
+   try{const r=await apiRequest('/api/users');const sel=document.getElementById('cioeMessageRecipient');if(!sel)return;const users=(r.users||[]).filter(u=>u.active&&u.username!=='admin');sel.innerHTML=users.map(u=>`<option value="${esc(u.username)}">${esc(u.username)}</option>`).join('')||'<option value="">Sin usuarios disponibles</option>';}catch(e){console.warn(e)}
+ };
+ window.sendCioeMessage=async function(){
+   const recipient=document.getElementById('cioeMessageRecipient')?.value||'';const body=document.getElementById('cioeMessageText')?.value.trim()||'';
+   if(!recipient||!body){alert('Selecciona un usuario y escribe el mensaje.');return;}
+   try{await apiRequest('/api/messages',{method:'POST',body:JSON.stringify({recipient,body})});document.getElementById('cioeMessageText').value='';await loadCioeMessages(true);}catch(e){alert(e.message||'No se pudo enviar el mensaje.');}
+ };
+ window.deleteCioeMessage=async function(id){if(!confirm('¿Eliminar este mensaje?'))return;try{await apiRequest('/api/messages/'+encodeURIComponent(id),{method:'DELETE'});await loadCioeMessages(true);}catch(e){alert(e.message||'No se pudo eliminar.')}};
+ window.loadCioeMessages=async function(markRead){
+   if(!currentSystemUser)return;
+   try{
+     const r=await apiRequest('/api/messages');const msgs=r.messages||[];const incoming=msgs.filter(x=>!x.sent_by_me);const unread=incoming.filter(x=>!x.read_at);
+     const badge=document.getElementById('cioeMessagesBadge');if(badge){badge.textContent=String(unread.length);badge.classList.toggle('hidden',unread.length===0);badge.classList.toggle('flex',unread.length>0)}
+     const list=document.getElementById('cioeMessagesList');if(list){list.innerHTML=msgs.length?msgs.map(x=>{const sent=!!x.sent_by_me;const unreadCard=!sent&&!x.read_at;return `<div class="cioe-msg-card ${unreadCard?'unread':''}"><div class="flex justify-between gap-3"><div class="min-w-0"><div class="text-[10px] font-black ${sent?'text-violet-400':'text-cyan-400'}">${sent?'PARA: '+esc(x.recipient_username):'DE: '+esc(x.sender_username)} ${unreadCard?'<span class="ml-2 text-rose-400">● NUEVO</span>':''}</div><div class="text-xs text-slate-100 mt-1 whitespace-pre-wrap break-words">${esc(x.body)}</div><div class="text-[9px] text-slate-500 mt-2">${limaDate(x.created_at)} · Se elimina automáticamente a las 24 h</div></div>${typeof isAdminUser==='function'&&isAdminUser()?`<button onclick="deleteCioeMessage('${esc(x.message_id)}')" class="shrink-0 w-8 h-8 rounded-lg bg-rose-500/10 border border-rose-500/30 text-rose-400 hover:bg-rose-500/20" title="Eliminar"><i class="fa-solid fa-trash"></i></button>`:''}</div></div>`}).join(''):'<div class="text-center text-xs text-slate-500 py-8">No hay mensajes de las últimas 24 horas.</div>'}
+     if(markRead&&unread.length){await Promise.allSettled(unread.map(x=>apiRequest('/api/messages/'+encodeURIComponent(x.message_id)+'/read',{method:'PATCH'})));setTimeout(()=>loadCioeMessages(false),150)}
+   }catch(e){if(e.status!==401)console.warn('Mensajería:',e)}
+ };
+ function start(){if(messagePoll)clearInterval(messagePoll);setTimeout(()=>loadCioeMessages(false),800);messagePoll=setInterval(()=>loadCioeMessages(false),10000)}
+ document.addEventListener('DOMContentLoaded',start,{once:true});
+ window.addEventListener('storage',()=>setTimeout(()=>loadCioeMessages(false),250));
 })();
 </script>
 
