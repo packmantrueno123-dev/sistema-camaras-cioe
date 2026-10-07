@@ -1240,18 +1240,28 @@ app.get("/api/messages", auth, async (req,res)=>{
   }catch(err){console.error(err);res.status(500).json({ok:false,error:"No se pudieron cargar los mensajes"});}
 });
 
-// Solo el administrador puede enviar mensajes a usuarios del sistema.
-app.post("/api/messages", auth, adminOnly, async (req,res)=>{
+// Chat privado: el administrador puede escribir a usuarios; un usuario normal solo puede responder al administrador.
+app.post("/api/messages", auth, async (req,res)=>{
   try{
     await cleanupExpiredMessages();
     const recipient=String(req.body?.recipient||"").trim();
     const body=String(req.body?.body||"").trim();
     if(!recipient || !body || body.length>1000) return res.status(400).json({ok:false,error:"Destinatario o mensaje inválido"});
-    const u=await pool.query(`SELECT id,username,active FROM users WHERE username=$1`,[recipient]);
+
+    const u=await pool.query(`SELECT id,username,role,active FROM users WHERE username=$1`,[recipient]);
     if(!u.rowCount || !u.rows[0].active) return res.status(404).json({ok:false,error:"Usuario no encontrado o inactivo"});
+
+    const target=u.rows[0];
+    if(req.user?.role==="admin"){
+      if(target.role==="admin") return res.status(400).json({ok:false,error:"Selecciona un usuario del sistema"});
+    }else{
+      if(target.role!=="admin") return res.status(403).json({ok:false,error:"Los usuarios solo pueden chatear con el administrador"});
+    }
+
     const q=await pool.query(
-      `INSERT INTO internal_messages(message_id,sender_id,recipient_id,body,created_at) VALUES($1,$2,$3,$4,NOW()) RETURNING message_id,created_at`,
-      [randomUUID(),req.user.id,u.rows[0].id,body]
+      `INSERT INTO internal_messages(message_id,sender_id,recipient_id,body,created_at)
+       VALUES($1,$2,$3,$4,NOW()) RETURNING message_id,created_at`,
+      [randomUUID(),req.user.id,target.id,body]
     );
     res.json({ok:true,message:q.rows[0]});
   }catch(err){console.error(err);res.status(500).json({ok:false,error:"No se pudo enviar el mensaje"});}
