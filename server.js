@@ -1228,11 +1228,12 @@ app.get("/api/messages", auth, async (req,res)=>{
            WHERE m.sender_id=$1 OR m.recipient_id=$1
            ORDER BY m.created_at DESC`
         : `SELECT m.message_id,m.body,m.created_at,m.read_at,
-                  su.username sender_username,ru.username recipient_username,FALSE AS sent_by_me
+                  su.username sender_username,ru.username recipient_username,
+                  (m.sender_id=$1) AS sent_by_me
            FROM internal_messages m
            JOIN users su ON su.id=m.sender_id
            JOIN users ru ON ru.id=m.recipient_id
-           WHERE m.recipient_id=$1
+           WHERE m.sender_id=$1 OR m.recipient_id=$1
            ORDER BY m.created_at DESC`,
       [req.user.id]
     );
