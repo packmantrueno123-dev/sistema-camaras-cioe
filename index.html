@@ -1572,6 +1572,10 @@ body.cioe-custom-theme #themeCustomizerBtn{background-color:var(--cioe-accent)!i
               <i class="fa-solid fa-users-viewfinder text-emerald-400"></i>
               <span>Cámaras vecinales / Barrio Seguro</span>
             </button>
+            <button type="button" onclick="showSchoolCamerasView(event)" class="w-full text-left px-3.5 py-2.5 rounded-xl hover:bg-amber-500 hover:text-black font-bold text-slate-200 transition flex items-center gap-2">
+              <i class="fa-solid fa-school text-yellow-300"></i>
+              <span>Cámaras de Colegios</span>
+            </button>
             <button type="button" onclick="showCamarasFijasView(event)" class="w-full text-left px-3.5 py-2.5 rounded-xl hover:bg-amber-500 hover:text-black font-bold text-slate-200 transition flex items-center gap-2">
               <i class="fa-solid fa-video text-blue-400"></i>
               <span>Listado de cámaras fijas</span>
@@ -2186,7 +2190,7 @@ body.cioe-custom-theme #themeCustomizerBtn{background-color:var(--cioe-accent)!i
       </div>
     </section>
 
-    <section class="grid grid-cols-2 lg:grid-cols-5 gap-3">
+    <section class="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-3">
       <div class="bg-[#0a0f1d] border border-cyan-500/30 rounded-2xl p-4 shadow-xl">
         <span class="text-[10px] text-cyan-400 font-black uppercase">Total general</span>
         <div id="statsGrandTotal" class="text-3xl font-black text-white mt-1">0</div>
@@ -2211,6 +2215,11 @@ body.cioe-custom-theme #themeCustomizerBtn{background-color:var(--cioe-accent)!i
         <span class="text-[10px] text-orange-400 font-black uppercase">Tótems M.D.L.O.</span>
         <div id="statsTotemsTotal" class="text-2xl font-black text-white mt-1">0</div>
         <div id="statsTotemsPct" class="text-[10px] text-orange-400 font-bold mt-1">0%</div>
+      </div>
+      <div class="bg-[#0a0f1d] border border-slate-800 rounded-2xl p-4">
+        <span class="text-[10px] text-yellow-300 font-black uppercase">Cámaras de Colegios</span>
+        <div id="statsSchoolsTotal" class="text-2xl font-black text-white mt-1">0</div>
+        <div id="statsSchoolsPct" class="text-[10px] text-yellow-300 font-bold mt-1">0%</div>
       </div>
     </section>
 
@@ -6340,6 +6349,7 @@ body.cioe-custom-theme #themeCustomizerBtn{background-color:var(--cioe-accent)!i
         const savedVecinales = JSON.parse(localStorage.getItem("cioe_vecinales_v300") || "null");
         if (Array.isArray(savedVecinales)) vecinalCameras = savedVecinales;
       } catch (_) {}
+      try { if (typeof window.reloadSchoolCamerasFromStorage === "function") window.reloadSchoolCamerasFromStorage(); } catch (_) {}
 
       try {
         const savedReports = JSON.parse(localStorage.getItem("cioe_report_timestamps_v1") || "null");
@@ -6383,6 +6393,13 @@ body.cioe-custom-theme #themeCustomizerBtn{background-color:var(--cioe-accent)!i
       try {
         const v = document.getElementById("totemsView");
         if (v && !v.classList.contains("hidden")) renderTotems();
+      } catch (_) {}
+
+      try {
+        const v = document.getElementById("schoolCamerasView");
+        if (v && !v.classList.contains("hidden") && typeof window.renderSchoolCameras === "function") {
+          window.renderSchoolCameras();
+        }
       } catch (_) {}
 
       try {
@@ -7140,7 +7157,7 @@ body.cioe-custom-theme #themeCustomizerBtn{background-color:var(--cioe-accent)!i
     }
     function saveTotems(){ localStorage.setItem('cioe_totems_v36', JSON.stringify(totems)); updateTotalGeneral(); }
     function updateTotalGeneral(){ const el=document.getElementById('stat-total-general'); if(el) el.textContent='532'; }
-    function hideAllViewsV36(){ ['mainDashboardView','searchReportView','camarasFijasView','vecinalesView','estacionesParesView','creacionTurnoView','totemsView','cameraStatisticsView'].forEach(id=>{const x=document.getElementById(id); if(x){x.classList.add('hidden');x.classList.remove('flex')}}); }
+    function hideAllViewsV36(){ ['mainDashboardView','searchReportView','camarasFijasView','vecinalesView','estacionesParesView','creacionTurnoView','totemsView','schoolCamerasView','cameraStatisticsView'].forEach(id=>{const x=document.getElementById(id); if(x){x.classList.add('hidden');x.classList.remove('flex')}}); }
     function showTotemsView(e){ if(e)e.stopPropagation(); const m=document.getElementById('ocurrenciasMenu'); if(m)m.classList.add('hidden'); hideAllViewsV36(); const v=document.getElementById('totemsView'); v.classList.remove('hidden');v.classList.add('flex'); renderTotems(); }
     function escTot(v){ return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
     function renderTotems(){
@@ -7262,7 +7279,7 @@ body.cioe-custom-theme #themeCustomizerBtn{background-color:var(--cioe-accent)!i
 // ===== APERTURA ROBUSTA DEL MODULO TURNOS =====
 (function(){
   function ocultarVistasTurnos(){
-    ['mainDashboardView','searchReportView','camarasFijasView','vecinalesView','estacionesParesView','totemsView','creacionTurnoView','cameraStatisticsView'].forEach(function(id){
+    ['mainDashboardView','searchReportView','camarasFijasView','vecinalesView','estacionesParesView','totemsView','creacionTurnoView','schoolCamerasView','cameraStatisticsView'].forEach(function(id){
       var el=document.getElementById(id);
       if(el){ el.classList.add('hidden'); el.classList.remove('flex'); }
     });
@@ -8537,7 +8554,7 @@ document.addEventListener('DOMContentLoaded', function(){
 
     [
       'mainDashboardView','searchReportView','camarasFijasView','vecinalesView',
-      'estacionesParesView','creacionTurnoView','totemsView','cameraStatisticsView'
+      'estacionesParesView','creacionTurnoView','totemsView','schoolCamerasView','cameraStatisticsView'
     ].forEach(id => {
       const el = document.getElementById(id);
       if(el){ el.classList.add('hidden'); el.classList.remove('flex'); }
@@ -8552,7 +8569,7 @@ document.addEventListener('DOMContentLoaded', function(){
     }
   }
 
-  const VIEW_IDS=['mainDashboardView','searchReportView','camarasFijasView','vecinalesView','estacionesParesView','creacionTurnoView','totemsView','cameraStatisticsView'];
+  const VIEW_IDS=['mainDashboardView','searchReportView','camarasFijasView','vecinalesView','estacionesParesView','creacionTurnoView','totemsView','schoolCamerasView','cameraStatisticsView'];
 
   function el(id){ return document.getElementById(id); }
   function hideMenu(){ const m=el('ocurrenciasMenu'); if(m) m.classList.add('hidden'); }
@@ -8966,7 +8983,8 @@ window.addEventListener('load',function(){
     const vecinales=readArrayLength('cioe_vecinales_v300','vec-stat-total');
     const fijas=readFijasTotal();
     const totems=readArrayLength('cioe_totems_v36','totStatTotal');
-    return {centro,vecinales,fijas,totems,total:centro+vecinales+fijas+totems};
+    const colegios=readArrayLength('cioe_colegios_v1','school-stat-total');
+    return {centro,vecinales,fijas,totems,colegios,total:centro+vecinales+fijas+totems+colegios};
   }
 
   window.getCameraStatisticsData=getStats;
@@ -8981,17 +8999,20 @@ window.addEventListener('load',function(){
     set('statsVecinalTotal',d.vecinales);
     set('statsFijasTotal',d.fijas);
     set('statsTotemsTotal',d.totems);
+    set('statsSchoolsTotal',d.colegios);
     set('statsCentroPct',pct(d.centro).toFixed(1)+'%');
     set('statsVecinalPct',pct(d.vecinales).toFixed(1)+'%');
     set('statsFijasPct',pct(d.fijas).toFixed(1)+'%');
     set('statsTotemsPct',pct(d.totems).toFixed(1)+'%');
+    set('statsSchoolsPct',pct(d.colegios).toFixed(1)+'%');
     set('statsDonutTotal',d.total);
 
     const items=[
       {label:'Centro de Control',value:d.centro,p:pct(d.centro),color:'#f59e0b'},
       {label:'Cámaras vecinales',value:d.vecinales,p:pct(d.vecinales),color:'#10b981'},
       {label:'Cámaras fijas DSS',value:d.fijas,p:pct(d.fijas),color:'#3b82f6'},
-      {label:'Tótems M.D.L.O.',value:d.totems,p:pct(d.totems),color:'#f97316'}
+      {label:'Tótems M.D.L.O.',value:d.totems,p:pct(d.totems),color:'#f97316'},
+      {label:'Cámaras de Colegios',value:d.colegios,p:pct(d.colegios),color:'#facc15'}
     ];
 
     const bars=document.getElementById('statsBars');
@@ -9032,6 +9053,7 @@ window.addEventListener('load',function(){
     try{ if(typeof updateVecinalStats==='function') updateVecinalStats(); }catch(_){}
     try{ if(typeof renderCamarasFijasTable==='function') renderCamarasFijasTable(); }catch(_){}
     try{ if(typeof renderTotems==='function') renderTotems(); }catch(_){}
+    try{ if(typeof renderSchoolCameras==='function') renderSchoolCameras(); }catch(_){}
 
     const n=id=>{
       const el=document.getElementById(id);
@@ -9043,6 +9065,7 @@ window.addEventListener('load',function(){
     const vec={nombre:'BARRIO SEGURO / CÁMARAS VECINALES',op:n('vec-stat-operativas'),inop:n('vec-stat-inoperativas'),mant:n('vec-stat-mantenimiento'),total:n('vec-stat-total')};
     const fijas={nombre:'CÁMARAS FIJAS DSS',op:n('fijas-stat-operativas'),inop:n('fijas-stat-inoperativas'),mant:n('fijas-stat-mantenimiento'),total:n('fijas-stat-total')};
     const tot={nombre:'TÓTEMS M.D.L.O.',op:n('totStatOp'),inop:n('totStatInop'),mant:n('totStatMant'),total:n('totStatTotal')};
+    const colegios={nombre:'CÁMARAS DE COLEGIOS',op:n('school-stat-operativas'),inop:n('school-stat-inoperativas'),mant:n('school-stat-mantenimiento'),total:n('school-stat-total')};
 
     try{
       if(typeof getTotalCamarasFijasGeneral==='function'){
@@ -9051,7 +9074,7 @@ window.addEventListener('load',function(){
       }
     }catch(_){}
 
-    const rows=[centro,vec,fijas,tot];
+    const rows=[centro,vec,fijas,tot,colegios];
     return {
       rows,
       totalOp:rows.reduce((a,x)=>a+x.op,0),
@@ -9121,7 +9144,7 @@ window.addEventListener('load',function(){
 
     const exp=document.getElementById('statsOperationalExplanation');
     if(exp){
-      exp.textContent=`El sistema registra ${s.totalGeneral} cámaras. Actualmente ${s.totalOp} están operativas, ${s.totalInop} inoperativas y ${s.totalMant} en mantenimiento. La operatividad general es de ${totalPct.toFixed(1)}%. Estos valores se calculan con los datos actuales del Centro de Control, Cámaras Vecinales, Cámaras Fijas DSS y Tótems M.D.L.O.; al agregar, eliminar o cambiar el estado de una cámara, el resumen se actualizará con la información vigente.`;
+      exp.textContent=`El sistema registra ${s.totalGeneral} cámaras. Actualmente ${s.totalOp} están operativas, ${s.totalInop} inoperativas y ${s.totalMant} en mantenimiento. La operatividad general es de ${totalPct.toFixed(1)}%. Estos valores se calculan con los datos actuales del Centro de Control, Cámaras Vecinales, Cámaras Fijas DSS, Tótems M.D.L.O. y Cámaras de Colegios; al agregar, eliminar o cambiar el estado de una cámara, el resumen se actualizará con la información vigente.`;
     }
   };
 
@@ -9136,7 +9159,8 @@ window.addEventListener('load',function(){
       ['Centro de Control',d.centro,pct(d.centro)],
       ['Cámaras vecinales / Barrio Seguro',d.vecinales,pct(d.vecinales)],
       ['Cámaras fijas DSS',d.fijas,pct(d.fijas)],
-      ['Tótems M.D.L.O.',d.totems,pct(d.totems)]
+      ['Tótems M.D.L.O.',d.totems,pct(d.totems)],
+      ['Cámaras de Colegios',d.colegios,pct(d.colegios)]
     ];
 
     const now=new Date();
@@ -9232,11 +9256,12 @@ window.addEventListener('load',function(){
             ['Cámaras vecinales / Barrio Seguro',d.vecinales,pct(d.vecinales)],
             ['Cámaras fijas DSS',d.fijas,pct(d.fijas)],
             ['Tótems M.D.L.O.',d.totems,pct(d.totems)],
+            ['Cámaras de Colegios',d.colegios,pct(d.colegios)],
             ['TOTAL GENERAL',d.total,'100%']
           ],
           theme:'grid',styles:{fontSize:8,cellPadding:2.5},
           headStyles:{fillColor:[17,24,39],textColor:[255,255,255]},
-          didParseCell:data=>{if(data.section==='body'&&data.row.index===4){data.cell.styles.fontStyle='bold';data.cell.styles.fillColor=[209,250,229];}}
+          didParseCell:data=>{if(data.section==='body'&&data.row.index===5){data.cell.styles.fontStyle='bold';data.cell.styles.fillColor=[209,250,229];}}
         });
 
         let y=doc.lastAutoTable.finalY+8;
@@ -9323,6 +9348,13 @@ window.addEventListener('load',function(){
       mant:n('totStatMant'),
       total:n('totStatTotal')
     };
+    const colegios={
+      nombre:'CÁMARAS DE COLEGIOS',
+      op:n('school-stat-operativas'),
+      inop:n('school-stat-inoperativas'),
+      mant:n('school-stat-mantenimiento'),
+      total:n('school-stat-total')
+    };
 
     // Si DSS todavía no había pintado el contador, usa el cálculo real ya corregido.
     if(!fijas.total){
@@ -9331,7 +9363,7 @@ window.addEventListener('load',function(){
       }catch(_){}
     }
 
-    const rows=[centro,vec,fijas,tot];
+    const rows=[centro,vec,fijas,tot,colegios];
     const totalOp=rows.reduce((a,x)=>a+x.op,0);
     const totalInop=rows.reduce((a,x)=>a+x.inop,0);
     const totalMant=rows.reduce((a,x)=>a+x.mant,0);
@@ -9445,7 +9477,7 @@ window.addEventListener('load',function(){
     if(menu)menu.classList.add('hidden');
 
     ['mainDashboardView','searchReportView','camarasFijasView','vecinalesView',
-     'estacionesParesView','creacionTurnoView','totemsView','cameraStatisticsView']
+     'estacionesParesView','creacionTurnoView','totemsView','schoolCamerasView','cameraStatisticsView']
       .forEach(id=>{
         const el=document.getElementById(id);
         if(el){el.classList.add('hidden');el.classList.remove('flex');}
@@ -9459,6 +9491,186 @@ window.addEventListener('load',function(){
       window.scrollTo({top:0,behavior:'smooth'});
     }
   };
+})();
+</script>
+
+
+
+<!-- ==================== CÁMARAS DE COLEGIOS ==================== -->
+<style id="cioeSchoolCamerasStyles">
+#schoolCamerasView .school-table th{background:#030712;color:#f8fafc;font-weight:900;white-space:nowrap}
+#schoolCamerasView .school-table td,#schoolCamerasView .school-table th{border-bottom:1px solid #1e293b;padding:11px 12px;vertical-align:middle}
+#schoolCamerasView .school-table tbody tr:hover{background:#111827}
+#schoolCamerasView .school-status{border-radius:9px;padding:7px 9px;font-size:10px;font-weight:900;outline:none;border:1px solid rgba(255,255,255,.12)}
+#schoolCamerasView .school-status.OPERATIVA{background:#fbbf24;color:#111827}
+#schoolCamerasView .school-status.INOPERATIVA{background:#ef4444;color:#fff}
+#schoolCamerasView .school-status.MANTENIMIENTO{background:#3b82f6;color:#fff}
+</style>
+
+<div id="schoolCamerasView" class="hidden space-y-4 flex-col flex-1">
+  <header class="bg-[#0a0f1d] border border-yellow-400/20 rounded-2xl p-4 shadow-xl flex flex-col xl:flex-row justify-between items-center gap-4 w-full">
+    <div class="flex items-center gap-3">
+      <div class="w-12 h-12 rounded-xl bg-yellow-400 text-black flex items-center justify-center shadow-lg shadow-yellow-400/10">
+        <i class="fa-solid fa-school text-xl"></i>
+      </div>
+      <div>
+        <h1 class="text-xl font-black text-white tracking-wide uppercase">CÁMARAS DE COLEGIOS</h1>
+        <p class="text-xs text-slate-400">Monitoreo y control de cámaras instaladas en instituciones educativas</p>
+      </div>
+    </div>
+    <div class="flex flex-wrap items-center justify-end gap-2">
+      <button type="button" onclick="openSchoolCameraModal()" class="bg-yellow-400 hover:bg-yellow-300 text-black px-4 py-2 rounded-xl text-xs font-black flex items-center gap-2">
+        <i class="fa-solid fa-plus"></i> Añadir Cámara
+      </button>
+      <button type="button" onclick="showMainDashboardView()" class="bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2">
+        <i class="fa-solid fa-arrow-left text-yellow-300"></i> Volver al Centro de Control
+      </button>
+    </div>
+  </header>
+
+  <section class="grid grid-cols-2 lg:grid-cols-5 gap-3">
+    <div class="bg-[#0a0f1d] p-4 rounded-2xl border border-slate-800"><span class="text-[10px] text-slate-400 font-black uppercase">Total Colegios</span><div id="school-stat-total" class="text-2xl font-black text-white mt-1">0</div></div>
+    <div class="bg-[#0a0f1d] p-4 rounded-2xl border border-amber-500/20"><span class="text-[10px] text-amber-400 font-black uppercase">Operativas</span><div id="school-stat-operativas" class="text-2xl font-black text-amber-400 mt-1">0</div></div>
+    <div class="bg-[#0a0f1d] p-4 rounded-2xl border border-rose-500/20"><span class="text-[10px] text-rose-400 font-black uppercase">Inoperativas</span><div id="school-stat-inoperativas" class="text-2xl font-black text-rose-400 mt-1">0</div></div>
+    <div class="bg-[#0a0f1d] p-4 rounded-2xl border border-blue-500/20"><span class="text-[10px] text-blue-400 font-black uppercase">Mantenimiento</span><div id="school-stat-mantenimiento" class="text-2xl font-black text-blue-400 mt-1">0</div></div>
+    <div class="bg-[#0a0f1d] p-4 rounded-2xl border border-cyan-500/20"><span class="text-[10px] text-cyan-400 font-black uppercase">% Operatividad</span><div id="school-stat-pct" class="text-2xl font-black text-cyan-400 mt-1">0%</div></div>
+  </section>
+
+  <section class="bg-[#0a0f1d] border border-slate-800 rounded-2xl p-3 shadow-xl flex flex-col lg:flex-row gap-3 items-center">
+    <div class="relative flex-1 w-full">
+      <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500"></i>
+      <input id="schoolSearchInput" oninput="renderSchoolCameras()" type="text" placeholder="Buscar colegio, cámara, ubicación, zona o estación..." class="w-full bg-[#030712] border border-slate-800 rounded-xl pl-10 pr-4 py-2.5 text-xs text-white focus:outline-none focus:border-yellow-400">
+    </div>
+    <select id="schoolStatusFilter" onchange="renderSchoolCameras()" class="w-full lg:w-52 bg-[#030712] border border-slate-800 rounded-xl px-3 py-2.5 text-xs font-bold text-yellow-300">
+      <option value="ALL">TODOS LOS ESTADOS</option><option value="OPERATIVA">OPERATIVAS</option><option value="INOPERATIVA">INOPERATIVAS</option><option value="MANTENIMIENTO">MANTENIMIENTO</option>
+    </select>
+    <div class="bg-[#030712] border border-slate-800 rounded-xl px-4 py-2.5 text-xs"><span class="text-slate-400 font-bold">Registros: </span><span id="schoolVisibleCount" class="text-yellow-300 font-black">0</span></div>
+  </section>
+
+  <section class="bg-[#0a0f1d] border border-slate-800 rounded-2xl shadow-xl overflow-hidden">
+    <div class="overflow-x-auto">
+      <table class="school-table w-full min-w-[1250px] text-[11px]">
+        <thead><tr>
+          <th>COLEGIO / INSTITUCIÓN</th><th>N° CÁMARA / DETALLE</th><th>SISTEMA</th><th>ESTADO</th><th>UBICACIÓN</th><th>URBANIZACIÓN</th><th>ZONA / SECTOR</th><th>ESTACIÓN</th><th>REPORTE</th><th>ACCIONES</th>
+        </tr></thead>
+        <tbody id="schoolCamerasTableBody"></tbody>
+      </table>
+    </div>
+  </section>
+</div>
+
+<div id="schoolCameraModal" class="fixed inset-0 z-[10020] hidden items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+  <div class="w-full max-w-3xl bg-[#0a0f1d] border border-yellow-400/25 rounded-2xl shadow-2xl overflow-hidden">
+    <div class="px-5 py-4 border-b border-slate-800 flex items-center justify-between">
+      <div><h3 id="schoolModalTitle" class="text-base font-black text-white"><i class="fa-solid fa-school text-yellow-300 mr-2"></i>Añadir Cámara de Colegio</h3><p class="text-[10px] text-slate-500 mt-1">Registra o edita la información de la cámara.</p></div>
+      <button type="button" onclick="closeSchoolCameraModal()" class="w-9 h-9 rounded-xl bg-slate-800 text-slate-300 hover:bg-slate-700"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <form onsubmit="saveSchoolCamera(event)" class="p-5 grid grid-cols-1 md:grid-cols-2 gap-3">
+      <input type="hidden" id="schoolEditIndex">
+      <div><label class="text-[10px] text-slate-400 font-bold">Colegio / Institución</label><input id="schoolName" required class="mt-1 w-full bg-[#030712] border border-slate-800 rounded-xl p-2.5 text-xs text-white" placeholder="Ej: I.E. N° 0001"></div>
+      <div><label class="text-[10px] text-slate-400 font-bold">N° Cámara / Detalle</label><input id="schoolCameraName" required class="mt-1 w-full bg-[#030712] border border-slate-800 rounded-xl p-2.5 text-xs text-white" placeholder="Ej: CÁMARA 01"></div>
+      <div><label class="text-[10px] text-slate-400 font-bold">Sistema</label><input id="schoolSystem" class="mt-1 w-full bg-[#030712] border border-slate-800 rounded-xl p-2.5 text-xs text-white" placeholder="Ej: DSS / HIK / IVS"></div>
+      <div><label class="text-[10px] text-slate-400 font-bold">Estado</label><select id="schoolStatus" class="mt-1 w-full bg-[#030712] border border-slate-800 rounded-xl p-2.5 text-xs text-white"><option>OPERATIVA</option><option>INOPERATIVA</option><option>MANTENIMIENTO</option></select></div>
+      <div class="md:col-span-2"><label class="text-[10px] text-slate-400 font-bold">Ubicación</label><input id="schoolLocation" class="mt-1 w-full bg-[#030712] border border-slate-800 rounded-xl p-2.5 text-xs text-white" placeholder="Dirección / referencia"></div>
+      <div><label class="text-[10px] text-slate-400 font-bold">Urbanización</label><input id="schoolUrbanization" class="mt-1 w-full bg-[#030712] border border-slate-800 rounded-xl p-2.5 text-xs text-white"></div>
+      <div><label class="text-[10px] text-slate-400 font-bold">Zona / Sector</label><input id="schoolZone" class="mt-1 w-full bg-[#030712] border border-slate-800 rounded-xl p-2.5 text-xs text-white"></div>
+      <div><label class="text-[10px] text-slate-400 font-bold">Estación</label><input id="schoolStation" class="mt-1 w-full bg-[#030712] border border-slate-800 rounded-xl p-2.5 text-xs text-white" placeholder="Ej: ESTACIÓN 5"></div>
+      <div><label class="text-[10px] text-slate-400 font-bold">Reporte / Detalle</label><input id="schoolReport" class="mt-1 w-full bg-[#030712] border border-slate-800 rounded-xl p-2.5 text-xs text-white" placeholder="Observación actual"></div>
+      <div class="md:col-span-2 flex justify-end gap-2 pt-2">
+        <button type="button" onclick="closeSchoolCameraModal()" class="px-4 py-2 rounded-xl bg-slate-800 text-slate-300 text-xs font-bold">Cancelar</button>
+        <button type="submit" class="px-5 py-2 rounded-xl bg-yellow-400 hover:bg-yellow-300 text-black text-xs font-black"><i class="fa-solid fa-floppy-disk mr-1"></i> Guardar Cámara</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script id="cioeSchoolCamerasModule">
+(function(){
+  const KEY='cioe_colegios_v1';
+  window.schoolCameras=[];
+
+  function esc(v){return String(v??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;')}
+  function normalizeStatus(v){v=String(v||'OPERATIVA').toUpperCase();return ['OPERATIVA','INOPERATIVA','MANTENIMIENTO'].includes(v)?v:'OPERATIVA'}
+
+  window.reloadSchoolCamerasFromStorage=function(){
+    try{
+      const x=JSON.parse(localStorage.getItem(KEY)||'[]');
+      window.schoolCameras=Array.isArray(x)?x:[];
+    }catch(_){window.schoolCameras=[]}
+  };
+
+  function persist(){
+    localStorage.setItem(KEY,JSON.stringify(window.schoolCameras));
+    try{ if(typeof window.renderCameraStatistics==='function') window.renderCameraStatistics(); }catch(_){}
+  }
+
+  function stats(){
+    const a=window.schoolCameras||[];
+    const op=a.filter(x=>normalizeStatus(x.estado)==='OPERATIVA').length;
+    const ino=a.filter(x=>normalizeStatus(x.estado)==='INOPERATIVA').length;
+    const man=a.filter(x=>normalizeStatus(x.estado)==='MANTENIMIENTO').length;
+    const set=(id,v)=>{const e=document.getElementById(id);if(e)e.textContent=v};
+    set('school-stat-total',a.length);set('school-stat-operativas',op);set('school-stat-inoperativas',ino);set('school-stat-mantenimiento',man);
+    set('school-stat-pct',a.length?((op*100/a.length).toFixed(1)+'%'):'0.0%');
+  }
+
+  window.renderSchoolCameras=function(){
+    stats();
+    const q=String(document.getElementById('schoolSearchInput')?.value||'').trim().toLowerCase();
+    const st=document.getElementById('schoolStatusFilter')?.value||'ALL';
+    const rows=(window.schoolCameras||[]).map((x,i)=>({...x,_i:i})).filter(x=>{
+      const hay=[x.colegio,x.camara,x.sistema,x.ubicacion,x.urbanizacion,x.zona,x.estacion,x.reporte].join(' ').toLowerCase();
+      return (!q||hay.includes(q))&&(st==='ALL'||normalizeStatus(x.estado)===st);
+    });
+    const c=document.getElementById('schoolVisibleCount');if(c)c.textContent=rows.length;
+    const tb=document.getElementById('schoolCamerasTableBody');if(!tb)return;
+    tb.innerHTML=rows.length?rows.map(x=>`<tr>
+      <td class="font-black text-yellow-200">${esc(x.colegio)}</td>
+      <td class="font-bold text-white">${esc(x.camara)}</td>
+      <td>${esc(x.sistema||'—')}</td>
+      <td><select class="school-status ${normalizeStatus(x.estado)}" onchange="changeSchoolStatus(${x._i},this.value);this.className='school-status '+this.value"><option ${normalizeStatus(x.estado)==='OPERATIVA'?'selected':''}>OPERATIVA</option><option ${normalizeStatus(x.estado)==='INOPERATIVA'?'selected':''}>INOPERATIVA</option><option ${normalizeStatus(x.estado)==='MANTENIMIENTO'?'selected':''}>MANTENIMIENTO</option></select></td>
+      <td>${esc(x.ubicacion||'—')}</td><td>${esc(x.urbanizacion||'—')}</td><td>${esc(x.zona||'—')}</td><td>${esc(x.estacion||'—')}</td>
+      <td class="max-w-[230px]"><span class="text-slate-300">${esc(x.reporte||'SIN REPORTE')}</span></td>
+      <td><div class="flex items-center justify-center gap-2"><button onclick="editSchoolCamera(${x._i})" title="Editar" class="w-8 h-8 rounded-lg bg-blue-500/10 border border-blue-500/20 text-blue-400 hover:bg-blue-500/20"><i class="fa-solid fa-pen"></i></button><button onclick="deleteSchoolCamera(${x._i})" title="Eliminar" class="w-8 h-8 rounded-lg bg-rose-500/10 border border-rose-500/20 text-rose-400 hover:bg-rose-500/20"><i class="fa-solid fa-trash"></i></button></div></td>
+    </tr>`).join(''):'<tr><td colspan="10" class="py-12 text-center text-slate-500">No hay cámaras de colegios registradas todavía.</td></tr>';
+  };
+
+  window.showSchoolCamerasView=function(e){
+    if(e){e.preventDefault();e.stopPropagation()}
+    document.getElementById('ocurrenciasMenu')?.classList.add('hidden');
+    ['mainDashboardView','searchReportView','camarasFijasView','vecinalesView','estacionesParesView','creacionTurnoView','totemsView','cameraStatisticsView','schoolCamerasView'].forEach(id=>{const v=document.getElementById(id);if(v){v.classList.add('hidden');v.classList.remove('flex')}});
+    const v=document.getElementById('schoolCamerasView');if(v){v.classList.remove('hidden');v.classList.add('flex')}
+    window.reloadSchoolCamerasFromStorage();window.renderSchoolCameras();window.scrollTo({top:0,behavior:'smooth'});
+  };
+
+  window.openSchoolCameraModal=function(){
+    document.getElementById('schoolEditIndex').value='';
+    ['schoolName','schoolCameraName','schoolSystem','schoolLocation','schoolUrbanization','schoolZone','schoolStation','schoolReport'].forEach(id=>document.getElementById(id).value='');
+    document.getElementById('schoolStatus').value='OPERATIVA';
+    document.getElementById('schoolModalTitle').innerHTML='<i class="fa-solid fa-school text-yellow-300 mr-2"></i>Añadir Cámara de Colegio';
+    const m=document.getElementById('schoolCameraModal');m.classList.remove('hidden');m.classList.add('flex');
+  };
+  window.closeSchoolCameraModal=function(){const m=document.getElementById('schoolCameraModal');m.classList.add('hidden');m.classList.remove('flex')};
+
+  window.editSchoolCamera=function(i){
+    const x=window.schoolCameras[i];if(!x)return;
+    document.getElementById('schoolEditIndex').value=i;document.getElementById('schoolName').value=x.colegio||'';document.getElementById('schoolCameraName').value=x.camara||'';document.getElementById('schoolSystem').value=x.sistema||'';document.getElementById('schoolStatus').value=normalizeStatus(x.estado);document.getElementById('schoolLocation').value=x.ubicacion||'';document.getElementById('schoolUrbanization').value=x.urbanizacion||'';document.getElementById('schoolZone').value=x.zona||'';document.getElementById('schoolStation').value=x.estacion||'';document.getElementById('schoolReport').value=x.reporte||'';
+    document.getElementById('schoolModalTitle').innerHTML='<i class="fa-solid fa-pen-to-square text-yellow-300 mr-2"></i>Editar Cámara de Colegio';
+    const m=document.getElementById('schoolCameraModal');m.classList.remove('hidden');m.classList.add('flex');
+  };
+
+  window.saveSchoolCamera=function(e){
+    e.preventDefault();
+    const x={colegio:schoolName.value.trim().toUpperCase(),camara:schoolCameraName.value.trim().toUpperCase(),sistema:schoolSystem.value.trim().toUpperCase(),estado:normalizeStatus(schoolStatus.value),ubicacion:schoolLocation.value.trim().toUpperCase(),urbanizacion:schoolUrbanization.value.trim().toUpperCase(),zona:schoolZone.value.trim().toUpperCase(),estacion:schoolStation.value.trim().toUpperCase(),reporte:schoolReport.value.trim(),updatedAt:new Date().toISOString()};
+    const i=schoolEditIndex.value;
+    if(i==='')window.schoolCameras.push(x);else window.schoolCameras[Number(i)]=x;
+    persist();closeSchoolCameraModal();renderSchoolCameras();
+  };
+  window.changeSchoolStatus=function(i,v){if(!window.schoolCameras[i])return;window.schoolCameras[i].estado=normalizeStatus(v);window.schoolCameras[i].updatedAt=new Date().toISOString();persist();renderSchoolCameras()};
+  window.deleteSchoolCamera=function(i){if(!window.schoolCameras[i])return;if(!confirm('¿Eliminar esta cámara de colegio?'))return;window.schoolCameras.splice(i,1);persist();renderSchoolCameras()};
+
+  window.reloadSchoolCamerasFromStorage();
+  document.addEventListener('DOMContentLoaded',()=>{stats()},{once:true});
 })();
 </script>
 
