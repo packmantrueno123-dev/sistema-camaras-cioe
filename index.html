@@ -2170,6 +2170,9 @@ body.cioe-custom-theme #themeCustomizerBtn{background-color:var(--cioe-accent)!i
           <button type="button" onclick="downloadCameraStatisticsWord()" class="bg-blue-500 hover:bg-blue-400 text-white px-4 py-2 rounded-xl text-xs font-black transition flex items-center gap-2">
             <i class="fa-solid fa-file-word"></i> Descargar Word
           </button>
+          <button type="button" onclick="downloadCameraStatisticsPDF()" class="bg-red-500 hover:bg-red-400 text-white px-4 py-2 rounded-xl text-xs font-black transition flex items-center gap-2">
+            <i class="fa-solid fa-file-pdf"></i> Descargar PDF
+          </button>
           <button type="button" onclick="showMainDashboardView()" class="bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2">
             <i class="fa-solid fa-arrow-left text-amber-400"></i> Volver al Centro de Control
           </button>
@@ -8805,52 +8808,196 @@ window.addEventListener('load',function(){
     }
   };
 
+  window.getCameraOperationalSummary=function(){
+    try{ if(typeof updateStats==='function') updateStats(); }catch(_){}
+    try{ if(typeof updateVecinalStats==='function') updateVecinalStats(); }catch(_){}
+    try{ if(typeof renderCamarasFijasTable==='function') renderCamarasFijasTable(); }catch(_){}
+    try{ if(typeof renderTotems==='function') renderTotems(); }catch(_){}
+
+    const n=id=>{
+      const el=document.getElementById(id);
+      const v=Number(String(el?.textContent||'').replace(/[^\d]/g,''));
+      return Number.isFinite(v)?v:0;
+    };
+
+    const centro={nombre:'CÁMARAS MUNICIPALES / CENTRO DE CONTROL',op:n('stat-operativas'),inop:n('stat-inoperativas'),mant:n('stat-mantenimiento'),total:n('stat-total')};
+    const vec={nombre:'BARRIO SEGURO / CÁMARAS VECINALES',op:n('vec-stat-operativas'),inop:n('vec-stat-inoperativas'),mant:n('vec-stat-mantenimiento'),total:n('vec-stat-total')};
+    const fijas={nombre:'CÁMARAS FIJAS DSS',op:n('fijas-stat-operativas'),inop:n('fijas-stat-inoperativas'),mant:n('fijas-stat-mantenimiento'),total:n('fijas-stat-total')};
+    const tot={nombre:'TÓTEMS M.D.L.O.',op:n('totStatOp'),inop:n('totStatInop'),mant:n('totStatMant'),total:n('totStatTotal')};
+
+    try{
+      if(typeof getTotalCamarasFijasGeneral==='function'){
+        const real=Number(getTotalCamarasFijasGeneral());
+        if(Number.isFinite(real)&&real>0) fijas.total=real;
+      }
+    }catch(_){}
+
+    const rows=[centro,vec,fijas,tot];
+    return {
+      rows,
+      totalOp:rows.reduce((a,x)=>a+x.op,0),
+      totalInop:rows.reduce((a,x)=>a+x.inop,0),
+      totalMant:rows.reduce((a,x)=>a+x.mant,0),
+      totalGeneral:rows.reduce((a,x)=>a+x.total,0)
+    };
+  };
+
   window.downloadCameraStatisticsExcel=function(){
     const d=getStats();
+    const s=window.getCameraOperationalSummary();
     const pct=n=>d.total ? (n*100/d.total).toFixed(1)+'%' : '0.0%';
-    const rows=[
+    const operPct=r=>r.total ? ((r.op/r.total)*100).toFixed(1)+'%' : '0.0%';
+    const esc=v=>String(v??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+
+    const modulos=[
       ['Centro de Control',d.centro,pct(d.centro)],
       ['Cámaras vecinales / Barrio Seguro',d.vecinales,pct(d.vecinales)],
       ['Cámaras fijas DSS',d.fijas,pct(d.fijas)],
-      ['Tótems M.D.L.O.',d.totems,pct(d.totems)],
-      ['TOTAL GENERAL',d.total,'100%']
+      ['Tótems M.D.L.O.',d.totems,pct(d.totems)]
     ];
 
-    const esc=v=>String(v??'')
-      .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
-      .replace(/"/g,'&quot;');
-
-    const table=`
-      <table border="1">
-        <thead>
-          <tr>
-            <th style="background:#111827;color:#fff;font-weight:bold">MÓDULO</th>
-            <th style="background:#111827;color:#fff;font-weight:bold">TOTAL CÁMARAS</th>
-            <th style="background:#111827;color:#fff;font-weight:bold">PORCENTAJE DEL TOTAL</th>
-          </tr>
-        </thead>
-        <tbody>
-          ${rows.map((r,i)=>`<tr>${r.map(v=>`<td${i===rows.length-1?' style="font-weight:bold;background:#d1fae5"':''}>${esc(v)}</td>`).join('')}</tr>`).join('')}
-        </tbody>
-      </table>`;
+    const now=new Date();
+    const mes=new Intl.DateTimeFormat('es-PE',{timeZone:'America/Lima',month:'long',year:'numeric'}).format(now).toUpperCase();
 
     const html=`<html xmlns:o="urn:schemas-microsoft-com:office:office"
       xmlns:x="urn:schemas-microsoft-com:office:excel"
       xmlns="http://www.w3.org/TR/REC-html40">
-      <head><meta charset="UTF-8"></head><body>
-      <h2>ESTADÍSTICA GENERAL DE CÁMARAS</h2>${table}</body></html>`;
+    <head><meta charset="UTF-8">
+    <style>
+      body{font-family:Arial,sans-serif;font-size:11pt}
+      table{border-collapse:collapse;margin-bottom:18px}
+      th,td{border:1px solid #333;padding:7px 9px;vertical-align:middle}
+      th{background:#111827;color:#fff;font-weight:bold;text-align:center}
+      .title{background:#d9d9d9;color:#111;font-weight:bold;text-align:center;font-size:12pt}
+      .total{background:#d1fae5;font-weight:bold}
+      .num{text-align:right}
+      .ok{background:#dcfce7}.bad{background:#fee2e2}.maint{background:#dbeafe}
+      .note{background:#f8fafc;color:#334155}
+    </style></head><body>
+      <h2>ESTADÍSTICA GENERAL DE CÁMARAS</h2>
+
+      <table>
+        <tr><th>MÓDULO</th><th>TOTAL CÁMARAS</th><th>PORCENTAJE DEL TOTAL</th></tr>
+        ${modulos.map(r=>`<tr><td>${esc(r[0])}</td><td class="num">${r[1]}</td><td class="num">${r[2]}</td></tr>`).join('')}
+        <tr class="total"><td>TOTAL GENERAL</td><td class="num">${d.total}</td><td class="num">100%</td></tr>
+      </table>
+
+      <table>
+        <tr><th colspan="2" class="title">ESTADO GENERAL DE CÁMARAS – ${esc(mes)}</th></tr>
+        <tr class="ok"><td>OPERATIVAS</td><td class="num">${s.totalOp}</td></tr>
+        <tr class="bad"><td>INOPERATIVAS</td><td class="num">${s.totalInop}</td></tr>
+        <tr class="maint"><td>MANTENIMIENTO</td><td class="num">${s.totalMant}</td></tr>
+        <tr class="total"><td>TOTAL</td><td class="num">${s.totalGeneral}</td></tr>
+      </table>
+
+      <table>
+        <tr><th colspan="7" class="title">DETALLE DEL ESTADO DE CÁMARAS – ${esc(mes)}</th></tr>
+        <tr><th>TIPO</th><th>OPERATIVAS</th><th>INOPERATIVAS</th><th>MANTENIMIENTO</th><th>SUBTOTAL</th><th>% OPERATIVIDAD</th><th>EXPLICACIÓN</th></tr>
+        ${s.rows.map(r=>`<tr>
+          <td>${esc(r.nombre)}</td><td class="num">${r.op}</td><td class="num">${r.inop}</td>
+          <td class="num">${r.mant}</td><td class="num">${r.total}</td><td class="num">${operPct(r)}</td>
+          <td class="note">${esc(`De ${r.total} cámaras registradas, ${r.op} están operativas, ${r.inop} inoperativas y ${r.mant} en mantenimiento.`)}</td>
+        </tr>`).join('')}
+        <tr class="total"><td>TOTAL GENERAL</td><td class="num">${s.totalOp}</td><td class="num">${s.totalInop}</td><td class="num">${s.totalMant}</td><td class="num">${s.totalGeneral}</td><td class="num">${s.totalGeneral?((s.totalOp/s.totalGeneral)*100).toFixed(1)+'%':'0.0%'}</td><td>Resumen consolidado de todos los módulos.</td></tr>
+      </table>
+    </body></html>`;
 
     const blob=new Blob(['\ufeff',html],{type:'application/vnd.ms-excel;charset=utf-8;'});
     const url=URL.createObjectURL(blob);
     const a=document.createElement('a');
     a.href=url;
-    a.download=`Estadistica_General_Camaras_${new Date().toISOString().slice(0,10)}.xls`;
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    URL.revokeObjectURL(url);
+    a.download=`Estadistica_General_Camaras_${now.toISOString().slice(0,10)}.xls`;
+    document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
   };
 
+
+
+  window.downloadCameraStatisticsPDF=function(){
+    const s=window.getCameraOperationalSummary();
+    const d=getStats();
+    const pct=n=>d.total ? (n*100/d.total).toFixed(1)+'%' : '0.0%';
+    const operPct=r=>r.total ? ((r.op/r.total)*100).toFixed(1)+'%' : '0.0%';
+    const now=new Date();
+    const fecha=new Intl.DateTimeFormat('es-PE',{timeZone:'America/Lima',day:'2-digit',month:'long',year:'numeric'}).format(now);
+    const mes=new Intl.DateTimeFormat('es-PE',{timeZone:'America/Lima',month:'long',year:'numeric'}).format(now).toUpperCase();
+
+    const loadScript=src=>new Promise((resolve,reject)=>{
+      const old=document.querySelector(`script[src="${src}"]`);
+      if(old){ if(old.dataset.loaded==='1') return resolve(); old.addEventListener('load',resolve,{once:true}); old.addEventListener('error',reject,{once:true}); return; }
+      const sc=document.createElement('script'); sc.src=src; sc.onload=()=>{sc.dataset.loaded='1';resolve();}; sc.onerror=reject; document.head.appendChild(sc);
+    });
+
+    (async()=>{
+      try{
+        if(!window.jspdf) await loadScript('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js');
+        if(!window.jspdf?.jsPDF?.API?.autoTable) await loadScript('https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.4/jspdf.plugin.autotable.min.js');
+
+        const {jsPDF}=window.jspdf;
+        const doc=new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
+        const W=210, margin=16;
+
+        doc.setFont('helvetica','bold'); doc.setFontSize(15);
+        doc.text('ESTADÍSTICA GENERAL DE CÁMARAS',margin,18);
+        doc.setFont('helvetica','normal'); doc.setFontSize(9);
+        doc.text(`Fecha: ${fecha} - Los Olivos`,margin,24);
+
+        doc.autoTable({
+          startY:30,
+          head:[['MÓDULO','TOTAL','% DEL TOTAL']],
+          body:[
+            ['Centro de Control',d.centro,pct(d.centro)],
+            ['Cámaras vecinales / Barrio Seguro',d.vecinales,pct(d.vecinales)],
+            ['Cámaras fijas DSS',d.fijas,pct(d.fijas)],
+            ['Tótems M.D.L.O.',d.totems,pct(d.totems)],
+            ['TOTAL GENERAL',d.total,'100%']
+          ],
+          theme:'grid',styles:{fontSize:8,cellPadding:2.5},
+          headStyles:{fillColor:[17,24,39],textColor:[255,255,255]},
+          didParseCell:data=>{if(data.section==='body'&&data.row.index===4){data.cell.styles.fontStyle='bold';data.cell.styles.fillColor=[209,250,229];}}
+        });
+
+        let y=doc.lastAutoTable.finalY+8;
+        doc.setFont('helvetica','bold'); doc.setFontSize(11);
+        doc.text(`ESTADO GENERAL DE CÁMARAS - ${mes}`,margin,y);
+        doc.autoTable({
+          startY:y+3,
+          body:[
+            ['OPERATIVAS',s.totalOp],
+            ['INOPERATIVAS',s.totalInop],
+            ['MANTENIMIENTO',s.totalMant],
+            ['TOTAL',s.totalGeneral]
+          ],
+          theme:'grid',styles:{fontSize:8,cellPadding:3},
+          columnStyles:{0:{cellWidth:90},1:{cellWidth:30,halign:'right'}},
+          didParseCell:data=>{if(data.row.index===3)data.cell.styles.fontStyle='bold';}
+        });
+
+        y=doc.lastAutoTable.finalY+8;
+        doc.setFont('helvetica','bold'); doc.setFontSize(11);
+        doc.text(`DETALLE DEL ESTADO DE CÁMARAS - ${mes}`,margin,y);
+        doc.autoTable({
+          startY:y+3,
+          head:[['TIPO','OP.','INOP.','MANT.','TOTAL','% OP.']],
+          body:s.rows.map(r=>[r.nombre,r.op,r.inop,r.mant,r.total,operPct(r)])
+            .concat([['TOTAL GENERAL',s.totalOp,s.totalInop,s.totalMant,s.totalGeneral,s.totalGeneral?((s.totalOp/s.totalGeneral)*100).toFixed(1)+'%':'0.0%']]),
+          theme:'grid',styles:{fontSize:7,cellPadding:2},
+          headStyles:{fillColor:[17,24,39],textColor:[255,255,255]},
+          columnStyles:{0:{cellWidth:72},1:{halign:'right'},2:{halign:'right'},3:{halign:'right'},4:{halign:'right'},5:{halign:'right'}},
+          didParseCell:data=>{if(data.section==='body'&&data.row.index===s.rows.length)data.cell.styles.fontStyle='bold';}
+        });
+
+        y=doc.lastAutoTable.finalY+7;
+        doc.setFont('helvetica','normal'); doc.setFontSize(8);
+        const explanation=`Resumen: el sistema registra ${s.totalGeneral} cámaras. Actualmente ${s.totalOp} están operativas, ${s.totalInop} inoperativas y ${s.totalMant} en mantenimiento. La información se genera con los datos disponibles al momento de la descarga.`;
+        doc.text(doc.splitTextToSize(explanation,W-(margin*2)),margin,y);
+
+        doc.save(`Estadistica_General_Camaras_${now.toISOString().slice(0,10)}.pdf`);
+      }catch(err){
+        console.error(err);
+        alert('No se pudo generar el PDF. Verifica la conexión a Internet e inténtalo nuevamente.');
+      }
+    })();
+  };
 
   window.downloadCameraStatisticsWord=function(){
     // Actualiza primero los contadores de cada módulo para tomar el estado más reciente.
