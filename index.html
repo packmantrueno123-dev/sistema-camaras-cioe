@@ -2246,6 +2246,82 @@ body.cioe-custom-theme #themeCustomizerBtn{background-color:var(--cioe-accent)!i
         </div>
       </div>
     </section>
+
+    <!-- ===== DETALLE DINÁMICO DEL ESTADO DE CÁMARAS ===== -->
+    <section id="statsOperationalDetail" class="bg-[#0a0f1d] border border-slate-800 rounded-2xl p-5 shadow-xl">
+      <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-3 mb-5">
+        <div>
+          <h3 id="statsOperationalTitle" class="text-sm font-black text-white uppercase">
+            ESTADO GENERAL DE CÁMARAS
+          </h3>
+          <p class="text-[10px] text-slate-500 mt-1">
+            Resumen actualizado automáticamente según el estado actual de las cámaras registradas
+          </p>
+        </div>
+        <div class="flex items-center gap-2 text-[10px] text-cyan-400 font-bold">
+          <i class="fa-solid fa-arrows-rotate"></i>
+          <span>Datos dinámicos</span>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-5">
+        <div class="rounded-xl border border-emerald-500/25 bg-emerald-500/5 p-4">
+          <div class="flex items-center gap-2 text-emerald-400 text-[10px] font-black uppercase">
+            <i class="fa-solid fa-circle-check"></i> Operativas
+          </div>
+          <div id="statsDetailOperativas" class="text-2xl font-black text-white mt-2">0</div>
+        </div>
+        <div class="rounded-xl border border-red-500/25 bg-red-500/5 p-4">
+          <div class="flex items-center gap-2 text-red-400 text-[10px] font-black uppercase">
+            <i class="fa-solid fa-circle-xmark"></i> Inoperativas
+          </div>
+          <div id="statsDetailInoperativas" class="text-2xl font-black text-white mt-2">0</div>
+        </div>
+        <div class="rounded-xl border border-blue-500/25 bg-blue-500/5 p-4">
+          <div class="flex items-center gap-2 text-blue-400 text-[10px] font-black uppercase">
+            <i class="fa-solid fa-screwdriver-wrench"></i> Mantenimiento
+          </div>
+          <div id="statsDetailMantenimiento" class="text-2xl font-black text-white mt-2">0</div>
+        </div>
+        <div class="rounded-xl border border-cyan-500/25 bg-cyan-500/5 p-4">
+          <div class="flex items-center gap-2 text-cyan-400 text-[10px] font-black uppercase">
+            <i class="fa-solid fa-video"></i> Total
+          </div>
+          <div id="statsDetailTotal" class="text-2xl font-black text-white mt-2">0</div>
+        </div>
+      </div>
+
+      <div class="overflow-x-auto rounded-xl border border-slate-800">
+        <table class="w-full min-w-[780px] text-[11px]">
+          <thead class="bg-[#111827] text-slate-200">
+            <tr>
+              <th class="px-4 py-3 text-left font-black uppercase">Tipo</th>
+              <th class="px-3 py-3 text-center font-black uppercase">Operativas</th>
+              <th class="px-3 py-3 text-center font-black uppercase">Inoperativas</th>
+              <th class="px-3 py-3 text-center font-black uppercase">Mantenimiento</th>
+              <th class="px-3 py-3 text-center font-black uppercase">Total</th>
+              <th class="px-3 py-3 text-center font-black uppercase">% Operatividad</th>
+            </tr>
+          </thead>
+          <tbody id="statsOperationalTableBody" class="divide-y divide-slate-800"></tbody>
+          <tfoot id="statsOperationalTableFoot" class="bg-cyan-500/5 border-t border-cyan-500/20"></tfoot>
+        </table>
+      </div>
+
+      <div class="mt-4 rounded-xl border border-slate-800 bg-[#030712] p-4">
+        <div class="flex items-start gap-3">
+          <div class="w-9 h-9 rounded-full bg-cyan-500/10 text-cyan-400 flex items-center justify-center shrink-0">
+            <i class="fa-solid fa-circle-info"></i>
+          </div>
+          <div>
+            <p class="text-[10px] font-black text-slate-300 uppercase">Resumen del sistema</p>
+            <p id="statsOperationalExplanation" class="text-[11px] leading-5 text-slate-400 mt-1">
+              Calculando información...
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
   </div>
 
   <div id="vecinalesView" class="hidden space-y-4 flex-col flex-1">
@@ -8339,6 +8415,7 @@ document.addEventListener('DOMContentLoaded', function(){
       view.classList.remove('hidden');
       view.classList.add('flex');
       renderCameraStatistics();
+      try{ window.renderCameraOperationalDetail(); }catch(_){}
     }
   }
 
@@ -8812,6 +8889,9 @@ window.addEventListener('load',function(){
       const parts=items.map(x=>{const s=a;a+=x.p;return `${x.color} ${s.toFixed(3)}% ${a.toFixed(3)}%`;});
       donut.style.background=d.total ? `conic-gradient(${parts.join(',')})` : '#1e293b';
     }
+
+    try{ window.renderCameraOperationalDetail(); }catch(_){}
+
   };
 
   window.getCameraOperationalSummary=function(){
@@ -8846,6 +8926,70 @@ window.addEventListener('load',function(){
       totalMant:rows.reduce((a,x)=>a+x.mant,0),
       totalGeneral:rows.reduce((a,x)=>a+x.total,0)
     };
+  };
+
+
+  window.renderCameraOperationalDetail=function(){
+    const s=window.getCameraOperationalSummary ? window.getCameraOperationalSummary() : null;
+    if(!s) return;
+
+    const set=(id,v)=>{
+      const el=document.getElementById(id);
+      if(el) el.textContent=v;
+    };
+
+    const now=new Date();
+    const mes=new Intl.DateTimeFormat('es-PE',{
+      timeZone:'America/Lima',
+      month:'long',
+      year:'numeric'
+    }).format(now).toUpperCase();
+
+    set('statsOperationalTitle',`ESTADO GENERAL DE CÁMARAS - ${mes}`);
+    set('statsDetailOperativas',s.totalOp);
+    set('statsDetailInoperativas',s.totalInop);
+    set('statsDetailMantenimiento',s.totalMant);
+    set('statsDetailTotal',s.totalGeneral);
+
+    const tbody=document.getElementById('statsOperationalTableBody');
+    if(tbody){
+      tbody.innerHTML=s.rows.map((r,i)=>{
+        const p=r.total ? (r.op*100/r.total) : 0;
+        const accent=['text-amber-400','text-emerald-400','text-blue-400','text-orange-400'][i] || 'text-cyan-400';
+        return `<tr class="bg-[#0a0f1d] hover:bg-[#111827] transition">
+          <td class="px-4 py-3 font-bold ${accent}">${r.nombre}</td>
+          <td class="px-3 py-3 text-center font-black text-emerald-400">${r.op}</td>
+          <td class="px-3 py-3 text-center font-black text-red-400">${r.inop}</td>
+          <td class="px-3 py-3 text-center font-black text-blue-400">${r.mant}</td>
+          <td class="px-3 py-3 text-center font-black text-white">${r.total}</td>
+          <td class="px-3 py-3 text-center">
+            <span class="inline-flex min-w-[62px] justify-center rounded-full px-2.5 py-1 font-black ${
+              p>=90 ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' :
+              p>=70 ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20' :
+                      'bg-red-500/10 text-red-400 border border-red-500/20'
+            }">${p.toFixed(1)}%</span>
+          </td>
+        </tr>`;
+      }).join('');
+    }
+
+    const totalPct=s.totalGeneral ? (s.totalOp*100/s.totalGeneral) : 0;
+    const foot=document.getElementById('statsOperationalTableFoot');
+    if(foot){
+      foot.innerHTML=`<tr>
+        <td class="px-4 py-3 font-black text-cyan-300">TOTAL GENERAL</td>
+        <td class="px-3 py-3 text-center font-black text-emerald-400">${s.totalOp}</td>
+        <td class="px-3 py-3 text-center font-black text-red-400">${s.totalInop}</td>
+        <td class="px-3 py-3 text-center font-black text-blue-400">${s.totalMant}</td>
+        <td class="px-3 py-3 text-center font-black text-white">${s.totalGeneral}</td>
+        <td class="px-3 py-3 text-center font-black text-cyan-400">${totalPct.toFixed(1)}%</td>
+      </tr>`;
+    }
+
+    const exp=document.getElementById('statsOperationalExplanation');
+    if(exp){
+      exp.textContent=`El sistema registra ${s.totalGeneral} cámaras. Actualmente ${s.totalOp} están operativas, ${s.totalInop} inoperativas y ${s.totalMant} en mantenimiento. La operatividad general es de ${totalPct.toFixed(1)}%. Estos valores se calculan con los datos actuales del Centro de Control, Cámaras Vecinales, Cámaras Fijas DSS y Tótems M.D.L.O.; al agregar, eliminar o cambiar el estado de una cámara, el resumen se actualizará con la información vigente.`;
+    }
   };
 
   window.downloadCameraStatisticsExcel=function(){
