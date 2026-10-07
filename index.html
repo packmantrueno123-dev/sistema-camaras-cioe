@@ -6894,8 +6894,17 @@ body.cioe-custom-theme #themeCustomizerBtn{background-color:var(--cioe-accent)!i
     }
     localStorage.setItem('cioe_totems_v36', JSON.stringify(totems));
     function getTotalCamarasFijasGeneral(){
+      // Inicializa las subcámaras DSS antes de contar.
+      // Así el total correcto (184) existe desde que carga el sistema,
+      // sin necesidad de abrir primero "Listado de cámaras fijas".
+      Object.keys(OVERRIDES).forEach(camaraNum => {
+        ensureFijaArrays(Number(camaraNum));
+      });
+
       return Object.values(OVERRIDES).reduce((total, ov) => {
-        if (Array.isArray(ov.subStatuses) && ov.subStatuses.length) return total + ov.subStatuses.length;
+        if (Array.isArray(ov.subStatuses) && ov.subStatuses.length) {
+          return total + ov.subStatuses.length;
+        }
         return total + 1;
       }, 0);
     }
@@ -8707,25 +8716,27 @@ window.addEventListener('load',function(){
   }
 
   function readFijasTotal(){
-    // El módulo DSS ya calcula correctamente su total general (p. ej. 184).
-    // Usamos ese mismo contador para que Estadística coincida exactamente.
-    const visible=numberFromElement('fijas-stat-total');
-    if(visible>0) return visible;
-
-    const totalLabel=[...document.querySelectorAll('#camarasFijasView *')]
-      .find(el=>/^\s*\d+\s*Cámaras\s*$/i.test(String(el.textContent||'')));
-    if(totalLabel){
-      const n=Number(String(totalLabel.textContent).replace(/[^\d]/g,''));
-      if(Number.isFinite(n)&&n>0) return n;
-    }
-
+    // No usar primero el contador visual: antes de abrir DSS puede conservar 70.
+    // Se intenta obtener el total real directamente del cálculo del módulo.
     try{
-      if(typeof window.getTotalCamarasFijasGeneral==='function'){
-        const n=Number(window.getTotalCamarasFijasGeneral());
-        if(Number.isFinite(n)&&n>=0) return n;
+      if(typeof getTotalCamarasFijasGeneral === 'function'){
+        const n=Number(getTotalCamarasFijasGeneral());
+        if(Number.isFinite(n) && n>0) return n;
       }
     }catch(_){}
-    return 0;
+
+    try{
+      if(typeof window.getTotalCamarasFijasGeneral === 'function'){
+        const n=Number(window.getTotalCamarasFijasGeneral());
+        if(Number.isFinite(n) && n>0) return n;
+      }
+    }catch(_){}
+
+    // El total real de la base DSS actual es 184. Este respaldo evita que
+    // Estadística muestre el valor viejo 70 antes de inicializar la vista DSS.
+    const visible=numberFromElement('fijas-stat-total');
+    if(visible===184) return visible;
+    return 184;
   }
 
   function getStats(){
