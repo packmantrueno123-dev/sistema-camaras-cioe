@@ -1277,6 +1277,24 @@ app.patch("/api/messages/:id/read", auth, async (req,res)=>{
   }catch(err){console.error(err);res.status(500).json({ok:false,error:"No se pudo actualizar el mensaje"});}
 });
 
+// El administrador puede eliminar una conversación completa con un usuario.
+app.delete("/api/messages/conversation/:username", auth, adminOnly, async (req,res)=>{
+  try{
+    await cleanupExpiredMessages();
+    const username=String(req.params.username||"").trim();
+    const u=await pool.query(`SELECT id,role FROM users WHERE username=$1`,[username]);
+    if(!u.rowCount || u.rows[0].role==="admin") return res.status(404).json({ok:false,error:"Usuario no encontrado"});
+    const q=await pool.query(
+      `DELETE FROM internal_messages
+       WHERE (sender_id=$1 AND recipient_id=$2)
+          OR (sender_id=$2 AND recipient_id=$1)
+       RETURNING message_id`,
+      [req.user.id,u.rows[0].id]
+    );
+    res.json({ok:true,deleted:q.rowCount});
+  }catch(err){console.error(err);res.status(500).json({ok:false,error:"No se pudo eliminar la conversación"});}
+});
+
 // El administrador puede eliminar cualquier mensaje visible del sistema.
 app.delete("/api/messages/:id", auth, adminOnly, async (req,res)=>{
   try{
