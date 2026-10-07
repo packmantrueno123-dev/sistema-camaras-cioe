@@ -6303,6 +6303,139 @@ body.cioe-custom-theme #themeCustomizerBtn{background-color:var(--cioe-accent)!i
       return false;
     }
 
+
+    // ============================================================
+    // SINCRONIZACIÓN EN TIEMPO CASI REAL DE CÁMARAS ENTRE SESIONES
+    // Consulta PostgreSQL mediante /api/state cada 3 segundos.
+    // Solo aplica cambios cuando updatedAt del servidor es más nuevo.
+    // ============================================================
+    let cioeCameraRealtimeBusy = false;
+
+    function cioeReloadCameraMemoryFromStorage() {
+      try {
+        const savedCameras = JSON.parse(localStorage.getItem("cioe_cameras_v101") || "null");
+        if (Array.isArray(savedCameras)) {
+          cameras = savedCameras.map(cam => ({
+            ...cam,
+            ip: (cam.ip && String(cam.ip).trim()) ? cam.ip : getAssignedCameraIP(cam.camara),
+            onuIp: (cam.onuIp && String(cam.onuIp).trim() && String(cam.onuIp).trim() !== "Poner IP")
+              ? cam.onuIp
+              : getAssignedONUIP(cam.camara)
+          }));
+        }
+      } catch (err) {
+        console.warn("No se pudieron actualizar las cámaras desde el servidor:", err);
+      }
+
+      try {
+        const savedLogs = JSON.parse(localStorage.getItem("cioe_daily_logs_v101") || "null");
+        if (savedLogs && typeof savedLogs === "object" && !Array.isArray(savedLogs)) {
+          dailyLogs = savedLogs;
+        }
+      } catch (err) {
+        console.warn("No se pudieron actualizar los estados diarios:", err);
+      }
+
+      try {
+        const savedVecinales = JSON.parse(localStorage.getItem("cioe_vecinales_v300") || "null");
+        if (Array.isArray(savedVecinales)) vecinalCameras = savedVecinales;
+      } catch (_) {}
+
+      try {
+        const savedReports = JSON.parse(localStorage.getItem("cioe_report_timestamps_v1") || "null");
+        if (savedReports && typeof savedReports === "object") reportTimestamps = savedReports;
+      } catch (_) {}
+
+      // Cámaras fijas DSS: actualiza el objeto existente sin cambiar su referencia.
+      try {
+        const savedFijas = JSON.parse(localStorage.getItem("cioe_fijas_overrides_v1") || "null");
+        if (savedFijas && typeof savedFijas === "object" && !Array.isArray(savedFijas)) {
+          Object.keys(savedFijas).forEach(k => {
+            OVERRIDES[k] = { ...(OVERRIDES[k] || {}), ...savedFijas[k] };
+          });
+        }
+      } catch (_) {}
+
+      // Tótems: la variable es global dentro del script actual.
+      try {
+        const savedTotems = JSON.parse(localStorage.getItem("cioe_totems_v36") || "null");
+        if (Array.isArray(savedTotems) && typeof totems !== "undefined") {
+          totems = savedTotems;
+        }
+      } catch (_) {}
+    }
+
+    function cioeRefreshCameraScreens() {
+      try { populateMainCameraFilter(); } catch (_) {}
+      try { renderTable(); } catch (_) {}
+      try { updateStats(); } catch (_) {}
+
+      try {
+        const v = document.getElementById("vecinalesView");
+        if (v && !v.classList.contains("hidden")) renderVecinalesTable();
+      } catch (_) {}
+
+      try {
+        const v = document.getElementById("camarasFijasView");
+        if (v && !v.classList.contains("hidden")) renderCamarasFijasTable();
+      } catch (_) {}
+
+      try {
+        const v = document.getElementById("totemsView");
+        if (v && !v.classList.contains("hidden")) renderTotems();
+      } catch (_) {}
+
+      try {
+        const v = document.getElementById("cameraStatisticsView");
+        if (v && !v.classList.contains("hidden") && typeof renderCameraStatistics === "function") {
+          renderCameraStatistics();
+        }
+      } catch (_) {}
+    }
+
+    async function cioePollCameraState() {
+      if (cioeCameraRealtimeBusy || applyingServerState || !getApiToken() || !currentSystemUser) return;
+      cioeCameraRealtimeBusy = true;
+
+      try {
+        const result = await apiRequest("/api/state");
+        const remoteUpdatedAt = result?.updatedAt || null;
+
+        if (!remoteUpdatedAt) return;
+
+        const remoteTime = new Date(remoteUpdatedAt).getTime();
+        const localTime = lastServerUpdatedAt ? new Date(lastServerUpdatedAt).getTime() : 0;
+
+        // Si no hay cambio nuevo, no repinta nada.
+        if (Number.isFinite(remoteTime) && Number.isFinite(localTime) && remoteTime <= localTime) return;
+
+        const remoteStorage = result?.data?.storage;
+        if (!remoteStorage || typeof remoteStorage !== "object") {
+          lastServerUpdatedAt = remoteUpdatedAt;
+          return;
+        }
+
+        applyCioeStorage(remoteStorage);
+        lastServerUpdatedAt = remoteUpdatedAt;
+
+        // Muy importante: localStorage ya cambió; ahora actualizamos las
+        // variables en memoria para que la tabla cambie sin recargar la página.
+        cioeReloadCameraMemoryFromStorage();
+        cioeRefreshCameraScreens();
+      } catch (err) {
+        // No interrumpe el uso del sistema si hay una caída momentánea de red.
+        if (err?.status !== 401) {
+          console.warn("Sincronización de cámaras temporalmente no disponible:", err);
+        }
+      } finally {
+        cioeCameraRealtimeBusy = false;
+      }
+    }
+
+    // Una sola consulta cada 3 segundos. No escribe en localStorage durante
+    // el intervalo, por lo que no genera el bucle de sincronización anterior.
+    setInterval(cioePollCameraState, 3000);
+
     async function handleLogin(event) {
       event.preventDefault();
       const usuario = document.getElementById("loginUser").value.trim();
