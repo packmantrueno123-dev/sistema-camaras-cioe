@@ -9187,62 +9187,104 @@ window.addEventListener('load',function(){
 
 
 <style id="cioeMessagingStyles">
-#cioeMessagesModal{backdrop-filter:blur(5px)}
-.cioe-msg-card{border:1px solid #1e293b;background:#030712;border-radius:14px;padding:12px}
-.cioe-msg-card.unread{border-color:rgba(34,211,238,.55);box-shadow:inset 3px 0 0 #22d3ee}
+#cioeMessagesModal{backdrop-filter:blur(6px)}
+#cioeChatMessages{scroll-behavior:smooth}
+.cioe-chat-row{display:flex;margin:7px 0}
+.cioe-chat-row.mine{justify-content:flex-end}
+.cioe-chat-row.theirs{justify-content:flex-start}
+.cioe-chat-bubble{max-width:78%;padding:9px 11px;border-radius:14px;font-size:12px;line-height:1.35;white-space:pre-wrap;word-break:break-word;box-shadow:0 1px 2px rgba(0,0,0,.25)}
+.cioe-chat-row.mine .cioe-chat-bubble{background:#075e54;color:#fff;border-bottom-right-radius:4px}
+.cioe-chat-row.theirs .cioe-chat-bubble{background:#182230;color:#f8fafc;border-bottom-left-radius:4px}
+.cioe-chat-time{font-size:8px;opacity:.65;margin-top:5px;text-align:right}
+.cioe-chat-new{display:inline-block;width:7px;height:7px;background:#ef4444;border-radius:999px;margin-left:5px}
+.cioe-chat-user.active{background:#172033;border-color:#22d3ee}
 </style>
 <div id="cioeMessagesModal" class="hidden fixed inset-0 z-[10050] bg-black/70 p-4 items-center justify-center">
-  <div class="w-full max-w-2xl max-h-[86vh] bg-[#0a0f1d] border border-slate-700 rounded-2xl shadow-2xl overflow-hidden flex flex-col">
-    <div class="px-5 py-4 border-b border-slate-800 flex items-center justify-between gap-3">
-      <div><h3 class="text-sm font-black text-white"><i class="fa-solid fa-message text-cyan-400 mr-2"></i>MENSAJERÍA INTERNA</h3><p class="text-[10px] text-slate-500 mt-1">Los mensajes se eliminan automáticamente después de 24 horas.</p></div>
-      <button type="button" onclick="closeCioeMessages()" class="w-9 h-9 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300"><i class="fa-solid fa-xmark"></i></button>
-    </div>
-    <div id="cioeMessageComposer" class="hidden p-4 border-b border-slate-800 bg-slate-950/30">
-      <div class="grid grid-cols-1 sm:grid-cols-[180px_1fr_auto] gap-2 items-end">
-        <label class="text-[10px] font-black text-slate-400">DESTINATARIO<select id="cioeMessageRecipient" class="mt-1 w-full bg-[#030712] border border-slate-700 rounded-xl px-3 py-2 text-xs text-white outline-none"></select></label>
-        <label class="text-[10px] font-black text-slate-400">MENSAJE<textarea id="cioeMessageText" maxlength="1000" rows="2" placeholder="Escribe un mensaje..." class="mt-1 w-full resize-none bg-[#030712] border border-slate-700 rounded-xl px-3 py-2 text-xs text-white outline-none focus:border-cyan-500"></textarea></label>
-        <button type="button" onclick="sendCioeMessage()" class="h-9 px-4 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-black text-xs font-black"><i class="fa-solid fa-paper-plane mr-1"></i> Enviar</button>
-      </div>
-    </div>
-    <div class="px-5 py-3 flex items-center justify-between border-b border-slate-800"><span class="text-[11px] font-black text-slate-300">MENSAJES DE LAS ÚLTIMAS 24 HORAS</span><button onclick="loadCioeMessages(true)" class="text-[10px] text-cyan-400 hover:text-cyan-300"><i class="fa-solid fa-rotate mr-1"></i>Actualizar</button></div>
-    <div id="cioeMessagesList" class="p-4 space-y-2 overflow-y-auto min-h-[180px]"><div class="text-center text-xs text-slate-500 py-8">Cargando...</div></div>
+ <div class="w-full max-w-4xl h-[78vh] max-h-[720px] bg-[#0a0f1d] border border-slate-700 rounded-2xl shadow-2xl overflow-hidden flex flex-col">
+  <div class="px-5 py-3 border-b border-slate-800 flex items-center justify-between">
+   <div><h3 class="text-sm font-black text-white"><i class="fa-solid fa-comments text-cyan-400 mr-2"></i>CHAT INTERNO</h3><p class="text-[9px] text-slate-500 mt-1">Conversaciones privadas con el administrador · Los mensajes se eliminan a las 24 horas.</p></div>
+   <button type="button" onclick="closeCioeMessages()" class="w-9 h-9 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300"><i class="fa-solid fa-xmark"></i></button>
   </div>
+  <div class="flex flex-1 min-h-0">
+   <aside id="cioeChatSidebar" class="hidden w-[220px] border-r border-slate-800 bg-[#070b14] p-2 overflow-y-auto">
+    <div class="px-2 py-2 text-[9px] font-black text-slate-500 uppercase">Usuarios</div>
+    <div id="cioeChatUsers" class="space-y-1"></div>
+   </aside>
+   <section class="flex-1 min-w-0 flex flex-col">
+    <div class="h-12 px-4 border-b border-slate-800 flex items-center justify-between bg-slate-950/20">
+     <div><div id="cioeChatTitle" class="text-xs font-black text-white">Administrador</div><div id="cioeChatSubtitle" class="text-[9px] text-emerald-400">Chat privado</div></div>
+     <button onclick="loadCioeMessages(false)" class="text-[10px] text-cyan-400"><i class="fa-solid fa-rotate mr-1"></i>Actualizar</button>
+    </div>
+    <div id="cioeChatMessages" class="flex-1 overflow-y-auto px-4 py-3 bg-[#050914]"></div>
+    <div class="p-3 border-t border-slate-800 bg-[#0b1120] flex items-end gap-2">
+     <textarea id="cioeMessageText" maxlength="1000" rows="1" placeholder="Escribe un mensaje..." class="flex-1 max-h-24 resize-none bg-[#030712] border border-slate-700 rounded-xl px-3 py-2.5 text-xs text-white outline-none focus:border-cyan-500"></textarea>
+     <button type="button" onclick="sendCioeMessage()" class="w-10 h-10 shrink-0 rounded-full bg-cyan-500 hover:bg-cyan-400 text-black" title="Enviar"><i class="fa-solid fa-paper-plane"></i></button>
+    </div>
+   </section>
+  </div>
+ </div>
 </div>
 <script id="cioeMessagingScript">
 (function(){
- let messagePoll=null;
- function limaDate(v){try{return new Intl.DateTimeFormat('es-PE',{timeZone:'America/Lima',dateStyle:'short',timeStyle:'medium'}).format(new Date(v));}catch(_){return String(v||'—')}}
+ let messagePoll=null, allMsgs=[], activeChatUser='admin';
+ function isAdm(){return typeof isAdminUser==='function'&&isAdminUser()}
+ function limaDate(v){try{return new Intl.DateTimeFormat('es-PE',{timeZone:'America/Lima',hour:'numeric',minute:'2-digit'}).format(new Date(v))}catch(_){return ''}}
  function esc(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+ function chatPeer(m){return m.sent_by_me?m.recipient_username:m.sender_username}
+ function scrollBottom(){const box=document.getElementById('cioeChatMessages');if(box)requestAnimationFrame(()=>box.scrollTop=box.scrollHeight)}
  window.openCioeMessages=async function(){
-   const m=document.getElementById('cioeMessagesModal'); if(!m)return;
+   const m=document.getElementById('cioeMessagesModal');if(!m)return;
    m.classList.remove('hidden');m.classList.add('flex');
-   document.getElementById('cioeMessageComposer')?.classList.toggle('hidden',!(typeof isAdminUser==='function'&&isAdminUser()));
-   if(typeof isAdminUser==='function'&&isAdminUser()) await loadCioeMessageUsers();
-   await loadCioeMessages(true);
+   const side=document.getElementById('cioeChatSidebar');if(side)side.classList.toggle('hidden',!isAdm());
+   if(!isAdm())activeChatUser='admin';
+   await loadCioeMessages(true);scrollBottom();
  };
  window.closeCioeMessages=function(){const m=document.getElementById('cioeMessagesModal');m?.classList.add('hidden');m?.classList.remove('flex')};
- window.loadCioeMessageUsers=async function(){
-   try{const r=await apiRequest('/api/users');const sel=document.getElementById('cioeMessageRecipient');if(!sel)return;const users=(r.users||[]).filter(u=>u.active&&u.username!=='admin');sel.innerHTML=users.map(u=>`<option value="${esc(u.username)}">${esc(u.username)}</option>`).join('')||'<option value="">Sin usuarios disponibles</option>';}catch(e){console.warn(e)}
- };
+ function renderUsers(){
+   if(!isAdm())return;
+   const users=[...new Set(allMsgs.map(chatPeer).filter(Boolean))];
+   const holder=document.getElementById('cioeChatUsers');if(!holder)return;
+   if(!users.length){holder.innerHTML='<div class="text-[10px] text-slate-600 px-2 py-4">Aún no hay conversaciones.</div>';return}
+   if(!users.includes(activeChatUser))activeChatUser=users[0];
+   holder.innerHTML=users.map(u=>{
+     const unread=allMsgs.filter(m=>chatPeer(m)===u&&!m.sent_by_me&&!m.read_at).length;
+     return `<button onclick="selectCioeChat('${esc(u)}')" class="cioe-chat-user ${u===activeChatUser?'active':''} w-full border border-transparent rounded-xl px-3 py-2 text-left flex items-center justify-between gap-2"><span class="text-xs font-bold text-slate-200"><i class="fa-solid fa-user text-cyan-400 mr-2"></i>${esc(u)}</span>${unread?`<span class="min-w-5 h-5 px-1 inline-flex items-center justify-center rounded-full bg-red-600 text-white text-[9px] font-black">${unread}</span>`:''}</button>`
+   }).join('');
+ }
+ window.selectCioeChat=function(u){activeChatUser=u;renderUsers();renderConversation(true)};
+ function renderConversation(markRead){
+   const title=document.getElementById('cioeChatTitle');if(title)title.textContent=isAdm()?activeChatUser:'Administrador';
+   const msgs=allMsgs.filter(m=>chatPeer(m)===activeChatUser).sort((a,b)=>new Date(a.created_at)-new Date(b.created_at));
+   const box=document.getElementById('cioeChatMessages');if(box){
+     box.innerHTML=msgs.length?msgs.map(m=>`<div class="cioe-chat-row ${m.sent_by_me?'mine':'theirs'}"><div class="cioe-chat-bubble">${esc(m.body)}${!m.sent_by_me&&!m.read_at?'<span class="cioe-chat-new" title="Nuevo"></span>':''}<div class="cioe-chat-time">${limaDate(m.created_at)}${m.sent_by_me?' · Tú':''}${isAdm()?` <button onclick="event.stopPropagation();deleteCioeMessage('${esc(m.message_id)}')" title="Eliminar" class="ml-2 text-rose-300 hover:text-rose-200"><i class="fa-solid fa-trash"></i></button>`:''}</div></div></div>`).join(''):'<div class="h-full flex items-center justify-center text-xs text-slate-600">No hay mensajes todavía.</div>';
+   }
+   if(markRead){
+     const unread=msgs.filter(m=>!m.sent_by_me&&!m.read_at);
+     if(unread.length)Promise.allSettled(unread.map(m=>apiRequest('/api/messages/'+encodeURIComponent(m.message_id)+'/read',{method:'PATCH'}))).then(()=>setTimeout(()=>loadCioeMessages(false),120));
+   }
+   scrollBottom();
+ }
  window.sendCioeMessage=async function(){
-   const recipient=document.getElementById('cioeMessageRecipient')?.value||'';const body=document.getElementById('cioeMessageText')?.value.trim()||'';
-   if(!recipient||!body){alert('Selecciona un usuario y escribe el mensaje.');return;}
-   try{await apiRequest('/api/messages',{method:'POST',body:JSON.stringify({recipient,body})});document.getElementById('cioeMessageText').value='';await loadCioeMessages(true);}catch(e){alert(e.message||'No se pudo enviar el mensaje.');}
+   const body=document.getElementById('cioeMessageText')?.value.trim()||'';
+   const recipient=isAdm()?activeChatUser:'admin';
+   if(!body)return;
+   if(!recipient){alert('Selecciona un usuario.');return}
+   try{await apiRequest('/api/messages',{method:'POST',body:JSON.stringify({recipient,body})});document.getElementById('cioeMessageText').value='';await loadCioeMessages(false);scrollBottom()}catch(e){alert(e.message||'No se pudo enviar el mensaje.')}
  };
- window.deleteCioeMessage=async function(id){if(!confirm('¿Eliminar este mensaje?'))return;try{await apiRequest('/api/messages/'+encodeURIComponent(id),{method:'DELETE'});await loadCioeMessages(true);}catch(e){alert(e.message||'No se pudo eliminar.')}};
+ window.deleteCioeMessage=async function(id){if(!confirm('¿Eliminar este mensaje?'))return;try{await apiRequest('/api/messages/'+encodeURIComponent(id),{method:'DELETE'});await loadCioeMessages(false)}catch(e){alert(e.message||'No se pudo eliminar.')}}
  window.loadCioeMessages=async function(markRead){
    if(!currentSystemUser)return;
    try{
-     const r=await apiRequest('/api/messages');const msgs=r.messages||[];const incoming=msgs.filter(x=>!x.sent_by_me);const unread=incoming.filter(x=>!x.read_at);
-     const badge=document.getElementById('cioeMessagesBadge');if(badge){badge.textContent=unread.length>99?'99+':String(unread.length);badge.style.display=unread.length>0?'inline-flex':'none';badge.title=unread.length===1?'1 mensaje nuevo':`${unread.length} mensajes nuevos`;}
-     const list=document.getElementById('cioeMessagesList');if(list){list.innerHTML=msgs.length?msgs.map(x=>{const sent=!!x.sent_by_me;const unreadCard=!sent&&!x.read_at;return `<div class="cioe-msg-card ${unreadCard?'unread':''}"><div class="flex justify-between gap-3"><div class="min-w-0"><div class="text-[10px] font-black ${sent?'text-violet-400':'text-cyan-400'}">${sent?'PARA: '+esc(x.recipient_username):'DE: '+esc(x.sender_username)} ${unreadCard?'<span class="ml-2 text-rose-400">● NUEVO</span>':''}</div><div class="text-xs text-slate-100 mt-1 whitespace-pre-wrap break-words">${esc(x.body)}</div><div class="text-[9px] text-slate-500 mt-2">${limaDate(x.created_at)} · Se elimina automáticamente a las 24 h</div></div>${typeof isAdminUser==='function'&&isAdminUser()?`<button onclick="deleteCioeMessage('${esc(x.message_id)}')" class="shrink-0 w-8 h-8 rounded-lg bg-rose-500/10 border border-rose-500/30 text-rose-400 hover:bg-rose-500/20" title="Eliminar"><i class="fa-solid fa-trash"></i></button>`:''}</div></div>`}).join(''):'<div class="text-center text-xs text-slate-500 py-8">No hay mensajes de las últimas 24 horas.</div>'}
-     if(markRead&&unread.length){await Promise.allSettled(unread.map(x=>apiRequest('/api/messages/'+encodeURIComponent(x.message_id)+'/read',{method:'PATCH'})));setTimeout(()=>loadCioeMessages(false),150)}
-   }catch(e){if(e.status!==401)console.warn('Mensajería:',e)}
+     const r=await apiRequest('/api/messages');allMsgs=r.messages||[];
+     const unread=allMsgs.filter(m=>!m.sent_by_me&&!m.read_at);
+     const badge=document.getElementById('cioeMessagesBadge');if(badge){badge.textContent=unread.length>99?'99+':String(unread.length);badge.style.display=unread.length?'inline-flex':'none'}
+     renderUsers();renderConversation(!!markRead);
+   }catch(e){if(e.status!==401)console.warn('Chat:',e)}
  };
- function start(){if(messagePoll)clearInterval(messagePoll);setTimeout(()=>loadCioeMessages(false),800);messagePoll=setInterval(()=>loadCioeMessages(false),10000)}
+ function start(){if(messagePoll)clearInterval(messagePoll);setTimeout(()=>loadCioeMessages(false),800);messagePoll=setInterval(()=>loadCioeMessages(false),5000)}
  document.addEventListener('DOMContentLoaded',start,{once:true});
- window.addEventListener('storage',()=>setTimeout(()=>loadCioeMessages(false),250));
  window.addEventListener('focus',()=>setTimeout(()=>loadCioeMessages(false),150));
+ document.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey&&document.activeElement?.id==='cioeMessageText'){e.preventDefault();sendCioeMessage()}});
 })();
 </script>
 
