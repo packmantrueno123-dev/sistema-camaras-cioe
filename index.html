@@ -1549,7 +1549,7 @@ body.cioe-custom-theme #themeCustomizerBtn{background-color:var(--cioe-accent)!i
         <button type="button" id="cioeMessagesBtn" onclick="openCioeMessages()" class="relative flex items-center gap-2 bg-[#030712] border border-slate-800 px-3.5 py-2 rounded-xl text-xs font-bold text-cyan-300 hover:border-cyan-500/50 hover:bg-slate-900/60 transition select-none" title="Mensajería interna">
           <i class="fa-solid fa-message text-cyan-400"></i>
           <span class="uppercase tracking-wider">Mensajería</span>
-          <span id="cioeMessagesBadge" class="hidden absolute -top-2 -right-2 min-w-[20px] h-5 px-1 rounded-full bg-rose-500 text-white text-[10px] font-black items-center justify-center border-2 border-[#0a0f1d]">0</span>
+          <span id="cioeMessagesBadge" style="display:none" class="absolute -top-2 -right-2 min-w-[21px] h-[21px] px-1 rounded-full bg-red-600 text-white text-[10px] font-black items-center justify-center border-2 border-[#0a0f1d] shadow-lg shadow-red-600/40 animate-pulse">0</span>
         </button>
 
         <div class="relative">
@@ -9234,7 +9234,7 @@ window.addEventListener('load',function(){
    if(!currentSystemUser)return;
    try{
      const r=await apiRequest('/api/messages');const msgs=r.messages||[];const incoming=msgs.filter(x=>!x.sent_by_me);const unread=incoming.filter(x=>!x.read_at);
-     const badge=document.getElementById('cioeMessagesBadge');if(badge){badge.textContent=String(unread.length);badge.classList.toggle('hidden',unread.length===0);badge.classList.toggle('flex',unread.length>0)}
+     const badge=document.getElementById('cioeMessagesBadge');if(badge){badge.textContent=unread.length>99?'99+':String(unread.length);badge.style.display=unread.length>0?'inline-flex':'none';badge.title=unread.length===1?'1 mensaje nuevo':`${unread.length} mensajes nuevos`;}
      const list=document.getElementById('cioeMessagesList');if(list){list.innerHTML=msgs.length?msgs.map(x=>{const sent=!!x.sent_by_me;const unreadCard=!sent&&!x.read_at;return `<div class="cioe-msg-card ${unreadCard?'unread':''}"><div class="flex justify-between gap-3"><div class="min-w-0"><div class="text-[10px] font-black ${sent?'text-violet-400':'text-cyan-400'}">${sent?'PARA: '+esc(x.recipient_username):'DE: '+esc(x.sender_username)} ${unreadCard?'<span class="ml-2 text-rose-400">● NUEVO</span>':''}</div><div class="text-xs text-slate-100 mt-1 whitespace-pre-wrap break-words">${esc(x.body)}</div><div class="text-[9px] text-slate-500 mt-2">${limaDate(x.created_at)} · Se elimina automáticamente a las 24 h</div></div>${typeof isAdminUser==='function'&&isAdminUser()?`<button onclick="deleteCioeMessage('${esc(x.message_id)}')" class="shrink-0 w-8 h-8 rounded-lg bg-rose-500/10 border border-rose-500/30 text-rose-400 hover:bg-rose-500/20" title="Eliminar"><i class="fa-solid fa-trash"></i></button>`:''}</div></div>`}).join(''):'<div class="text-center text-xs text-slate-500 py-8">No hay mensajes de las últimas 24 horas.</div>'}
      if(markRead&&unread.length){await Promise.allSettled(unread.map(x=>apiRequest('/api/messages/'+encodeURIComponent(x.message_id)+'/read',{method:'PATCH'})));setTimeout(()=>loadCioeMessages(false),150)}
    }catch(e){if(e.status!==401)console.warn('Mensajería:',e)}
@@ -9242,6 +9242,7 @@ window.addEventListener('load',function(){
  function start(){if(messagePoll)clearInterval(messagePoll);setTimeout(()=>loadCioeMessages(false),800);messagePoll=setInterval(()=>loadCioeMessages(false),10000)}
  document.addEventListener('DOMContentLoaded',start,{once:true});
  window.addEventListener('storage',()=>setTimeout(()=>loadCioeMessages(false),250));
+ window.addEventListener('focus',()=>setTimeout(()=>loadCioeMessages(false),150));
 })();
 </script>
 
