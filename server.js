@@ -295,6 +295,20 @@ async function initDb() {
       ADD COLUMN IF NOT EXISTS device_id UUID REFERENCES user_devices(device_id) ON DELETE SET NULL;
   `);
 
+  // Mensajería interna: los mensajes se eliminan automáticamente después de 24 horas.
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS internal_messages (
+      message_id UUID PRIMARY KEY,
+      sender_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      recipient_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      body TEXT NOT NULL,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      read_at TIMESTAMPTZ
+    );
+    CREATE INDEX IF NOT EXISTS idx_internal_messages_recipient ON internal_messages(recipient_id, created_at DESC);
+    CREATE INDEX IF NOT EXISTS idx_internal_messages_created_at ON internal_messages(created_at);
+  `);
+
   // ====================================================
   // CREAR ADMIN SI NO EXISTE
   // ====================================================
@@ -1190,6 +1204,77 @@ app.delete(
     }
   }
 );
+
+// ======================================================
+// MENSAJERÍA INTERNA - 24 HORAS
+// ======================================================
+async function cleanupExpiredMessages(){
+  await pool.query(`DELETE FROM internal_messages WHERE created_at <= NOW() - INTERVAL '24 hours'`);
+}
+
+// Mensajes visibles para el usuario actual. El admin también ve los enviados por él.
+app.get("/api/messages", auth, async (req,res)=>{
+  try{
+    await cleanupExpiredMessages();
+    const isAdmin=req.user?.role==="admin";
+    const q=await pool.query(
+      isAdmin
+        ? `SELECT m.message_id,m.body,m.created_at,m.read_at,
+                  su.username sender_username,ru.username recipient_username,
+                  (m.sender_id=$1) AS sent_by_me
+           FROM internal_messages m
+           JOIN users su ON su.id=m.sender_id
+           JOIN users ru ON ru.id=m.recipient_id
+           WHERE m.sender_id=$1 OR m.recipient_id=$1
+           ORDER BY m.created_at DESC`
+        : `SELECT m.message_id,m.body,m.created_at,m.read_at,
+                  su.username sender_username,ru.username recipient_username,FALSE AS sent_by_me
+           FROM internal_messages m
+           JOIN users su ON su.id=m.sender_id
+           JOIN users ru ON ru.id=m.recipient_id
+           WHERE m.recipient_id=$1
+           ORDER BY m.created_at DESC`,
+      [req.user.id]
+    );
+    res.json({ok:true,messages:q.rows});
+  }catch(err){console.error(err);res.status(500).json({ok:false,error:"No se pudieron cargar los mensajes"});}
+});
+
+// Solo el administrador puede enviar mensajes a usuarios del sistema.
+app.post("/api/messages", auth, adminOnly, async (req,res)=>{
+  try{
+    await cleanupExpiredMessages();
+    const recipient=String(req.body?.recipient||"").trim();
+    const body=String(req.body?.body||"").trim();
+    if(!recipient || !body || body.length>1000) return res.status(400).json({ok:false,error:"Destinatario o mensaje inválido"});
+    const u=await pool.query(`SELECT id,username,active FROM users WHERE username=$1`,[recipient]);
+    if(!u.rowCount || !u.rows[0].active) return res.status(404).json({ok:false,error:"Usuario no encontrado o inactivo"});
+    const q=await pool.query(
+      `INSERT INTO internal_messages(message_id,sender_id,recipient_id,body,created_at) VALUES($1,$2,$3,$4,NOW()) RETURNING message_id,created_at`,
+      [randomUUID(),req.user.id,u.rows[0].id,body]
+    );
+    res.json({ok:true,message:q.rows[0]});
+  }catch(err){console.error(err);res.status(500).json({ok:false,error:"No se pudo enviar el mensaje"});}
+});
+
+// Marca como leído únicamente un mensaje recibido por el usuario actual.
+app.patch("/api/messages/:id/read", auth, async (req,res)=>{
+  try{
+    await cleanupExpiredMessages();
+    const q=await pool.query(`UPDATE internal_messages SET read_at=COALESCE(read_at,NOW()) WHERE message_id=$1 AND recipient_id=$2 RETURNING message_id`,[req.params.id,req.user.id]);
+    if(!q.rowCount) return res.status(404).json({ok:false,error:"Mensaje no encontrado"});
+    res.json({ok:true});
+  }catch(err){console.error(err);res.status(500).json({ok:false,error:"No se pudo actualizar el mensaje"});}
+});
+
+// El administrador puede eliminar cualquier mensaje visible del sistema.
+app.delete("/api/messages/:id", auth, adminOnly, async (req,res)=>{
+  try{
+    const q=await pool.query(`DELETE FROM internal_messages WHERE message_id=$1 RETURNING message_id`,[req.params.id]);
+    if(!q.rowCount) return res.status(404).json({ok:false,error:"Mensaje no encontrado"});
+    res.json({ok:true});
+  }catch(err){console.error(err);res.status(500).json({ok:false,error:"No se pudo eliminar el mensaje"});}
+});
 
 // ======================================================
 // INICIAR SERVIDOR
