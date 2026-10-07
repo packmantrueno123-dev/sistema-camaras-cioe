@@ -2167,6 +2167,9 @@ body.cioe-custom-theme #themeCustomizerBtn{background-color:var(--cioe-accent)!i
           <button type="button" onclick="downloadCameraStatisticsExcel()" class="bg-emerald-500 hover:bg-emerald-400 text-black px-4 py-2 rounded-xl text-xs font-black transition flex items-center gap-2">
             <i class="fa-solid fa-file-excel"></i> Descargar Excel
           </button>
+          <button type="button" onclick="downloadCameraStatisticsWord()" class="bg-blue-500 hover:bg-blue-400 text-white px-4 py-2 rounded-xl text-xs font-black transition flex items-center gap-2">
+            <i class="fa-solid fa-file-word"></i> Descargar Word
+          </button>
           <button type="button" onclick="showMainDashboardView()" class="bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2">
             <i class="fa-solid fa-arrow-left text-amber-400"></i> Volver al Centro de Control
           </button>
@@ -8842,6 +8845,158 @@ window.addEventListener('load',function(){
     const a=document.createElement('a');
     a.href=url;
     a.download=`Estadistica_General_Camaras_${new Date().toISOString().slice(0,10)}.xls`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  };
+
+
+  window.downloadCameraStatisticsWord=function(){
+    // Actualiza primero los contadores de cada módulo para tomar el estado más reciente.
+    try{ if(typeof updateStats==='function') updateStats(); }catch(_){}
+    try{ if(typeof updateVecinalStats==='function') updateVecinalStats(); }catch(_){}
+    try{ if(typeof renderCamarasFijasTable==='function') renderCamarasFijasTable(); }catch(_){}
+    try{ if(typeof renderTotems==='function') renderTotems(); }catch(_){}
+
+    const n=id=>{
+      const el=document.getElementById(id);
+      const v=Number(String(el?.textContent||'').replace(/[^\d]/g,''));
+      return Number.isFinite(v)?v:0;
+    };
+
+    const centro={
+      nombre:'CÁMARAS MUNICIPALES / CENTRO DE CONTROL',
+      op:n('stat-operativas'),
+      inop:n('stat-inoperativas'),
+      mant:n('stat-mantenimiento'),
+      total:n('stat-total')
+    };
+    const vec={
+      nombre:'BARRIO SEGURO / CÁMARAS VECINALES',
+      op:n('vec-stat-operativas'),
+      inop:n('vec-stat-inoperativas'),
+      mant:n('vec-stat-mantenimiento'),
+      total:n('vec-stat-total')
+    };
+    const fijas={
+      nombre:'CÁMARAS FIJAS DSS',
+      op:n('fijas-stat-operativas'),
+      inop:n('fijas-stat-inoperativas'),
+      mant:n('fijas-stat-mantenimiento'),
+      total:n('fijas-stat-total')
+    };
+    const tot={
+      nombre:'TÓTEMS M.D.L.O.',
+      op:n('totStatOp'),
+      inop:n('totStatInop'),
+      mant:n('totStatMant'),
+      total:n('totStatTotal')
+    };
+
+    // Si DSS todavía no había pintado el contador, usa el cálculo real ya corregido.
+    if(!fijas.total){
+      try{
+        if(typeof getTotalCamarasFijasGeneral==='function') fijas.total=Number(getTotalCamarasFijasGeneral())||0;
+      }catch(_){}
+    }
+
+    const rows=[centro,vec,fijas,tot];
+    const totalOp=rows.reduce((a,x)=>a+x.op,0);
+    const totalInop=rows.reduce((a,x)=>a+x.inop,0);
+    const totalMant=rows.reduce((a,x)=>a+x.mant,0);
+    const totalGeneral=rows.reduce((a,x)=>a+x.total,0);
+
+    const now=new Date();
+    const fechaLima=new Intl.DateTimeFormat('es-PE',{
+      timeZone:'America/Lima',day:'2-digit',month:'long',year:'numeric'
+    }).format(now);
+    const mesLima=new Intl.DateTimeFormat('es-PE',{
+      timeZone:'America/Lima',month:'long',year:'numeric'
+    }).format(now).toUpperCase();
+
+    const esc=v=>String(v??'')
+      .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+
+    const detalle=rows.map(r=>`
+      <tr>
+        <td>${esc(r.nombre)}</td>
+        <td class="num">${r.op}</td>
+        <td class="num">${r.inop}</td>
+        <td class="num">${r.mant}</td>
+        <td class="num bold">${r.total}</td>
+      </tr>`).join('');
+
+    const html=`<!DOCTYPE html>
+<html xmlns:o="urn:schemas-microsoft-com:office:office"
+      xmlns:w="urn:schemas-microsoft-com:office:word"
+      xmlns="http://www.w3.org/TR/REC-html40">
+<head>
+<meta charset="UTF-8">
+<meta name="ProgId" content="Word.Document">
+<title>Informe de Cámaras</title>
+<style>
+  @page{size:21cm 29.7cm;margin:2cm 2.2cm 1.8cm 2.2cm;}
+  body{font-family:Arial,sans-serif;font-size:11pt;color:#000;line-height:1.35;}
+  .page{max-width:17cm;margin:0 auto;}
+  h1{text-align:center;font-size:13pt;text-decoration:underline;margin:0 0 34px;font-weight:700;}
+  .meta{width:100%;border-collapse:collapse;margin-bottom:12px;}
+  .meta td{border:0;padding:5px 2px;vertical-align:top;}
+  .meta .label{width:17%;}.meta .colon{width:2%;text-align:center;}
+  .line{border-bottom:2px solid #111;padding-bottom:6px;}
+  p{margin:26px 0 24px;text-align:justify;}
+  table.report{border-collapse:collapse;width:78%;margin:20px auto 34px;}
+  table.report th,table.report td{border:1px solid #222;padding:8px 6px;}
+  table.report th{font-weight:700;text-align:center;}
+  .titlecell{background:#d9d7d7;font-size:12pt;}
+  .num{text-align:right;}.bold{font-weight:700;}
+  .detail{width:86% !important;}
+  .detail td:first-child{width:48%;}
+  .signature{width:260px;margin:80px auto 0;text-align:center;border-top:1px solid #777;padding-top:7px;font-size:9.5pt;line-height:1.1;}
+  .signature strong{font-size:10pt;}
+</style>
+</head>
+<body>
+<div class="page">
+  <h1>INFORME N° 004-2026-MDR-CIOE-TM/SGS/GSC/MDLO</h1>
+
+  <table class="meta">
+    <tr><td class="label">A</td><td class="colon">:</td><td>LUIS ALBERTO ARAUJO RAMOS<br><strong>SUB GERENTE DE SERENAZGO (E)</strong></td></tr>
+    <tr><td class="label">DE</td><td class="colon">:</td><td>MARLENE DIAZ RODRIGEZ<br><strong>SUPERVISORA CENTRAL DE CÁMARAS TURNO MAÑANA</strong></td></tr>
+    <tr><td class="label">ASUNTO</td><td class="colon">:</td><td><strong>ESTADO DE LAS CÁMARAS DE VIDEOVIGILANCIA DE LOS OLIVOS</strong></td></tr>
+    <tr class="line"><td class="label">FECHA</td><td class="colon">:</td><td>Los Olivos, ${esc(fechaLima)}</td></tr>
+  </table>
+
+  <p>Tengo el agrado de dirigirme a usted con el propósito de extenderle un cordial saludo y, al mismo tiempo informar el estado actualizado de las cámaras interconectadas en el Centro de Videovigilancia de Los Olivos correspondiente a ${esc(mesLima.toLowerCase())}.</p>
+
+  <table class="report">
+    <tr><th colspan="2" class="titlecell">ESTADO DE CÁMARAS – ${esc(mesLima)}</th></tr>
+    <tr><td>OPERATIVAS</td><td class="num">${totalOp}</td></tr>
+    <tr><td>INOPERATIVAS</td><td class="num">${totalInop}</td></tr>
+    <tr><td>MANTENIMIENTO</td><td class="num">${totalMant}</td></tr>
+    <tr><td class="bold">TOTAL</td><td class="num bold">${totalGeneral}</td></tr>
+  </table>
+
+  <table class="report detail">
+    <tr><th colspan="5" class="titlecell">DETALLE DEL ESTADO DE CÁMARAS – ${esc(mesLima)}</th></tr>
+    <tr><th>TIPO</th><th>OPERATIVO</th><th>INOPERATIVO</th><th>MANTENIMIENTO</th><th>SUBTOTAL</th></tr>
+    ${detalle}
+    <tr><td colspan="4" class="num bold">TOTAL</td><td class="num bold">${totalGeneral}</td></tr>
+  </table>
+
+  <div class="signature">
+    <strong>MARLENE DIAZ RODRIGUEZ</strong><br>
+    SUPERVISORA CENTRAL DE CÁMARAS<br>
+    TURNO MAÑANA
+  </div>
+</div>
+</body></html>`;
+
+    const blob=new Blob(['\ufeff',html],{type:'application/msword;charset=utf-8;'});
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement('a');
+    a.href=url;
+    a.download=`Informe_Estado_Camaras_${now.toISOString().slice(0,10)}.doc`;
     document.body.appendChild(a);
     a.click();
     a.remove();
