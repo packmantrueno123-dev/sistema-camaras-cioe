@@ -3,7 +3,7 @@ const cors = require("cors");
 const { Pool } = require("pg");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
-const { randomUUID, createHash } = require("crypto");
+const { randomUUID, createHash, createCipheriv, createDecipheriv, randomBytes } = require("crypto");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -1305,11 +1305,55 @@ app.delete("/api/messages/:id", auth, adminOnly, async (req,res)=>{
   }catch(err){console.error(err);res.status(500).json({ok:false,error:"No se pudo eliminar el mensaje"});}
 });
 
+
+// =============== SPOTIFY (independiente del sistema CIOE) ===============
+const SPOTIFY_REDIRECT_URI=process.env.SPOTIFY_REDIRECT_URI || 'https://sistema-camaras-cioe-api.onrender.com/api/spotify/callback';
+const spotifyKey=createHash('sha256').update(String(JWT_SECRET)+':spotify-tokens').digest();
+function spotifyEncrypt(data){const iv=randomBytes(12),c=createCipheriv('aes-256-gcm',spotifyKey,iv);const v=Buffer.concat([c.update(JSON.stringify(data),'utf8'),c.final()]);return Buffer.concat([iv,c.getAuthTag(),v]).toString('base64')}
+function spotifyDecrypt(data){const b=Buffer.from(data,'base64'),d=createDecipheriv('aes-256-gcm',spotifyKey,b.subarray(0,12));d.setAuthTag(b.subarray(12,28));return JSON.parse(Buffer.concat([d.update(b.subarray(28)),d.final()]).toString('utf8'))}
+async function spotifyTokenRequest(body){
+ const clientId=process.env.SPOTIFY_CLIENT_ID,secret=process.env.SPOTIFY_CLIENT_SECRET;
+ if(!clientId||!secret)throw Error('Faltan credenciales Spotify en Render');
+ const response=await fetch('https://accounts.spotify.com/api/token',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded','Authorization':'Basic '+Buffer.from(clientId+':'+secret).toString('base64')},body:new URLSearchParams(body),signal:AbortSignal.timeout(8000)});
+ const data=await response.json();if(!response.ok)throw Error(data.error_description||data.error||'Spotify rechazó la solicitud');return data;
+}
+async function spotifyStore(userId,info){await pool.query('INSERT INTO spotify_connections(user_id,token_data) VALUES($1,$2) ON CONFLICT(user_id) DO UPDATE SET token_data=EXCLUDED.token_data',[userId,spotifyEncrypt(info)])}
+app.get('/api/spotify/connect',auth,(req,res)=>{
+ if(!process.env.SPOTIFY_CLIENT_ID||!process.env.SPOTIFY_CLIENT_SECRET)return res.status(503).json({ok:false,error:'Configura SPOTIFY_CLIENT_ID y SPOTIFY_CLIENT_SECRET en Render'});
+ const state=jwt.sign({userId:req.user.id,purpose:'spotify',nonce:randomUUID()},JWT_SECRET,{expiresIn:'5m'});
+ const url=new URL('https://accounts.spotify.com/authorize');url.search=new URLSearchParams({client_id:process.env.SPOTIFY_CLIENT_ID,response_type:'code',redirect_uri:SPOTIFY_REDIRECT_URI,scope:'user-read-currently-playing user-read-playback-state',state}).toString();res.json({ok:true,url:url.toString()});
+});
+app.get('/api/spotify/callback',async(req,res)=>{
+ const back='https://sistema-camaras-cioe.onrender.com/';
+ try{
+  if(req.query.error)throw Error('Acceso denegado');
+  const state=jwt.verify(String(req.query.state||''),JWT_SECRET);
+  if(state.purpose!=='spotify'||!Number.isInteger(state.userId)||!req.query.code)throw Error('Autorización inválida');
+  const t=await spotifyTokenRequest({grant_type:'authorization_code',code:String(req.query.code),redirect_uri:SPOTIFY_REDIRECT_URI});
+  await spotifyStore(state.userId,{access_token:t.access_token,refresh_token:t.refresh_token,expires_at:Date.now()+t.expires_in*1000});
+  res.redirect(back+'?spotify=connected');
+ }catch(err){console.error('Spotify callback:',err.message);res.redirect(back+'?spotify=error')}
+});
+app.get('/api/spotify/now-playing',auth,async(req,res)=>{
+ try{
+  const q=await pool.query('SELECT token_data FROM spotify_connections WHERE user_id=$1',[req.user.id]);
+  if(!q.rowCount)return res.json({ok:true,connected:false,track:null});
+  let t=spotifyDecrypt(q.rows[0].token_data);
+  if(Date.now()>=t.expires_at-60000){const n=await spotifyTokenRequest({grant_type:'refresh_token',refresh_token:t.refresh_token});t={access_token:n.access_token,refresh_token:n.refresh_token||t.refresh_token,expires_at:Date.now()+n.expires_in*1000};await spotifyStore(req.user.id,t)}
+  const r=await fetch('https://api.spotify.com/v1/me/player/currently-playing',{headers:{Authorization:'Bearer '+t.access_token},signal:AbortSignal.timeout(7000)});
+  if(r.status===204)return res.json({ok:true,connected:true,track:null});
+  if(!r.ok)throw Error('Spotify HTTP '+r.status);
+  const d=await r.json();const item=d.item;
+  res.json({ok:true,connected:true,track:item?{name:item.name,artist:(item.artists||[]).map(a=>a.name).join(', '),image:item.album?.images?.[0]?.url||null,isPlaying:!!d.is_playing}:null});
+ }catch(e){console.error('Spotify:',e.message);res.status(503).json({ok:false,error:'Spotify temporalmente no disponible'})}
+});
+
 // ======================================================
 // INICIAR SERVIDOR
 // ======================================================
 
 initDb()
+  .then(async () => { await pool.query(`CREATE TABLE IF NOT EXISTS spotify_connections (user_id INTEGER PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE, token_data TEXT NOT NULL)`); })
   .then(() => {
     app.listen(PORT, () => {
       console.log(
