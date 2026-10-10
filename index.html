@@ -5860,24 +5860,7 @@ body.cioe-custom-theme #themeCustomizerBtn{background-color:var(--cioe-accent)!i
         '<html xmlns:o="urn:schemas-microsoft-com:office:office" ' +
         'xmlns:x="urn:schemas-microsoft-com:office:excel" ' +
         'xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="UTF-8"></head><body>' +
-        tableHtml + '<script>
-
-// ===== NIVELES Y RANGOS CIOE: GP persistentes en servidor =====
-const CIOE_RANGOS = ['Novato','Aprendiz','Iniciado','Explorador','Aventurero','Soldado','Guerrero','Defensor','Combatiente','Caballero','Élite','Veterano','Maestro','Gran Maestro','Héroe','Campeón','Legendario','Mítico','Ilustre','Supremo','Celestial','Divino','Inmortal','Arcano','Titán','Leyenda Viva','Dios de Guerra','Supra Divino','Rey Legendario','Emperador'];
-const CIOE_UMBRALES = [0,500,1000,2000,3500,6000,10000,15000,25000,40000,60000,90000,130000,190000,270000,370000,500000,700000,950000,1300000,1750000,2300000,3000000,3900000,5000000,6500000,8500000,11000000,15000000,20000000];
-function cioeNivelGp(gp){let i=0;while(i<29 && gp>=CIOE_UMBRALES[i+1])i++;return {nivel:i+1,rango:CIOE_RANGOS[i],progreso:i===29?100:Math.min(100,100*(gp-CIOE_UMBRALES[i])/(CIOE_UMBRALES[i+1]-CIOE_UMBRALES[i])),faltan:i===29?0:CIOE_UMBRALES[i+1]-gp};}
-async function cioeToggleRangos(){const p=document.getElementById('cioeRangosPanel');const abrir=p.classList.contains('hidden');p.classList.toggle('hidden',!abrir);if(abrir)await cioeCargarRangos();}
-async function cioeCargarRangos(){const estado=document.getElementById('cioeRangosEstado');estado.textContent='Consultando datos del servidor...';try{
- const data=await apiRequest('/api/gp/ranking');const lista=data.ranking||[];const yo=data.me||{gp:0};const nivel=cioeNivelGp(Number(yo.gp)||0);const fmt=n=>Number(n).toLocaleString('es-PE');
- document.getElementById('cioeMiNivel').textContent=`Nivel ${nivel.nivel} — ${nivel.rango}`;document.getElementById('cioeMiGp').textContent=fmt(yo.gp||0)+' GP';document.getElementById('cioeMiSiguiente').textContent=nivel.nivel===30?'Nivel máximo':fmt(nivel.faltan)+' GP para nivel '+(nivel.nivel+1);document.getElementById('cioeBarraGp').style.width=nivel.progreso+'%';
- const tbody=document.getElementById('cioeRankingBody');tbody.replaceChildren();lista.forEach((u,i)=>{const tr=document.createElement('tr');tr.className='border-t border-slate-800';[String(i+1),u.username,`Nivel ${cioeNivelGp(Number(u.gp)).nivel} — ${cioeNivelGp(Number(u.gp)).rango}`,fmt(u.gp)].forEach((t,j)=>{const td=document.createElement('td');td.className='p-2'+(j===3?' text-right':'');td.textContent=t;tr.appendChild(td)});tbody.appendChild(tr)});
- const admin=data.isAdmin===true;document.getElementById('cioeAdminGpPanel').classList.toggle('hidden',!admin);if(admin){const sel=document.getElementById('cioeGpUsuario');const anterior=sel.value;sel.replaceChildren();lista.filter(u=>u.role!=='admin').forEach(u=>{const opt=document.createElement('option');opt.value=u.id;opt.textContent=u.username;sel.appendChild(opt)});if([...sel.options].some(o=>o.value===anterior))sel.value=anterior;}
- estado.textContent='Datos actualizados desde PostgreSQL.';
-}catch(e){estado.textContent='No se pudieron cargar los GP: '+e.message;}}
-async function cioeAsignarGp(e){e.preventDefault();const btn=e.submitter;if(btn)btn.disabled=true;try{await apiRequest('/api/gp/award',{method:'POST',body:JSON.stringify({userId:Number(document.getElementById('cioeGpUsuario').value),points:Number(document.getElementById('cioeGpCantidad').value),reason:document.getElementById('cioeGpMotivo').value.trim()})});document.getElementById('cioeGpCantidad').value='';document.getElementById('cioeGpMotivo').value='';await cioeCargarRangos();}catch(err){alert('No se pudieron asignar GP: '+err.message)}finally{if(btn)btn.disabled=false;}}
-
-</script>
-</body></html>';
+        tableHtml + '</body></html>';
 
       const blob = new Blob(['\ufeff', excelHtml], {type:'application/vnd.ms-excel;charset=utf-8;'});
       const url = URL.createObjectURL(blob);
@@ -9985,5 +9968,22 @@ window.addEventListener('load',function(){
 })();
 </script>
 
+<script>
+
+// ===== NIVELES Y RANGOS CIOE: GP persistentes en servidor =====
+const CIOE_RANGOS = ['Novato','Aprendiz','Iniciado','Explorador','Aventurero','Soldado','Guerrero','Defensor','Combatiente','Caballero','Élite','Veterano','Maestro','Gran Maestro','Héroe','Campeón','Legendario','Mítico','Ilustre','Supremo','Celestial','Divino','Inmortal','Arcano','Titán','Leyenda Viva','Dios de Guerra','Supra Divino','Rey Legendario','Emperador'];
+const CIOE_UMBRALES = [0,500,1000,2000,3500,6000,10000,15000,25000,40000,60000,90000,130000,190000,270000,370000,500000,700000,950000,1300000,1750000,2300000,3000000,3900000,5000000,6500000,8500000,11000000,15000000,20000000];
+function cioeNivelGp(gp){let i=0;while(i<29 && gp>=CIOE_UMBRALES[i+1])i++;return {nivel:i+1,rango:CIOE_RANGOS[i],progreso:i===29?100:Math.min(100,100*(gp-CIOE_UMBRALES[i])/(CIOE_UMBRALES[i+1]-CIOE_UMBRALES[i])),faltan:i===29?0:CIOE_UMBRALES[i+1]-gp};}
+async function cioeToggleRangos(){const p=document.getElementById('cioeRangosPanel');const abrir=p.classList.contains('hidden');p.classList.toggle('hidden',!abrir);if(abrir)await cioeCargarRangos();}
+async function cioeCargarRangos(){const estado=document.getElementById('cioeRangosEstado');estado.textContent='Consultando datos del servidor...';try{
+ const data=await apiRequest('/api/gp/ranking');const lista=data.ranking||[];const yo=data.me||{gp:0};const nivel=cioeNivelGp(Number(yo.gp)||0);const fmt=n=>Number(n).toLocaleString('es-PE');
+ document.getElementById('cioeMiNivel').textContent=`Nivel ${nivel.nivel} — ${nivel.rango}`;document.getElementById('cioeMiGp').textContent=fmt(yo.gp||0)+' GP';document.getElementById('cioeMiSiguiente').textContent=nivel.nivel===30?'Nivel máximo':fmt(nivel.faltan)+' GP para nivel '+(nivel.nivel+1);document.getElementById('cioeBarraGp').style.width=nivel.progreso+'%';
+ const tbody=document.getElementById('cioeRankingBody');tbody.replaceChildren();lista.forEach((u,i)=>{const tr=document.createElement('tr');tr.className='border-t border-slate-800';[String(i+1),u.username,`Nivel ${cioeNivelGp(Number(u.gp)).nivel} — ${cioeNivelGp(Number(u.gp)).rango}`,fmt(u.gp)].forEach((t,j)=>{const td=document.createElement('td');td.className='p-2'+(j===3?' text-right':'');td.textContent=t;tr.appendChild(td)});tbody.appendChild(tr)});
+ const admin=data.isAdmin===true;document.getElementById('cioeAdminGpPanel').classList.toggle('hidden',!admin);if(admin){const sel=document.getElementById('cioeGpUsuario');const anterior=sel.value;sel.replaceChildren();lista.filter(u=>u.role!=='admin').forEach(u=>{const opt=document.createElement('option');opt.value=u.id;opt.textContent=u.username;sel.appendChild(opt)});if([...sel.options].some(o=>o.value===anterior))sel.value=anterior;}
+ estado.textContent='Datos actualizados desde PostgreSQL.';
+}catch(e){estado.textContent='No se pudieron cargar los GP: '+e.message;}}
+async function cioeAsignarGp(e){e.preventDefault();const btn=e.submitter;if(btn)btn.disabled=true;try{await apiRequest('/api/gp/award',{method:'POST',body:JSON.stringify({userId:Number(document.getElementById('cioeGpUsuario').value),points:Number(document.getElementById('cioeGpCantidad').value),reason:document.getElementById('cioeGpMotivo').value.trim()})});document.getElementById('cioeGpCantidad').value='';document.getElementById('cioeGpMotivo').value='';await cioeCargarRangos();}catch(err){alert('No se pudieron asignar GP: '+err.message)}finally{if(btn)btn.disabled=false;}}
+
+</script>
 </body>
 </html>
