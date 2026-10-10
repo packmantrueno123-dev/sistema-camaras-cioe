@@ -1465,9 +1465,9 @@ body.cioe-custom-theme #themeCustomizerBtn{background-color:var(--cioe-accent)!i
 <style id="cioeSpotifyStyle">
 #cioeSpotifyPlayer{display:flex;align-items:center;gap:7px;padding:7px 10px;border:1px solid #22563d;background:#0c211b;border-radius:12px;color:#1ed760;font-size:11px;font-weight:800;white-space:nowrap}
 #cioeSpotifyPlayer button{border:0;color:#1ed760;font-weight:900}
-#cioeSpotifyMini{background:#0a0f1d;border:1px solid #22563d;border-radius:15px;padding:12px 14px;color:#e2e8f0;display:grid;grid-template-columns:minmax(0,1fr) minmax(340px,440px);gap:16px;align-items:center}
+#cioeSpotifyMini{background:#0a0f1d;border:1px solid #22563d;border-radius:15px;padding:12px 14px;color:#e2e8f0;display:grid;grid-template-columns:minmax(0,1fr) minmax(340px,440px);gap:14px;align-items:stretch}
 #cioeSpotifyMini .spotify-heading{display:flex;align-items:center;gap:8px;margin-bottom:10px}
-#cioeSpotifyMini .spotify-left{min-width:0;display:flex;flex-direction:column;justify-content:center;gap:9px}
+#cioeSpotifyMini .spotify-left{min-width:0;display:flex;flex-direction:column;justify-content:center;gap:10px}
 #cioeSpotifyMini .spotify-controls{display:flex;align-items:center;gap:8px;min-width:0}
 #cioeSpotifyMini input{min-width:0;flex:1;background:#030712;color:#f8fafc;border:1px solid #334155;border-radius:9px;padding:9px 11px;outline:none;font-size:12px}
 #cioeSpotifyMini input:focus{border-color:#1ed760}
@@ -1677,7 +1677,7 @@ body.cioe-custom-theme #themeCustomizerBtn{background-color:var(--cioe-accent)!i
     </header>
 
     <!-- Spotify: búsqueda y álbum compartido, sin vincular cuentas a CIOE -->
-    <section id="cioeSpotifyMini" aria-label="Spotify: buscador y álbum">
+    <section id="cioeSpotifyMini" aria-label="Spotify: buscador y playlist">
       <div class="spotify-left">
         <div class="spotify-heading">
           <i class="fa-brands fa-spotify" style="color:#1ed760;font-size:19px"></i>
@@ -1686,21 +1686,21 @@ body.cioe-custom-theme #themeCustomizerBtn{background-color:var(--cioe-accent)!i
         <form id="cioeSpotifySearchForm" class="spotify-controls" onsubmit="return cioeSpotifySearch(event)">
           <input id="cioeSpotifySearchInput" type="search" placeholder="Buscar canción, artista o álbum..." autocomplete="off" aria-label="Buscar música en Spotify">
           <button type="submit" class="spotify-search"><i class="fa-solid fa-magnifying-glass mr-1"></i> Buscar</button>
-          <button type="button" class="spotify-secondary" onclick="window.open('https://open.spotify.com/collection/albums','_blank','noopener,noreferrer')"><i class="fa-solid fa-record-vinyl mr-1"></i> Mis álbumes</button>
+          <button type="button" class="spotify-secondary" onclick="window.open('https://open.spotify.com/collection/tracks','_blank','noopener,noreferrer')"><i class="fa-solid fa-heart mr-1"></i> Mis canciones</button>
         </form>
         <form class="spotify-controls" onsubmit="return cioeSpotifyLoadAlbum(event)">
-          <input id="cioeSpotifyAlbumUrl" type="url" placeholder="Pega aquí el enlace de tu álbum de Spotify..." aria-label="Enlace de álbum de Spotify">
-          <button type="submit" class="spotify-search"><i class="fa-solid fa-play mr-1"></i> Cargar álbum</button>
+          <input id="cioeSpotifyAlbumUrl" type="url" placeholder="Pega el enlace de tu playlist o álbum de Spotify..." aria-label="Enlace de playlist o álbum de Spotify">
+          <button type="submit" class="spotify-search"><i class="fa-solid fa-play mr-1"></i> Reproducir</button>
         </form>
-        <p class="spotify-help">Busca música en Spotify o abre <b>Mis álbumes</b> para copiar el enlace de un álbum y reproducirlo aquí.</p>
+        <p class="spotify-help"><b>¿Quieres tus canciones favoritas?</b> Abre <b>Mis canciones</b>, añádelas a una playlist en Spotify y pega aquí el enlace de esa playlist. La colección privada de Me gusta no se puede insertar directamente.</p>
       </div>
       <div class="spotify-player-box">
         <div class="spotify-player-title">
           <span><i class="fa-brands fa-spotify" style="color:#1ed760"></i> REPRODUCTOR</span>
-          <button type="button" class="spotify-secondary" style="padding:5px 8px;font-size:10px" onclick="window.open('https://open.spotify.com/collection/albums','_blank','noopener,noreferrer')">Abrir biblioteca <i class="fa-solid fa-arrow-up-right-from-square"></i></button>
+          <button type="button" class="spotify-secondary" style="padding:5px 8px;font-size:10px" onclick="window.open('https://open.spotify.com/collection/tracks','_blank','noopener,noreferrer')">Mis favoritos <i class="fa-solid fa-arrow-up-right-from-square"></i></button>
         </div>
         <div id="cioeSpotifyEmbed">
-          <div id="cioeSpotifyPlaceholder" class="spotify-placeholder"><span><i class="fa-solid fa-compact-disc" style="font-size:22px;color:#1ed760"></i><br>Elige un álbum de tu biblioteca y pega su enlace para mostrarlo aquí.</span></div>
+          <div id="cioeSpotifyPlaceholder" class="spotify-placeholder"><span><i class="fa-solid fa-compact-disc" style="font-size:22px;color:#1ed760"></i><br>Pega el enlace de una playlist o álbum para escucharlo aquí.</span></div>
           <iframe id="cioeSpotifyAlbumFrame" title="Álbum de Spotify" loading="lazy" style="display:none" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" referrerpolicy="strict-origin-when-cross-origin"></iframe>
           <p id="cioeSpotifyMessage">La reproducción completa depende de las condiciones de Spotify.</p>
         </div>
@@ -10041,20 +10041,23 @@ window.addEventListener('load',function(){
 (function(){
  window.cioeSpotifyFocus=function(){const el=document.getElementById('cioeSpotifySearchInput');if(el){el.scrollIntoView({behavior:'smooth',block:'center'});el.focus();}};
  window.cioeSpotifySearch=function(event){if(event)event.preventDefault();const el=document.getElementById('cioeSpotifySearchInput');const q=el?.value.trim();if(!q){el?.focus();return false;}window.open('https://open.spotify.com/search/'+encodeURIComponent(q),'_blank','noopener,noreferrer');return false;};
+ document.addEventListener('DOMContentLoaded',()=>{try{const saved=localStorage.getItem('cioeSpotifySavedLink');if(saved){const input=document.getElementById('cioeSpotifyAlbumUrl');if(input)input.value=saved;window.cioeSpotifyLoadAlbum();}}catch(e){}},{once:true});
  window.cioeSpotifyLoadAlbum=function(event){
    if(event)event.preventDefault();
    const input=document.getElementById('cioeSpotifyAlbumUrl');const msg=document.getElementById('cioeSpotifyMessage');
    const raw=(input?.value||'').trim();let url;
-   try{url=new URL(raw);}catch(e){if(msg)msg.textContent='Pega un enlace válido de un álbum de Spotify.';return false;}
+   try{url=new URL(raw);}catch(e){if(msg)msg.textContent='Pega un enlace válido de Spotify (playlist, álbum o canción).';return false;}
    const host=url.hostname.toLowerCase();const parts=url.pathname.split('/').filter(Boolean);
-   const idx=parts.indexOf('album');const id=idx>=0?parts[idx+1]:null;
+   const kind=['playlist','album','track'].find(k=>parts.includes(k));const idx=kind?parts.indexOf(kind):-1;const id=idx>=0?parts[idx+1]:null;
+   if(url.pathname.includes('/collection/tracks')){if(msg)msg.textContent='Canciones que te gustan es una colección privada. Crea una playlist con tus favoritas y pega su enlace.';return false;}
    if(!['open.spotify.com','play.spotify.com'].includes(host)||!id||!/^[a-zA-Z0-9]{15,30}$/.test(id)){
-     if(msg)msg.textContent='Usa un enlace de álbum: https://open.spotify.com/album/ID';return false;
+     if(msg)msg.textContent='Usa un enlace de playlist o álbum compartido de Spotify.';return false;
    }
    const frame=document.getElementById('cioeSpotifyAlbumFrame');const placeholder=document.getElementById('cioeSpotifyPlaceholder');
-   if(frame){frame.src='https://open.spotify.com/embed/album/'+encodeURIComponent(id)+'?utm_source=generator';frame.style.display='block';}
+   if(frame){frame.src='https://open.spotify.com/embed/'+kind+'/'+encodeURIComponent(id)+'?utm_source=generator';frame.style.display='block';}
    if(placeholder)placeholder.style.display='none';
-   if(msg)msg.textContent='Álbum cargado. La reproducción depende de las condiciones de Spotify.';
+   if(msg)msg.textContent='Contenido cargado. La reproducción depende de las condiciones de Spotify.';
+   try{localStorage.setItem('cioeSpotifySavedLink',raw)}catch(e){}
    return false;
  };
 })();
