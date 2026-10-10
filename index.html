@@ -1963,28 +1963,6 @@ body.cioe-custom-theme #themeCustomizerBtn{background-color:var(--cioe-accent)!i
         <button onclick="seleccionarTurnoCreador('TARDE')" class="bg-orange-500/10 hover:bg-orange-500/20 border border-orange-500/40 rounded-2xl p-7 text-center transition"><i class="fa-solid fa-cloud-sun text-4xl text-orange-400 mb-3"></i><span class="block font-black text-orange-300">TURNO TARDE</span></button>
         <button onclick="seleccionarTurnoCreador('NOCHE')" class="bg-indigo-500/10 hover:bg-indigo-500/20 border border-indigo-500/40 rounded-2xl p-7 text-center transition"><i class="fa-solid fa-moon text-4xl text-indigo-400 mb-3"></i><span class="block font-black text-indigo-300">TURNO NOCHE</span></button>
       </div>
-      <div class="max-w-4xl mx-auto mt-5 rounded-2xl border border-amber-500/30 bg-[#10182a] p-4">
-        <button type="button" onclick="cioeToggleRangos()" class="w-full flex items-center justify-between gap-3 text-left font-black text-amber-300"><span><i class="fa-solid fa-trophy mr-2"></i>NIVELES Y RANGOS CIOE</span><i class="fa-solid fa-chevron-down"></i></button>
-        <div id="cioeRangosPanel" class="hidden mt-4 space-y-4">
-          <div id="cioeRangosEstado" class="text-xs text-slate-400">Cargando...</div>
-          <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
-            <div class="rounded-xl bg-[#030712] border border-slate-700 p-4"><div class="text-xs text-slate-400">Mi nivel / rango</div><div id="cioeMiNivel" class="font-black text-xl text-amber-300">—</div></div>
-            <div class="rounded-xl bg-[#030712] border border-slate-700 p-4"><div class="text-xs text-slate-400">GP acumulados</div><div id="cioeMiGp" class="font-black text-xl text-cyan-300">—</div></div>
-            <div class="rounded-xl bg-[#030712] border border-slate-700 p-4"><div class="text-xs text-slate-400">Siguiente nivel</div><div id="cioeMiSiguiente" class="font-black text-sm text-white">—</div></div>
-          </div>
-          <div class="h-3 bg-slate-800 rounded-full overflow-hidden"><div id="cioeBarraGp" class="h-full bg-amber-400" style="width:0%"></div></div>
-          <h3 class="text-sm font-black text-white">CLASIFICACIÓN DE OPERADORES</h3>
-          <div class="overflow-x-auto"><table class="w-full text-xs text-left"><thead class="text-slate-400"><tr><th class="p-2">#</th><th class="p-2">Operador</th><th class="p-2">Rango</th><th class="p-2 text-right">GP</th></tr></thead><tbody id="cioeRankingBody"></tbody></table></div>
-          <div id="cioeAdminGpPanel" class="hidden border-t border-slate-700 pt-4 space-y-3"><h3 class="text-sm font-black text-amber-300">ADMINISTRACIÓN DE GP</h3>
-            <form onsubmit="cioeAsignarGp(event)" class="flex flex-wrap gap-2 items-end">
-              <label class="text-xs text-slate-400 flex-1 min-w-[150px]">Operador<select id="cioeGpUsuario" required class="mt-1 w-full bg-slate-900 border border-slate-600 rounded-lg p-2 text-white"></select></label>
-              <label class="text-xs text-slate-400 w-32">GP a sumar<input id="cioeGpCantidad" type="number" min="1" max="10000" required class="mt-1 w-full bg-slate-900 border border-slate-600 rounded-lg p-2 text-white"></label>
-              <label class="text-xs text-slate-400 flex-1 min-w-[160px]">Motivo<input id="cioeGpMotivo" maxlength="160" required placeholder="Actividad validada" class="mt-1 w-full bg-slate-900 border border-slate-600 rounded-lg p-2 text-white"></label>
-              <button type="submit" class="bg-amber-500 text-black rounded-lg p-2 font-black text-xs">Asignar GP</button>
-            </form><p class="text-xs text-slate-400">Solo administradores. Cada asignación queda registrada en el servidor.</p>
-          </div>
-        </div>
-      </div>
     </section>
     <section id="turnoTrabajoPanel" class="hidden space-y-4">
       <div class="bg-[#0a0f1d] border border-fuchsia-500/30 rounded-2xl p-4 flex flex-col md:flex-row justify-between items-center gap-3"><div><span class="text-[10px] text-slate-500 font-bold uppercase">Turno seleccionado</span><div id="turnoActualLabel" class="text-lg font-black text-fuchsia-400">—</div></div><button onclick="cambiarTurnoCreador()" class="bg-slate-800 hover:bg-slate-700 border border-slate-700 px-4 py-2 rounded-xl text-xs font-bold"><i class="fa-solid fa-right-left mr-2 text-fuchsia-400"></i>Cambiar turno</button></div>
@@ -9968,22 +9946,5 @@ window.addEventListener('load',function(){
 })();
 </script>
 
-<script>
-
-// ===== NIVELES Y RANGOS CIOE: GP persistentes en servidor =====
-const CIOE_RANGOS = ['Novato','Aprendiz','Iniciado','Explorador','Aventurero','Soldado','Guerrero','Defensor','Combatiente','Caballero','Élite','Veterano','Maestro','Gran Maestro','Héroe','Campeón','Legendario','Mítico','Ilustre','Supremo','Celestial','Divino','Inmortal','Arcano','Titán','Leyenda Viva','Dios de Guerra','Supra Divino','Rey Legendario','Emperador'];
-const CIOE_UMBRALES = [0,500,1000,2000,3500,6000,10000,15000,25000,40000,60000,90000,130000,190000,270000,370000,500000,700000,950000,1300000,1750000,2300000,3000000,3900000,5000000,6500000,8500000,11000000,15000000,20000000];
-function cioeNivelGp(gp){let i=0;while(i<29 && gp>=CIOE_UMBRALES[i+1])i++;return {nivel:i+1,rango:CIOE_RANGOS[i],progreso:i===29?100:Math.min(100,100*(gp-CIOE_UMBRALES[i])/(CIOE_UMBRALES[i+1]-CIOE_UMBRALES[i])),faltan:i===29?0:CIOE_UMBRALES[i+1]-gp};}
-async function cioeToggleRangos(){const p=document.getElementById('cioeRangosPanel');const abrir=p.classList.contains('hidden');p.classList.toggle('hidden',!abrir);if(abrir)await cioeCargarRangos();}
-async function cioeCargarRangos(){const estado=document.getElementById('cioeRangosEstado');estado.textContent='Consultando datos del servidor...';try{
- const data=await apiRequest('/api/gp/ranking');const lista=data.ranking||[];const yo=data.me||{gp:0};const nivel=cioeNivelGp(Number(yo.gp)||0);const fmt=n=>Number(n).toLocaleString('es-PE');
- document.getElementById('cioeMiNivel').textContent=`Nivel ${nivel.nivel} — ${nivel.rango}`;document.getElementById('cioeMiGp').textContent=fmt(yo.gp||0)+' GP';document.getElementById('cioeMiSiguiente').textContent=nivel.nivel===30?'Nivel máximo':fmt(nivel.faltan)+' GP para nivel '+(nivel.nivel+1);document.getElementById('cioeBarraGp').style.width=nivel.progreso+'%';
- const tbody=document.getElementById('cioeRankingBody');tbody.replaceChildren();lista.forEach((u,i)=>{const tr=document.createElement('tr');tr.className='border-t border-slate-800';[String(i+1),u.username,`Nivel ${cioeNivelGp(Number(u.gp)).nivel} — ${cioeNivelGp(Number(u.gp)).rango}`,fmt(u.gp)].forEach((t,j)=>{const td=document.createElement('td');td.className='p-2'+(j===3?' text-right':'');td.textContent=t;tr.appendChild(td)});tbody.appendChild(tr)});
- const admin=data.isAdmin===true;document.getElementById('cioeAdminGpPanel').classList.toggle('hidden',!admin);if(admin){const sel=document.getElementById('cioeGpUsuario');const anterior=sel.value;sel.replaceChildren();lista.filter(u=>u.role!=='admin').forEach(u=>{const opt=document.createElement('option');opt.value=u.id;opt.textContent=u.username;sel.appendChild(opt)});if([...sel.options].some(o=>o.value===anterior))sel.value=anterior;}
- estado.textContent='Datos actualizados desde PostgreSQL.';
-}catch(e){estado.textContent='No se pudieron cargar los GP: '+e.message;}}
-async function cioeAsignarGp(e){e.preventDefault();const btn=e.submitter;if(btn)btn.disabled=true;try{await apiRequest('/api/gp/award',{method:'POST',body:JSON.stringify({userId:Number(document.getElementById('cioeGpUsuario').value),points:Number(document.getElementById('cioeGpCantidad').value),reason:document.getElementById('cioeGpMotivo').value.trim()})});document.getElementById('cioeGpCantidad').value='';document.getElementById('cioeGpMotivo').value='';await cioeCargarRangos();}catch(err){alert('No se pudieron asignar GP: '+err.message)}finally{if(btn)btn.disabled=false;}}
-
-</script>
 </body>
 </html>
