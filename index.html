@@ -1483,6 +1483,17 @@ body.cioe-custom-theme #themeCustomizerBtn{background-color:var(--cioe-accent)!i
 #cioeSpotifyMini .spotify-placeholder{height:152px;border:1px dashed #315448;border-radius:11px;display:flex;align-items:center;justify-content:center;text-align:center;padding:15px;color:#94a3b8;font-size:11px}
 @media(max-width:1100px){#cioeSpotifyMini{grid-template-columns:1fr}}
 @media(max-width:650px){#cioeSpotifyMini .spotify-controls{flex-wrap:wrap}#cioeSpotifyMini input{flex-basis:100%}#cioeSpotifyMini button{flex:1}}
+
+/* CIOE Spotify: barra plegable y acceso claro a favoritos */
+#cioeSpotifyMini{position:relative;padding-top:45px}
+#cioeSpotifyMini .spotify-panel-top{position:absolute;top:9px;left:13px;right:13px;display:flex;justify-content:space-between;align-items:center;gap:12px}
+#cioeSpotifyMini .spotify-panel-top button{background:#10261e;color:#a7f3d0;border:1px solid #22563d;border-radius:999px;padding:6px 11px;cursor:pointer}
+#cioeSpotifyMini.spotify-collapsed{display:block!important;padding:10px 14px!important;min-height:45px}
+#cioeSpotifyMini.spotify-collapsed .spotify-panel-top{position:static}
+#cioeSpotifyMini.spotify-collapsed>.spotify-left,#cioeSpotifyMini.spotify-collapsed>.spotify-player-box{display:none!important}
+#cioeSpotifyMini .spotify-left .spotify-heading{display:none}
+#cioeSpotifyMini .spotify-favorites-hint{font-size:10px;color:#94a3b8;line-height:1.45}
+@media(max-width:650px){#cioeSpotifyMini{padding-top:52px}#cioeSpotifyMini .spotify-panel-top{left:10px;right:10px}}
 </style>
 </head>
 <body class="min-h-screen flex flex-col p-3 md:p-5 space-y-4 w-full">
@@ -1678,6 +1689,10 @@ body.cioe-custom-theme #themeCustomizerBtn{background-color:var(--cioe-accent)!i
 
     <!-- Spotify: búsqueda y álbum compartido, sin vincular cuentas a CIOE -->
     <section id="cioeSpotifyMini" aria-label="Spotify: buscador y playlist">
+      <div class="spotify-panel-top">
+        <span class="font-black text-xs text-white"><i class="fa-brands fa-spotify" style="color:#1ed760;font-size:17px;margin-right:6px"></i> SPOTIFY · MÚSICA</span>
+        <button type="button" id="cioeSpotifyCollapseBtn" aria-expanded="true" aria-controls="cioeSpotifyMini" onclick="cioeSpotifyTogglePanel()"><i class="fa-solid fa-chevron-up"></i> Ocultar</button>
+      </div>
       <div class="spotify-left">
         <div class="spotify-heading">
           <i class="fa-brands fa-spotify" style="color:#1ed760;font-size:19px"></i>
@@ -1686,18 +1701,18 @@ body.cioe-custom-theme #themeCustomizerBtn{background-color:var(--cioe-accent)!i
         <form id="cioeSpotifySearchForm" class="spotify-controls" onsubmit="return cioeSpotifySearch(event)">
           <input id="cioeSpotifySearchInput" type="search" placeholder="Buscar canción, artista o álbum..." autocomplete="off" aria-label="Buscar música en Spotify">
           <button type="submit" class="spotify-search"><i class="fa-solid fa-magnifying-glass mr-1"></i> Buscar</button>
-          <button type="button" class="spotify-secondary" onclick="window.open('https://open.spotify.com/collection/tracks','_blank','noopener,noreferrer')"><i class="fa-solid fa-heart mr-1"></i> Mis canciones</button>
+          <button type="button" class="spotify-secondary" onclick="cioeSpotifyOpenLikes()"><i class="fa-solid fa-heart mr-1"></i> Canciones que te gustan</button>
         </form>
         <form class="spotify-controls" onsubmit="return cioeSpotifyLoadAlbum(event)">
           <input id="cioeSpotifyAlbumUrl" type="url" placeholder="Pega el enlace de tu playlist o álbum de Spotify..." aria-label="Enlace de playlist o álbum de Spotify">
           <button type="submit" class="spotify-search"><i class="fa-solid fa-play mr-1"></i> Reproducir</button>
         </form>
-        <p class="spotify-help"><b>¿Quieres tus canciones favoritas?</b> Abre <b>Mis canciones</b>, añádelas a una playlist en Spotify y pega aquí el enlace de esa playlist. La colección privada de Me gusta no se puede insertar directamente.</p>
+        <p class="spotify-favorites-hint">Pulsa <b>Canciones que te gustan</b> para abrir tus favoritos en Spotify. Para verlos en el reproductor de la derecha, crea una playlist con esas canciones y pega su enlace arriba. Spotify no permite insertar directamente la colección privada de Me gusta.</p>
       </div>
       <div class="spotify-player-box">
         <div class="spotify-player-title">
           <span><i class="fa-brands fa-spotify" style="color:#1ed760"></i> REPRODUCTOR</span>
-          <button type="button" class="spotify-secondary" style="padding:5px 8px;font-size:10px" onclick="window.open('https://open.spotify.com/collection/tracks','_blank','noopener,noreferrer')">Mis favoritos <i class="fa-solid fa-arrow-up-right-from-square"></i></button>
+          <button type="button" class="spotify-secondary" style="padding:5px 8px;font-size:10px" onclick="cioeSpotifyOpenLikes()">Mis favoritos <i class="fa-solid fa-arrow-up-right-from-square"></i></button>
         </div>
         <div id="cioeSpotifyEmbed">
           <div id="cioeSpotifyPlaceholder" class="spotify-placeholder"><span><i class="fa-solid fa-compact-disc" style="font-size:22px;color:#1ed760"></i><br>Pega el enlace de una playlist o álbum para escucharlo aquí.</span></div>
@@ -10039,6 +10054,9 @@ window.addEventListener('load',function(){
 
 <script id="cioeSpotifyClient">
 (function(){
+ window.cioeSpotifyOpenLikes=function(){window.open('https://open.spotify.com/collection/tracks','_blank','noopener,noreferrer');const msg=document.getElementById('cioeSpotifyMessage');if(msg)msg.textContent='Tus canciones favoritas se abrieron en Spotify. Para mostrarlas aquí, comparte una playlist creada con esas canciones.';};
+ window.cioeSpotifyTogglePanel=function(){const panel=document.getElementById('cioeSpotifyMini');const btn=document.getElementById('cioeSpotifyCollapseBtn');if(!panel||!btn)return;const collapsed=panel.classList.toggle('spotify-collapsed');btn.setAttribute('aria-expanded',String(!collapsed));btn.innerHTML=collapsed?'<i class="fa-solid fa-chevron-down"></i> Mostrar':'<i class="fa-solid fa-chevron-up"></i> Ocultar';try{localStorage.setItem('cioeSpotifyCollapsed',collapsed?'1':'0')}catch(e){}};
+ document.addEventListener('DOMContentLoaded',()=>{try{if(localStorage.getItem('cioeSpotifyCollapsed')==='1'){window.cioeSpotifyTogglePanel()}}catch(e){}},{once:true});
  window.cioeSpotifyFocus=function(){const el=document.getElementById('cioeSpotifySearchInput');if(el){el.scrollIntoView({behavior:'smooth',block:'center'});el.focus();}};
  window.cioeSpotifySearch=function(event){if(event)event.preventDefault();const el=document.getElementById('cioeSpotifySearchInput');const q=el?.value.trim();if(!q){el?.focus();return false;}window.open('https://open.spotify.com/search/'+encodeURIComponent(q),'_blank','noopener,noreferrer');return false;};
  document.addEventListener('DOMContentLoaded',()=>{try{const saved=localStorage.getItem('cioeSpotifySavedLink');if(saved){const input=document.getElementById('cioeSpotifyAlbumUrl');if(input)input.value=saved;window.cioeSpotifyLoadAlbum();}}catch(e){}},{once:true});
