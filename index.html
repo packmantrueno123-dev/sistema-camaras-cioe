@@ -5830,46 +5830,7 @@ body.cioe-custom-theme #themeCustomizerBtn{background-color:var(--cioe-accent)!i
         '<html xmlns:o="urn:schemas-microsoft-com:office:office" ' +
         'xmlns:x="urn:schemas-microsoft-com:office:excel" ' +
         'xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="UTF-8"></head><body>' +
-        tableHtml + '
-<!-- CIOE: Navegación rápida entre módulos, sin modificar los filtros ni la lógica existente -->
-<style>
-#cioeQuickNavigation{position:fixed;z-index:99999;width:min(290px,calc(100vw - 24px));max-height:min(65vh,490px);overflow:auto;background:#0a0f1d;border:1px solid #475569;border-radius:16px;padding:7px;box-shadow:0 20px 50px #000a}
-#cioeQuickNavigation button{display:flex;align-items:center;gap:10px;width:100%;padding:11px 12px;border-radius:10px;color:#e2e8f0;text-align:left;font-size:12px;font-weight:700}
-#cioeQuickNavigation button:hover{background:#334155;color:white}
-#cioeQuickNavigation button i{width:18px;color:#fbbf24}
-</style>
-<script>
-(function(){
- const items=[['fa-house','Centro de Control',null],['fa-magnifying-glass','Buscar reporte de cámara',0],['fa-calendar-days','Calendario / Historial de reportes',1],['fa-users-viewfinder','Cámaras vecinales / Barrio Seguro',2],['fa-school','Cámaras de Colegios',3],['fa-video','Listado de cámaras fijas',4],['fa-calendar-day','Creación de Estaciones/Pares - Turno',5],['fa-tower-observation','Tótems de cámaras',6],['fa-chart-pie','Ver estadística de cámaras',7]];
- let panel;
- function close(){if(panel)panel.hidden=true;}
- window.cioeToggleNavigation=function(e){
-  if(e){e.preventDefault();e.stopPropagation();}
-  if(!panel){panel=document.createElement('div');panel.id='cioeQuickNavigation';document.body.appendChild(panel);}
-  if(!panel.hidden && panel.dataset.open==='1'){close();panel.dataset.open='0';return false;}
-  panel.replaceChildren();
-  const source=document.querySelectorAll('#ocurrenciasMenu > button');
-  items.forEach(([icon,label,index])=>{
-   const original=index===null?null:source[index];
-   if(index!==null && (!original || original.hidden || original.classList.contains('hidden') || getComputedStyle(original).display==='none'))return;
-   const btn=document.createElement('button');btn.type='button';
-   const ico=document.createElement('i');ico.className='fa-solid '+icon;
-   const span=document.createElement('span');span.textContent=label;btn.append(ico,span);
-   btn.addEventListener('click',()=>{close();panel.dataset.open='0';if(index===null){window.showMainDashboardView();}else{original.click();}});
-   panel.appendChild(btn);
-  });
-  panel.hidden=false;panel.dataset.open='1';
-  const rect=e.currentTarget.getBoundingClientRect();
-  panel.style.left=Math.max(12,Math.min(rect.right-290,innerWidth-302))+'px';
-  panel.style.top=(rect.bottom+8+Math.min(490,innerHeight-rect.bottom-20)>innerHeight?Math.max(8,rect.top-Math.min(panel.scrollHeight,490)-8):rect.bottom+8)+'px';
-  return false;
- };
- document.addEventListener('click',e=>{if(panel&&!panel.contains(e.target)&&!e.target.closest('[onclick*="cioeToggleNavigation"]')){close();panel.dataset.open='0';}});
- document.addEventListener('keydown',e=>{if(e.key==='Escape'){close();if(panel)panel.dataset.open='0';}});
-})();
-</script>
-
-</body></html>';
+        tableHtml + '</body></html>'; 
 
       const blob = new Blob(['\ufeff', excelHtml], {type:'application/vnd.ms-excel;charset=utf-8;'});
       const url = URL.createObjectURL(blob);
@@ -5973,47 +5934,7 @@ body.cioe-custom-theme #themeCustomizerBtn{background-color:var(--cioe-accent)!i
         '<html xmlns:o="urn:schemas-microsoft-com:office:office" ' +
         'xmlns:x="urn:schemas-microsoft-com:office:excel" ' +
         'xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="UTF-8"></head><body>' +
-        tableHtml +
-        '
-<!-- CIOE: Navegación rápida entre módulos, sin modificar los filtros ni la lógica existente -->
-<style>
-#cioeQuickNavigation{position:fixed;z-index:99999;width:min(290px,calc(100vw - 24px));max-height:min(65vh,490px);overflow:auto;background:#0a0f1d;border:1px solid #475569;border-radius:16px;padding:7px;box-shadow:0 20px 50px #000a}
-#cioeQuickNavigation button{display:flex;align-items:center;gap:10px;width:100%;padding:11px 12px;border-radius:10px;color:#e2e8f0;text-align:left;font-size:12px;font-weight:700}
-#cioeQuickNavigation button:hover{background:#334155;color:white}
-#cioeQuickNavigation button i{width:18px;color:#fbbf24}
-</style>
-<script>
-(function(){
- const items=[['fa-house','Centro de Control',null],['fa-magnifying-glass','Buscar reporte de cámara',0],['fa-calendar-days','Calendario / Historial de reportes',1],['fa-users-viewfinder','Cámaras vecinales / Barrio Seguro',2],['fa-school','Cámaras de Colegios',3],['fa-video','Listado de cámaras fijas',4],['fa-calendar-day','Creación de Estaciones/Pares - Turno',5],['fa-tower-observation','Tótems de cámaras',6],['fa-chart-pie','Ver estadística de cámaras',7]];
- let panel;
- function close(){if(panel)panel.hidden=true;}
- window.cioeToggleNavigation=function(e){
-  if(e){e.preventDefault();e.stopPropagation();}
-  if(!panel){panel=document.createElement('div');panel.id='cioeQuickNavigation';document.body.appendChild(panel);}
-  if(!panel.hidden && panel.dataset.open==='1'){close();panel.dataset.open='0';return false;}
-  panel.replaceChildren();
-  const source=document.querySelectorAll('#ocurrenciasMenu > button');
-  items.forEach(([icon,label,index])=>{
-   const original=index===null?null:source[index];
-   if(index!==null && (!original || original.hidden || original.classList.contains('hidden') || getComputedStyle(original).display==='none'))return;
-   const btn=document.createElement('button');btn.type='button';
-   const ico=document.createElement('i');ico.className='fa-solid '+icon;
-   const span=document.createElement('span');span.textContent=label;btn.append(ico,span);
-   btn.addEventListener('click',()=>{close();panel.dataset.open='0';if(index===null){window.showMainDashboardView();}else{original.click();}});
-   panel.appendChild(btn);
-  });
-  panel.hidden=false;panel.dataset.open='1';
-  const rect=e.currentTarget.getBoundingClientRect();
-  panel.style.left=Math.max(12,Math.min(rect.right-290,innerWidth-302))+'px';
-  panel.style.top=(rect.bottom+8+Math.min(490,innerHeight-rect.bottom-20)>innerHeight?Math.max(8,rect.top-Math.min(panel.scrollHeight,490)-8):rect.bottom+8)+'px';
-  return false;
- };
- document.addEventListener('click',e=>{if(panel&&!panel.contains(e.target)&&!e.target.closest('[onclick*="cioeToggleNavigation"]')){close();panel.dataset.open='0';}});
- document.addEventListener('keydown',e=>{if(e.key==='Escape'){close();if(panel)panel.dataset.open='0';}});
-})();
-</script>
-
-</body></html>';
+        tableHtml + '</body></html>';
 
       const blob = new Blob(['\ufeff', excelHtml], { type: 'application/vnd.ms-excel;charset=utf-8;' });
       const url = URL.createObjectURL(blob);
@@ -9322,43 +9243,7 @@ window.addEventListener('load',function(){
         <tr class="total"><td>TOTAL GENERAL</td><td class="num">${s.totalOp}</td><td class="num">${s.totalInop}</td><td class="num">${s.totalMant}</td><td class="num">${s.totalGeneral}</td><td class="num">${s.totalGeneral?((s.totalOp/s.totalGeneral)*100).toFixed(1)+'%':'0.0%'}</td><td>Resumen consolidado de todos los módulos.</td></tr>
       </table>
     
-<!-- CIOE: Navegación rápida entre módulos, sin modificar los filtros ni la lógica existente -->
-<style>
-#cioeQuickNavigation{position:fixed;z-index:99999;width:min(290px,calc(100vw - 24px));max-height:min(65vh,490px);overflow:auto;background:#0a0f1d;border:1px solid #475569;border-radius:16px;padding:7px;box-shadow:0 20px 50px #000a}
-#cioeQuickNavigation button{display:flex;align-items:center;gap:10px;width:100%;padding:11px 12px;border-radius:10px;color:#e2e8f0;text-align:left;font-size:12px;font-weight:700}
-#cioeQuickNavigation button:hover{background:#334155;color:white}
-#cioeQuickNavigation button i{width:18px;color:#fbbf24}
-</style>
-<script>
-(function(){
- const items=[['fa-house','Centro de Control',null],['fa-magnifying-glass','Buscar reporte de cámara',0],['fa-calendar-days','Calendario / Historial de reportes',1],['fa-users-viewfinder','Cámaras vecinales / Barrio Seguro',2],['fa-school','Cámaras de Colegios',3],['fa-video','Listado de cámaras fijas',4],['fa-calendar-day','Creación de Estaciones/Pares - Turno',5],['fa-tower-observation','Tótems de cámaras',6],['fa-chart-pie','Ver estadística de cámaras',7]];
- let panel;
- function close(){if(panel)panel.hidden=true;}
- window.cioeToggleNavigation=function(e){
-  if(e){e.preventDefault();e.stopPropagation();}
-  if(!panel){panel=document.createElement('div');panel.id='cioeQuickNavigation';document.body.appendChild(panel);}
-  if(!panel.hidden && panel.dataset.open==='1'){close();panel.dataset.open='0';return false;}
-  panel.replaceChildren();
-  const source=document.querySelectorAll('#ocurrenciasMenu > button');
-  items.forEach(([icon,label,index])=>{
-   const original=index===null?null:source[index];
-   if(index!==null && (!original || original.hidden || original.classList.contains('hidden') || getComputedStyle(original).display==='none'))return;
-   const btn=document.createElement('button');btn.type='button';
-   const ico=document.createElement('i');ico.className='fa-solid '+icon;
-   const span=document.createElement('span');span.textContent=label;btn.append(ico,span);
-   btn.addEventListener('click',()=>{close();panel.dataset.open='0';if(index===null){window.showMainDashboardView();}else{original.click();}});
-   panel.appendChild(btn);
-  });
-  panel.hidden=false;panel.dataset.open='1';
-  const rect=e.currentTarget.getBoundingClientRect();
-  panel.style.left=Math.max(12,Math.min(rect.right-290,innerWidth-302))+'px';
-  panel.style.top=(rect.bottom+8+Math.min(490,innerHeight-rect.bottom-20)>innerHeight?Math.max(8,rect.top-Math.min(panel.scrollHeight,490)-8):rect.bottom+8)+'px';
-  return false;
- };
- document.addEventListener('click',e=>{if(panel&&!panel.contains(e.target)&&!e.target.closest('[onclick*="cioeToggleNavigation"]')){close();panel.dataset.open='0';}});
- document.addEventListener('keydown',e=>{if(e.key==='Escape'){close();if(panel)panel.dataset.open='0';}});
-})();
-</script>
+
 
 </body></html>`;
 
@@ -9612,43 +9497,7 @@ window.addEventListener('load',function(){
   </div>
 </div>
 
-<!-- CIOE: Navegación rápida entre módulos, sin modificar los filtros ni la lógica existente -->
-<style>
-#cioeQuickNavigation{position:fixed;z-index:99999;width:min(290px,calc(100vw - 24px));max-height:min(65vh,490px);overflow:auto;background:#0a0f1d;border:1px solid #475569;border-radius:16px;padding:7px;box-shadow:0 20px 50px #000a}
-#cioeQuickNavigation button{display:flex;align-items:center;gap:10px;width:100%;padding:11px 12px;border-radius:10px;color:#e2e8f0;text-align:left;font-size:12px;font-weight:700}
-#cioeQuickNavigation button:hover{background:#334155;color:white}
-#cioeQuickNavigation button i{width:18px;color:#fbbf24}
-</style>
-<script>
-(function(){
- const items=[['fa-house','Centro de Control',null],['fa-magnifying-glass','Buscar reporte de cámara',0],['fa-calendar-days','Calendario / Historial de reportes',1],['fa-users-viewfinder','Cámaras vecinales / Barrio Seguro',2],['fa-school','Cámaras de Colegios',3],['fa-video','Listado de cámaras fijas',4],['fa-calendar-day','Creación de Estaciones/Pares - Turno',5],['fa-tower-observation','Tótems de cámaras',6],['fa-chart-pie','Ver estadística de cámaras',7]];
- let panel;
- function close(){if(panel)panel.hidden=true;}
- window.cioeToggleNavigation=function(e){
-  if(e){e.preventDefault();e.stopPropagation();}
-  if(!panel){panel=document.createElement('div');panel.id='cioeQuickNavigation';document.body.appendChild(panel);}
-  if(!panel.hidden && panel.dataset.open==='1'){close();panel.dataset.open='0';return false;}
-  panel.replaceChildren();
-  const source=document.querySelectorAll('#ocurrenciasMenu > button');
-  items.forEach(([icon,label,index])=>{
-   const original=index===null?null:source[index];
-   if(index!==null && (!original || original.hidden || original.classList.contains('hidden') || getComputedStyle(original).display==='none'))return;
-   const btn=document.createElement('button');btn.type='button';
-   const ico=document.createElement('i');ico.className='fa-solid '+icon;
-   const span=document.createElement('span');span.textContent=label;btn.append(ico,span);
-   btn.addEventListener('click',()=>{close();panel.dataset.open='0';if(index===null){window.showMainDashboardView();}else{original.click();}});
-   panel.appendChild(btn);
-  });
-  panel.hidden=false;panel.dataset.open='1';
-  const rect=e.currentTarget.getBoundingClientRect();
-  panel.style.left=Math.max(12,Math.min(rect.right-290,innerWidth-302))+'px';
-  panel.style.top=(rect.bottom+8+Math.min(490,innerHeight-rect.bottom-20)>innerHeight?Math.max(8,rect.top-Math.min(panel.scrollHeight,490)-8):rect.bottom+8)+'px';
-  return false;
- };
- document.addEventListener('click',e=>{if(panel&&!panel.contains(e.target)&&!e.target.closest('[onclick*="cioeToggleNavigation"]')){close();panel.dataset.open='0';}});
- document.addEventListener('keydown',e=>{if(e.key==='Escape'){close();if(panel)panel.dataset.open='0';}});
-})();
-</script>
+
 
 </body></html>`;
 
@@ -10093,6 +9942,8 @@ window.addEventListener('load',function(){
 </script>
 
 
+
+
 <!-- CIOE: Navegación rápida entre módulos, sin modificar los filtros ni la lógica existente -->
 <style>
 #cioeQuickNavigation{position:fixed;z-index:99999;width:min(290px,calc(100vw - 24px));max-height:min(65vh,490px);overflow:auto;background:#0a0f1d;border:1px solid #475569;border-radius:16px;padding:7px;box-shadow:0 20px 50px #000a}
@@ -10130,6 +9981,5 @@ window.addEventListener('load',function(){
  document.addEventListener('keydown',e=>{if(e.key==='Escape'){close();if(panel)panel.dataset.open='0';}});
 })();
 </script>
-
 </body>
 </html>
