@@ -1463,12 +1463,17 @@ body.cioe-custom-theme #themeCustomizerBtn{background-color:var(--cioe-accent)!i
 
 
 <style id="cioeSpotifyStyle">
-#cioeSpotifyPlayer{display:flex;align-items:center;gap:9px;max-width:370px;min-width:220px;padding:7px 10px;border:1px solid #22563d;background:#0c211b;border-radius:12px;color:#e2e8f0;font-size:11px}
-#cioeSpotifyCover{width:36px;height:36px;object-fit:cover;border-radius:6px;display:none}
-#cioeSpotifyPlayer button{border:1px solid #1db954;color:#1ed760;border-radius:9px;padding:5px 8px;font-weight:800;white-space:nowrap}
-#cioeSpotifyTitle{font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:150px}
-#cioeSpotifyArtist{color:#94a3b8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:150px}
-@media(max-width:1350px){#cioeSpotifyPlayer{max-width:260px;min-width:190px}}
+#cioeSpotifyPlayer{display:flex;align-items:center;gap:7px;padding:7px 10px;border:1px solid #22563d;background:#0c211b;border-radius:12px;color:#1ed760;font-size:11px;font-weight:800;white-space:nowrap}
+#cioeSpotifyPlayer button{border:0;color:#1ed760;font-weight:900}
+#cioeSpotifyMini{background:#0a0f1d;border:1px solid #22563d;border-radius:15px;padding:11px 14px;color:#e2e8f0}
+#cioeSpotifyMini input{min-width:0;flex:1;background:#030712;color:#f8fafc;border:1px solid #334155;border-radius:9px;padding:9px 11px;outline:none;font-size:12px}
+#cioeSpotifyMini input:focus{border-color:#1ed760}
+#cioeSpotifyMini button{border-radius:9px;padding:9px 13px;font-size:11px;font-weight:800;white-space:nowrap}
+#cioeSpotifyMini .spotify-search{background:#15803d;color:white}
+#cioeSpotifyMini .spotify-secondary{background:#172c24;color:#a7f3d0;border:1px solid #22563d}
+#cioeSpotifyEmbed{display:none;margin-top:12px;max-width:600px}
+#cioeSpotifyEmbed iframe{display:block;width:100%;height:152px;border:0;border-radius:12px}
+@media(max-width:650px){#cioeSpotifyMini .spotify-controls{flex-wrap:wrap}#cioeSpotifyMini input{flex-basis:100%}}
 </style>
 </head>
 <body class="min-h-screen flex flex-col p-3 md:p-5 space-y-4 w-full">
@@ -1561,11 +1566,7 @@ body.cioe-custom-theme #themeCustomizerBtn{background-color:var(--cioe-accent)!i
           <span id="cioeMessagesBadge" style="display:none" class="absolute -top-2 -right-2 min-w-[21px] h-[21px] px-1 rounded-full bg-red-600 text-white text-[10px] font-black items-center justify-center border-2 border-[#0a0f1d] shadow-lg shadow-red-600/40 animate-pulse">0</span>
         </button>
 
-        <div id="cioeSpotifyPlayer" title="Spotify: canción en reproducción">
-          <img id="cioeSpotifyCover" alt="Portada de Spotify">
-          <div style="min-width:0;flex:1"><div style="color:#1ed760;font-size:9px;font-weight:900">♫ SPOTIFY</div><div id="cioeSpotifyTitle">Sin conectar</div><div id="cioeSpotifyArtist">Conecta tu cuenta</div></div>
-          <button type="button" id="cioeSpotifyAction" onclick="cioeSpotifyConnect()">Conectar</button>
-        </div>
+        <div id="cioeSpotifyPlayer"><i class="fa-brands fa-spotify"></i><button type="button" onclick="cioeSpotifyFocus()" title="Ir al buscador de Spotify">SPOTIFY <i class="fa-solid fa-magnifying-glass"></i></button></div>
         <div class="relative">
           <button type="button" id="ocurrenciasBtn" onclick="toggleOcurrenciasMenu(event)" class="flex items-center gap-2 bg-[#030712] border border-slate-800 px-3.5 py-2 rounded-xl text-xs font-bold text-amber-400 hover:border-slate-700 hover:bg-slate-900/60 transition select-none">
             <i class="fa-solid fa-clipboard-list text-amber-500 text-sm pointer-events-none"></i>
@@ -1665,6 +1666,25 @@ body.cioe-custom-theme #themeCustomizerBtn{background-color:var(--cioe-accent)!i
         </button>
       </div>
     </header>
+
+    <!-- Spotify sin API: búsqueda externa y playlist oficial opcional -->
+    <section id="cioeSpotifyMini" aria-label="Spotify: buscador de canciones">
+      <div class="flex flex-wrap items-center gap-2 mb-2">
+        <i class="fa-brands fa-spotify" style="color:#1ed760;font-size:17px"></i>
+        <span class="font-black text-xs text-white">SPOTIFY · BUSCAR MÚSICA</span>
+        <span class="text-[10px] text-emerald-400">Sin vincular cuenta a CIOE · Sin Web API</span>
+      </div>
+      <form id="cioeSpotifySearchForm" class="spotify-controls flex items-center gap-2" onsubmit="return cioeSpotifySearch(event)">
+        <input id="cioeSpotifySearchInput" type="search" placeholder="Escribe una canción, artista o álbum..." autocomplete="off" aria-label="Buscar música en Spotify">
+        <button type="submit" class="spotify-search"><i class="fa-solid fa-magnifying-glass mr-1"></i> Buscar</button>
+        <button type="button" class="spotify-secondary" onclick="cioeSpotifyToggleEmbed()"><i class="fa-solid fa-play mr-1"></i> Playlist</button>
+        <button type="button" class="spotify-secondary" onclick="window.open('https://open.spotify.com/','_blank','noopener,noreferrer')"><i class="fa-solid fa-arrow-up-right-from-square mr-1"></i> Abrir Spotify</button>
+      </form>
+      <div id="cioeSpotifyEmbed">
+        <iframe title="Playlist oficial de Spotify" loading="lazy" src="https://open.spotify.com/embed/playlist/37i9dQZF1DXcBWIGoYBM5M" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"></iframe>
+        <p class="text-[10px] text-slate-400 mt-2">La reproducción depende de las condiciones de Spotify. Buscar abre los resultados en una pestaña nueva.</p>
+      </div>
+    </section>
 
     <section class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 w-full">
       <div class="bg-[#0a0f1d] p-3.5 rounded-2xl border border-slate-800 shadow-xl flex justify-between items-center">
@@ -9998,24 +10018,9 @@ window.addEventListener('load',function(){
 
 <script id="cioeSpotifyClient">
 (function(){
- let spotifyTimer=null,connected=false;
- const api='https://sistema-camaras-cioe-api.onrender.com';
- const title=document.getElementById('cioeSpotifyTitle'),artist=document.getElementById('cioeSpotifyArtist'),cover=document.getElementById('cioeSpotifyCover'),btn=document.getElementById('cioeSpotifyAction');
- const token=()=>sessionStorage.getItem('cioe_api_token')||'';
- const update=(t,a,img)=>{title.textContent=t;artist.textContent=a;cover.style.display=img?'block':'none';if(img)cover.src=img;else cover.removeAttribute('src')};
- window.cioeSpotifyConnect=async function(){
-  if(!token()){update('Inicia sesión en CIOE','Para conectar Spotify');return}
-  if(connected){window.open('https://open.spotify.com/','_blank','noopener,noreferrer');return}
-  try{btn.disabled=true;const r=await fetch(api+'/api/spotify/connect',{headers:{Authorization:'Bearer '+token()}});const d=await r.json();if(!r.ok||!d.url)throw Error(d.error||'No se pudo conectar');location.href=d.url}catch(e){update('Spotify no disponible',e.message)}finally{btn.disabled=false}
- };
- async function refresh(){
-  if(!token()||document.getElementById('mainDashboardView')?.classList.contains('hidden'))return;
-  try{const r=await fetch(api+'/api/spotify/now-playing',{headers:{Authorization:'Bearer '+token()},signal:AbortSignal.timeout(7000)});const d=await r.json();if(!r.ok)throw Error(d.error||'Spotify no disponible');connected=!!d.connected;btn.textContent=connected?'Abrir':'Conectar';if(!connected){update('Sin conectar','Conecta tu cuenta');return}if(d.track){update(d.track.name,d.track.artist,d.track.image)}else update('Sin reproducción','Abre Spotify y reproduce música');}catch(e){update('Spotify no disponible','CIOE continúa funcionando')}
- }
- const qs=new URLSearchParams(location.search);
- if(qs.has('spotify')){history.replaceState(null,'',location.pathname+location.hash)}
- spotifyTimer=setInterval(refresh,30000);setTimeout(refresh,2000);
- document.addEventListener('visibilitychange',()=>{if(!document.hidden)refresh()});
+ window.cioeSpotifyFocus=function(){const el=document.getElementById('cioeSpotifySearchInput');if(el){el.scrollIntoView({behavior:'smooth',block:'center'});el.focus();}};
+ window.cioeSpotifySearch=function(event){if(event)event.preventDefault();const el=document.getElementById('cioeSpotifySearchInput');const q=el?.value.trim();if(!q){el?.focus();return false;}window.open('https://open.spotify.com/search/'+encodeURIComponent(q),'_blank','noopener,noreferrer');return false;};
+ window.cioeSpotifyToggleEmbed=function(){const el=document.getElementById('cioeSpotifyEmbed');if(el)el.style.display=getComputedStyle(el).display==='none'?'block':'none';};
 })();
 </script>
 </body>
