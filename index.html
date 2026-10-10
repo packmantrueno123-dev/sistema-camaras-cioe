@@ -7203,7 +7203,7 @@ body.cioe-custom-theme #themeCustomizerBtn{background-color:var(--cioe-accent)!i
       hideAllViewsV36();
       const v=document.getElementById('creacionTurnoView'); v.classList.remove('hidden'); v.classList.add('flex');
       const menu=document.getElementById('ocurrenciasMenu'); if(menu) menu.classList.add('hidden');
-      if(turnoCreadorActual){ document.getElementById('turnoSelectorPanel').classList.add('hidden');document.getElementById('turnoTrabajoPanel').classList.remove('hidden');renderRegistrosTurno(); }
+      turnoCreadorActual=''; document.getElementById('turnoSelectorPanel').classList.remove('hidden'); document.getElementById('turnoTrabajoPanel').classList.add('hidden');
     }
     function seleccionarTurnoCreador(turno){
       const permisoTurno = {'MAÑANA':'turno_manana','TARDE':'turno_tarde','NOCHE':'turno_noche'}[turno];
@@ -7226,7 +7226,7 @@ body.cioe-custom-theme #themeCustomizerBtn{background-color:var(--cioe-accent)!i
     // Se ejecuta una sola vez por navegador, sin borrar el respaldo original.
     function migrarEstacionesParesAManana(){
       const key='cioe_ep_migrado_manana_v1';
-      if(localStorage.getItem(key)==='ok') return;
+      // Reconciliar registros incluso si una migración anterior marcó éxito sin datos.
       if(!Array.isArray(estacionesPares) || !estacionesPares.length) return;
       const regs=getRegistrosTurno();
       const grupos=new Map();
@@ -7252,6 +7252,7 @@ body.cioe-custom-theme #themeCustomizerBtn{background-color:var(--cioe-accent)!i
       localStorage.setItem(key,'ok');
     }
     migrarEstacionesParesAManana();
+    document.addEventListener('DOMContentLoaded',()=>{ try { migrarEstacionesParesAManana(); } catch(e) { console.warn('Migración EP:',e); } });
     function renderRegistrosTurno(){
       const body=document.getElementById('turnoRegistrosBody'); if(!body)return;
       const grupos=getRegistrosTurno().filter(x=>x.turno===turnoCreadorActual);
@@ -8668,7 +8669,8 @@ document.addEventListener('DOMContentLoaded', function(){
     const selector=el('turnoSelectorPanel'), trabajo=el('turnoTrabajoPanel');
     if(selector) selector.classList.remove('hidden');
     if(trabajo) trabajo.classList.add('hidden');
-    if(typeof window.seleccionarTurnoCreador==='function') window.seleccionarTurnoCreador('MAÑANA');
+    // Mostrar selector; no seleccionar un turno automáticamente.
+    if(typeof turnoCreadorActual!=='undefined') turnoCreadorActual='';
     return false;
   };
   window.showCreacionTurnoView=window.abrirModuloTurnos;
