@@ -309,11 +309,6 @@ async function initDb() {
     CREATE INDEX IF NOT EXISTS idx_internal_messages_created_at ON internal_messages(created_at);
   `);
 
-
-  // GP por usuario: no modifica los datos existentes.
-  await pool.query(`CREATE TABLE IF NOT EXISTS operator_gp (user_id INTEGER PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE, gp BIGINT NOT NULL DEFAULT 0 CHECK (gp >= 0));`);
-  await pool.query(`CREATE TABLE IF NOT EXISTS operator_gp_history (id BIGSERIAL PRIMARY KEY, user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE, awarded_by INTEGER NOT NULL REFERENCES users(id), points INTEGER NOT NULL CHECK (points > 0), reason VARCHAR(160) NOT NULL, created_at TIMESTAMPTZ NOT NULL DEFAULT NOW());`);
-
   // ====================================================
   // CREAR ADMIN SI NO EXISTE
   // ====================================================
@@ -1308,24 +1303,6 @@ app.delete("/api/messages/:id", auth, adminOnly, async (req,res)=>{
     if(!q.rowCount) return res.status(404).json({ok:false,error:"Mensaje no encontrado"});
     res.json({ok:true});
   }catch(err){console.error(err);res.status(500).json({ok:false,error:"No se pudo eliminar el mensaje"});}
-});
-
-
-// ===== GP / RANKING CIOE =====
-app.get('/api/gp/ranking',auth,async(req,res)=>{try{
- const current=await getCurrentUser(req.user.id);if(!current||!current.active)return res.status(403).json({ok:false,error:'Usuario no disponible'});
- const q=await pool.query(`SELECT u.id,u.username,u.role,COALESCE(g.gp,0)::text AS gp FROM users u LEFT JOIN operator_gp g ON g.user_id=u.id WHERE u.active=TRUE ORDER BY COALESCE(g.gp,0) DESC,u.username ASC LIMIT 200`);
- const me=q.rows.find(u=>u.id===req.user.id)||{gp:'0',username:req.user.username};res.json({ok:true,ranking:q.rows,me,isAdmin:current.role==='admin'});
-}catch(e){console.error(e);res.status(500).json({ok:false,error:'Error consultando GP'});}});
-app.post('/api/gp/award',auth,adminOnly,async(req,res)=>{
- const userId=Number(req.body?.userId),points=Number(req.body?.points),reason=String(req.body?.reason||'').trim();
- if(!Number.isSafeInteger(userId)||!Number.isSafeInteger(points)||points<1||points>10000||reason.length<3||reason.length>160)return res.status(400).json({ok:false,error:'Datos de GP inválidos'});
- const client=await pool.connect();try{await client.query('BEGIN');
- const u=await client.query(`SELECT id FROM users WHERE id=$1 AND active=TRUE AND role!='admin'`,[userId]);if(!u.rowCount){await client.query('ROLLBACK');return res.status(404).json({ok:false,error:'Operador no encontrado'});}
- await client.query(`INSERT INTO operator_gp(user_id,gp) VALUES($1,$2) ON CONFLICT(user_id) DO UPDATE SET gp=operator_gp.gp+EXCLUDED.gp`,[userId,points]);
- await client.query(`INSERT INTO operator_gp_history(user_id,awarded_by,points,reason) VALUES($1,$2,$3,$4)`,[userId,req.user.id,points,reason]);
- await client.query('COMMIT');res.json({ok:true});
- }catch(e){await client.query('ROLLBACK');console.error(e);res.status(500).json({ok:false,error:'No se pudieron guardar los GP'});}finally{client.release();}
 });
 
 // ======================================================
