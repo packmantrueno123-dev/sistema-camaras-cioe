@@ -7208,6 +7208,7 @@ body.cioe-custom-theme #themeCustomizerBtn{background-color:var(--cioe-accent)!i
     function seleccionarTurnoCreador(turno){
       const permisoTurno = {'MAÑANA':'turno_manana','TARDE':'turno_tarde','NOCHE':'turno_noche'}[turno];
       if (permisoTurno && !hasPermission(permisoTurno)) { permissionDenied('acceder al TURNO '+turno); return; }
+      if(turno==='MAÑANA') migrarEstacionesParesAManana();
       turnoCreadorActual=turno; document.getElementById('turnoActualLabel').textContent='TURNO '+turno; document.getElementById('turnoSelectorPanel').classList.add('hidden'); document.getElementById('turnoTrabajoPanel').classList.remove('hidden'); limpiarFormularioTurno(); renderRegistrosTurno();
     }
     function cambiarTurnoCreador(){ turnoCreadorActual=''; document.getElementById('turnoSelectorPanel').classList.remove('hidden'); document.getElementById('turnoTrabajoPanel').classList.add('hidden'); }
@@ -7225,12 +7226,13 @@ body.cioe-custom-theme #themeCustomizerBtn{background-color:var(--cioe-accent)!i
     // Migración no destructiva de Estaciones/Pares al turno MAÑANA.
     // Se ejecuta una sola vez por navegador, sin borrar el respaldo original.
     function migrarEstacionesParesAManana(){
-      const key='cioe_ep_migrado_manana_v1';
+      const key='cioe_ep_migrado_manana_v2';
       // Reconciliar registros incluso si una migración anterior marcó éxito sin datos.
-      if(!Array.isArray(estacionesPares) || !estacionesPares.length) return;
+      const fuente = Array.isArray(estacionesPares) && estacionesPares.length ? estacionesPares : ESTACIONES_PARES_DEFAULT;
+      if(!Array.isArray(fuente) || !fuente.length) return;
       const regs=getRegistrosTurno();
       const grupos=new Map();
-      estacionesPares.forEach(r=>{
+      fuente.forEach(r=>{
         const nombre=String(r.grupo||'SIN GRUPO').trim();
         if(!grupos.has(nombre)) grupos.set(nombre,[]);
         grupos.get(nombre).push(r);
