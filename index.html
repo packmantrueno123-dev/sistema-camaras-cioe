@@ -1727,6 +1727,14 @@ body.cioe-custom-theme #themeCustomizerBtn{background-color:var(--cioe-accent)!i
         </select>
       </div>
 
+      <!-- Buscador exacto tipo BUSCARV: adicional, no altera filtros existentes -->
+      <div class="flex items-center gap-1.5 w-full md:w-auto" title="Buscar número exacto de cámara">
+        <i class="fa-solid fa-magnifying-glass text-cyan-400 text-xs"></i>
+        <input id="cioeBuscaCamExacta" type="search" inputmode="numeric" autocomplete="off"
+          oninput="renderTable()" placeholder="Cámara N°..." aria-label="Buscar cámara por número exacto"
+          class="w-full md:w-32 bg-[#030712] border border-cyan-900 text-cyan-200 text-xs rounded-xl px-2.5 py-2.5 focus:outline-none focus:border-cyan-400" />
+      </div>
+
       <div class="flex items-center gap-3 w-full md:w-auto">
         <label class="text-xs font-bold text-slate-400 whitespace-nowrap"><i class="fa-solid fa-phone text-emerald-400 mr-1"></i>Cámaras de Anexos:</label>
         <select id="mainAnexoFilter" onchange="renderTable()" class="bg-[#030712] border border-slate-800 text-emerald-400 font-bold text-xs rounded-xl px-3 py-2.5 focus:outline-none focus:border-emerald-500 w-full md:w-52">
@@ -3990,6 +3998,10 @@ body.cioe-custom-theme #themeCustomizerBtn{background-color:var(--cioe-accent)!i
       if (typeof updateTotalGeneral === 'function') updateTotalGeneral();
       const search = document.getElementById('searchInput').value.toLowerCase();
       const cameraFilter = document.getElementById('mainCameraFilter')?.value || 'ALL';
+      const buscaCamExacta = (document.getElementById('cioeBuscaCamExacta')?.value || '').trim();
+      const numeroCamExacta = buscaCamExacta.replace(/^c[aá]mara\s*[-#:º°]*\s*/i, '').trim();
+      const coincideCamExacta = !buscaCamExacta || (/^\d+$/.test(numeroCamExacta) && Number.isSafeInteger(Number(numeroCamExacta)));
+
       const anexoFilter = document.getElementById('mainAnexoFilter')?.value || 'ALL';
       const tbody = document.getElementById('tableBody');
       tbody.innerHTML = '';
@@ -4005,7 +4017,8 @@ body.cioe-custom-theme #themeCustomizerBtn{background-color:var(--cioe-accent)!i
         const matchesSearch = Object.values(cam).some(val => String(val).toLowerCase().includes(search)) || 
                               camLabel.includes(search) || 
                               log.details.toLowerCase().includes(search);
-        return matchesFilter && matchesCamera && matchesAnexo && matchesSearch;
+        const matchesExacta = !buscaCamExacta || (coincideCamExacta && Number(cam.camara) === Number(numeroCamExacta));
+        return matchesFilter && matchesCamera && matchesAnexo && matchesSearch && matchesExacta;
       });
 
       document.getElementById('recordCount').innerText = `${filtered.length} Registros`;
