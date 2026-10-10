@@ -1801,9 +1801,7 @@ body.cioe-custom-theme #themeCustomizerBtn{background-color:var(--cioe-accent)!i
         </div>
       </div>
 
-      <button onclick="showMainDashboardView()" class="bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2">
-        <i class="fa-solid fa-arrow-left text-amber-500"></i> Volver al Centro de Control
-      </button>
+      <button type="button" onclick="cioeToggleNavigation(event)" class="bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2"><i class="fa-solid fa-compass text-amber-400"></i> Ir a otras opciones <i class="fa-solid fa-chevron-down text-[10px]"></i></button>
     </header>
 
     <div class="space-y-4 flex-1 flex flex-col">
@@ -1870,9 +1868,7 @@ body.cioe-custom-theme #themeCustomizerBtn{background-color:var(--cioe-accent)!i
         <button onclick="openModal()" class="bg-amber-500 hover:bg-amber-400 text-black px-4 py-2 rounded-xl text-xs font-black transition flex items-center gap-2 shadow-lg shadow-amber-500/10">
           <i class="fa-solid fa-plus"></i> Añadir Cámara
         </button>
-        <button onclick="showMainDashboardView()" class="bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2">
-          <i class="fa-solid fa-arrow-left text-amber-500"></i> Volver al Centro de Control
-        </button>
+        <button type="button" onclick="cioeToggleNavigation(event)" class="bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2"><i class="fa-solid fa-compass text-amber-400"></i> Ir a otras opciones <i class="fa-solid fa-chevron-down text-[10px]"></i></button>
       </div>
     </header>
 
@@ -1954,7 +1950,7 @@ body.cioe-custom-theme #themeCustomizerBtn{background-color:var(--cioe-accent)!i
   <div id="creacionTurnoView" class="hidden space-y-4 flex-col flex-1">
     <header class="bg-[#0a0f1d] border border-fuchsia-500/30 rounded-2xl p-4 shadow-xl flex flex-col lg:flex-row justify-between items-center gap-4 w-full">
       <div class="flex items-center gap-3"><div class="p-3 bg-fuchsia-600 rounded-xl text-white"><i class="fa-solid fa-calendar-day text-xl"></i></div><div><h1 class="text-xl font-black text-white uppercase">CREACIÓN DE ESTACIONES / PARES POR TURNO</h1><p class="text-xs text-slate-400">Selecciona tu turno y crea Estaciones/Pares con sus cámaras y operador.</p></div></div>
-      <button onclick="showMainDashboardView()" class="bg-slate-800 hover:bg-slate-700 border border-slate-700 px-4 py-2 rounded-xl text-xs font-bold"><i class="fa-solid fa-arrow-left text-amber-500 mr-2"></i>Volver al Centro de Control</button>
+      <button type="button" onclick="cioeToggleNavigation(event)" class="bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2"><i class="fa-solid fa-compass text-amber-400"></i> Ir a otras opciones <i class="fa-solid fa-chevron-down text-[10px]"></i></button>
     </header>
     <section id="turnoSelectorPanel" class="bg-[#0a0f1d] border border-slate-800 rounded-2xl p-6 shadow-xl">
       <div class="text-center mb-6"><h2 class="text-lg font-black text-white">¿QUÉ TURNO ERES?</h2><p class="text-xs text-slate-400 mt-1">Escoge el turno para continuar.</p></div>
@@ -2006,7 +2002,7 @@ body.cioe-custom-theme #themeCustomizerBtn{background-color:var(--cioe-accent)!i
   <div id="totemsView" class="hidden space-y-4 flex-col flex-1">
     <header class="bg-[#0a0f1d] border border-orange-500/30 rounded-2xl p-4 shadow-xl flex flex-col lg:flex-row justify-between items-center gap-4 w-full">
       <div class="flex items-center gap-3"><div class="p-3 bg-orange-500 rounded-xl text-black"><i class="fa-solid fa-tower-observation text-xl"></i></div><div><h1 class="text-xl font-black text-white uppercase">TÓTEMS DE CÁMARAS DE LA MUNICIPALIDAD DE LOS OLIVOS</h1><p class="text-xs text-slate-400">Registro y control de cámaras instaladas en tótems municipales</p></div></div>
-      <div class="flex gap-2"><button onclick="openTotemModal()" class="bg-amber-500 hover:bg-amber-400 text-black px-4 py-2 rounded-xl text-xs font-black"><i class="fa-solid fa-plus mr-2"></i>Añadir Tótem</button><button onclick="showMainDashboardView()" class="bg-slate-800 hover:bg-slate-700 border border-slate-700 px-4 py-2 rounded-xl text-xs font-bold"><i class="fa-solid fa-arrow-left text-amber-500 mr-2"></i>Volver al Centro de Control</button></div>
+      <div class="flex gap-2"><button onclick="openTotemModal()" class="bg-amber-500 hover:bg-amber-400 text-black px-4 py-2 rounded-xl text-xs font-black"><i class="fa-solid fa-plus mr-2"></i>Añadir Tótem</button><button type="button" onclick="cioeToggleNavigation(event)" class="bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2"><i class="fa-solid fa-compass text-amber-400"></i> Ir a otras opciones <i class="fa-solid fa-chevron-down text-[10px]"></i></button></div>
     </header>
     <section class="grid grid-cols-2 lg:grid-cols-4 gap-3"><div class="bg-[#0a0f1d] border border-slate-800 rounded-2xl p-4"><span class="text-[10px] text-slate-400 font-bold">TOTAL TÓTEMS</span><div id="totStatTotal" class="text-2xl font-black">0</div></div><div class="bg-[#0a0f1d] border border-slate-800 rounded-2xl p-4"><span class="text-[10px] text-emerald-400 font-bold">OPERATIVAS</span><div id="totStatOp" class="text-2xl font-black text-emerald-400">0</div></div><div class="bg-[#0a0f1d] border border-slate-800 rounded-2xl p-4"><span class="text-[10px] text-rose-400 font-bold">INOPERATIVAS</span><div id="totStatInop" class="text-2xl font-black text-rose-400">0</div></div><div class="bg-[#0a0f1d] border border-slate-800 rounded-2xl p-4"><span class="text-[10px] text-blue-400 font-bold">MANTENIMIENTO</span><div id="totStatMant" class="text-2xl font-black text-blue-400">0</div></div></section>
     <div class="bg-[#0a0f1d] border border-slate-800 rounded-2xl p-3"><input id="totemSearch" oninput="renderTotems()" placeholder="Buscar tótem, sistema, ubicación, urbanización o zona..." class="w-full bg-[#030712] border border-slate-700 rounded-xl px-4 py-2.5 text-xs text-white outline-none focus:border-orange-500"></div>
@@ -2023,7 +2019,7 @@ body.cioe-custom-theme #themeCustomizerBtn{background-color:var(--cioe-accent)!i
       </div>
       <div class="flex flex-wrap gap-2">
         <button onclick="openEpGroupManager()" class="bg-violet-600 hover:bg-violet-500 text-white px-4 py-2 rounded-xl text-xs font-black"><i class="fa-solid fa-layer-group mr-2"></i>Añadir Estación / Par</button><button onclick="openEpAddCameraModal()" class="bg-amber-500 hover:bg-amber-400 text-black px-4 py-2 rounded-xl text-xs font-black"><i class="fa-solid fa-camera mr-2"></i>Añadir Cámara</button>
-        <button onclick="showMainDashboardView()" class="bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 px-4 py-2 rounded-xl text-xs font-bold"><i class="fa-solid fa-arrow-left text-amber-500 mr-2"></i>Volver al Centro de Control</button>
+        <button type="button" onclick="cioeToggleNavigation(event)" class="bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2"><i class="fa-solid fa-compass text-amber-400"></i> Ir a otras opciones <i class="fa-solid fa-chevron-down text-[10px]"></i></button>
       </div>
     </header>
     <section class="bg-[#0a0f1d] border border-slate-800 rounded-2xl p-3 shadow-xl space-y-3">
@@ -2187,9 +2183,7 @@ body.cioe-custom-theme #themeCustomizerBtn{background-color:var(--cioe-accent)!i
           <button type="button" onclick="downloadCameraStatisticsPDF()" class="bg-red-500 hover:bg-red-400 text-white px-4 py-2 rounded-xl text-xs font-black transition flex items-center gap-2">
             <i class="fa-solid fa-file-pdf"></i> Descargar PDF
           </button>
-          <button type="button" onclick="showMainDashboardView()" class="bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2">
-            <i class="fa-solid fa-arrow-left text-amber-400"></i> Volver al Centro de Control
-          </button>
+          <button type="button" onclick="cioeToggleNavigation(event)" class="bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2"><i class="fa-solid fa-compass text-amber-400"></i> Ir a otras opciones <i class="fa-solid fa-chevron-down text-[10px]"></i></button>
         </div>
       </div>
     </section>
@@ -2388,9 +2382,7 @@ body.cioe-custom-theme #themeCustomizerBtn{background-color:var(--cioe-accent)!i
           <i class="fa-solid fa-folder-plus text-sm"></i> Añadir a un Barrio
         </button>
 
-        <button onclick="showMainDashboardView()" class="bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2">
-          <i class="fa-solid fa-arrow-left text-amber-500"></i> Volver al Centro de Control
-        </button>
+        <button type="button" onclick="cioeToggleNavigation(event)" class="bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2"><i class="fa-solid fa-compass text-amber-400"></i> Ir a otras opciones <i class="fa-solid fa-chevron-down text-[10px]"></i></button>
       </div>
     </header>
 
@@ -5838,7 +5830,46 @@ body.cioe-custom-theme #themeCustomizerBtn{background-color:var(--cioe-accent)!i
         '<html xmlns:o="urn:schemas-microsoft-com:office:office" ' +
         'xmlns:x="urn:schemas-microsoft-com:office:excel" ' +
         'xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="UTF-8"></head><body>' +
-        tableHtml + '</body></html>';
+        tableHtml + '
+<!-- CIOE: Navegación rápida entre módulos, sin modificar los filtros ni la lógica existente -->
+<style>
+#cioeQuickNavigation{position:fixed;z-index:99999;width:min(290px,calc(100vw - 24px));max-height:min(65vh,490px);overflow:auto;background:#0a0f1d;border:1px solid #475569;border-radius:16px;padding:7px;box-shadow:0 20px 50px #000a}
+#cioeQuickNavigation button{display:flex;align-items:center;gap:10px;width:100%;padding:11px 12px;border-radius:10px;color:#e2e8f0;text-align:left;font-size:12px;font-weight:700}
+#cioeQuickNavigation button:hover{background:#334155;color:white}
+#cioeQuickNavigation button i{width:18px;color:#fbbf24}
+</style>
+<script>
+(function(){
+ const items=[['fa-house','Centro de Control',null],['fa-magnifying-glass','Buscar reporte de cámara',0],['fa-calendar-days','Calendario / Historial de reportes',1],['fa-users-viewfinder','Cámaras vecinales / Barrio Seguro',2],['fa-school','Cámaras de Colegios',3],['fa-video','Listado de cámaras fijas',4],['fa-calendar-day','Creación de Estaciones/Pares - Turno',5],['fa-tower-observation','Tótems de cámaras',6],['fa-chart-pie','Ver estadística de cámaras',7]];
+ let panel;
+ function close(){if(panel)panel.hidden=true;}
+ window.cioeToggleNavigation=function(e){
+  if(e){e.preventDefault();e.stopPropagation();}
+  if(!panel){panel=document.createElement('div');panel.id='cioeQuickNavigation';document.body.appendChild(panel);}
+  if(!panel.hidden && panel.dataset.open==='1'){close();panel.dataset.open='0';return false;}
+  panel.replaceChildren();
+  const source=document.querySelectorAll('#ocurrenciasMenu > button');
+  items.forEach(([icon,label,index])=>{
+   const original=index===null?null:source[index];
+   if(index!==null && (!original || original.hidden || original.classList.contains('hidden') || getComputedStyle(original).display==='none'))return;
+   const btn=document.createElement('button');btn.type='button';
+   const ico=document.createElement('i');ico.className='fa-solid '+icon;
+   const span=document.createElement('span');span.textContent=label;btn.append(ico,span);
+   btn.addEventListener('click',()=>{close();panel.dataset.open='0';if(index===null){window.showMainDashboardView();}else{original.click();}});
+   panel.appendChild(btn);
+  });
+  panel.hidden=false;panel.dataset.open='1';
+  const rect=e.currentTarget.getBoundingClientRect();
+  panel.style.left=Math.max(12,Math.min(rect.right-290,innerWidth-302))+'px';
+  panel.style.top=(rect.bottom+8+Math.min(490,innerHeight-rect.bottom-20)>innerHeight?Math.max(8,rect.top-Math.min(panel.scrollHeight,490)-8):rect.bottom+8)+'px';
+  return false;
+ };
+ document.addEventListener('click',e=>{if(panel&&!panel.contains(e.target)&&!e.target.closest('[onclick*="cioeToggleNavigation"]')){close();panel.dataset.open='0';}});
+ document.addEventListener('keydown',e=>{if(e.key==='Escape'){close();if(panel)panel.dataset.open='0';}});
+})();
+</script>
+
+</body></html>';
 
       const blob = new Blob(['\ufeff', excelHtml], {type:'application/vnd.ms-excel;charset=utf-8;'});
       const url = URL.createObjectURL(blob);
@@ -5943,7 +5974,46 @@ body.cioe-custom-theme #themeCustomizerBtn{background-color:var(--cioe-accent)!i
         'xmlns:x="urn:schemas-microsoft-com:office:excel" ' +
         'xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="UTF-8"></head><body>' +
         tableHtml +
-        '</body></html>';
+        '
+<!-- CIOE: Navegación rápida entre módulos, sin modificar los filtros ni la lógica existente -->
+<style>
+#cioeQuickNavigation{position:fixed;z-index:99999;width:min(290px,calc(100vw - 24px));max-height:min(65vh,490px);overflow:auto;background:#0a0f1d;border:1px solid #475569;border-radius:16px;padding:7px;box-shadow:0 20px 50px #000a}
+#cioeQuickNavigation button{display:flex;align-items:center;gap:10px;width:100%;padding:11px 12px;border-radius:10px;color:#e2e8f0;text-align:left;font-size:12px;font-weight:700}
+#cioeQuickNavigation button:hover{background:#334155;color:white}
+#cioeQuickNavigation button i{width:18px;color:#fbbf24}
+</style>
+<script>
+(function(){
+ const items=[['fa-house','Centro de Control',null],['fa-magnifying-glass','Buscar reporte de cámara',0],['fa-calendar-days','Calendario / Historial de reportes',1],['fa-users-viewfinder','Cámaras vecinales / Barrio Seguro',2],['fa-school','Cámaras de Colegios',3],['fa-video','Listado de cámaras fijas',4],['fa-calendar-day','Creación de Estaciones/Pares - Turno',5],['fa-tower-observation','Tótems de cámaras',6],['fa-chart-pie','Ver estadística de cámaras',7]];
+ let panel;
+ function close(){if(panel)panel.hidden=true;}
+ window.cioeToggleNavigation=function(e){
+  if(e){e.preventDefault();e.stopPropagation();}
+  if(!panel){panel=document.createElement('div');panel.id='cioeQuickNavigation';document.body.appendChild(panel);}
+  if(!panel.hidden && panel.dataset.open==='1'){close();panel.dataset.open='0';return false;}
+  panel.replaceChildren();
+  const source=document.querySelectorAll('#ocurrenciasMenu > button');
+  items.forEach(([icon,label,index])=>{
+   const original=index===null?null:source[index];
+   if(index!==null && (!original || original.hidden || original.classList.contains('hidden') || getComputedStyle(original).display==='none'))return;
+   const btn=document.createElement('button');btn.type='button';
+   const ico=document.createElement('i');ico.className='fa-solid '+icon;
+   const span=document.createElement('span');span.textContent=label;btn.append(ico,span);
+   btn.addEventListener('click',()=>{close();panel.dataset.open='0';if(index===null){window.showMainDashboardView();}else{original.click();}});
+   panel.appendChild(btn);
+  });
+  panel.hidden=false;panel.dataset.open='1';
+  const rect=e.currentTarget.getBoundingClientRect();
+  panel.style.left=Math.max(12,Math.min(rect.right-290,innerWidth-302))+'px';
+  panel.style.top=(rect.bottom+8+Math.min(490,innerHeight-rect.bottom-20)>innerHeight?Math.max(8,rect.top-Math.min(panel.scrollHeight,490)-8):rect.bottom+8)+'px';
+  return false;
+ };
+ document.addEventListener('click',e=>{if(panel&&!panel.contains(e.target)&&!e.target.closest('[onclick*="cioeToggleNavigation"]')){close();panel.dataset.open='0';}});
+ document.addEventListener('keydown',e=>{if(e.key==='Escape'){close();if(panel)panel.dataset.open='0';}});
+})();
+</script>
+
+</body></html>';
 
       const blob = new Blob(['\ufeff', excelHtml], { type: 'application/vnd.ms-excel;charset=utf-8;' });
       const url = URL.createObjectURL(blob);
@@ -9251,7 +9321,46 @@ window.addEventListener('load',function(){
         </tr>`).join('')}
         <tr class="total"><td>TOTAL GENERAL</td><td class="num">${s.totalOp}</td><td class="num">${s.totalInop}</td><td class="num">${s.totalMant}</td><td class="num">${s.totalGeneral}</td><td class="num">${s.totalGeneral?((s.totalOp/s.totalGeneral)*100).toFixed(1)+'%':'0.0%'}</td><td>Resumen consolidado de todos los módulos.</td></tr>
       </table>
-    </body></html>`;
+    
+<!-- CIOE: Navegación rápida entre módulos, sin modificar los filtros ni la lógica existente -->
+<style>
+#cioeQuickNavigation{position:fixed;z-index:99999;width:min(290px,calc(100vw - 24px));max-height:min(65vh,490px);overflow:auto;background:#0a0f1d;border:1px solid #475569;border-radius:16px;padding:7px;box-shadow:0 20px 50px #000a}
+#cioeQuickNavigation button{display:flex;align-items:center;gap:10px;width:100%;padding:11px 12px;border-radius:10px;color:#e2e8f0;text-align:left;font-size:12px;font-weight:700}
+#cioeQuickNavigation button:hover{background:#334155;color:white}
+#cioeQuickNavigation button i{width:18px;color:#fbbf24}
+</style>
+<script>
+(function(){
+ const items=[['fa-house','Centro de Control',null],['fa-magnifying-glass','Buscar reporte de cámara',0],['fa-calendar-days','Calendario / Historial de reportes',1],['fa-users-viewfinder','Cámaras vecinales / Barrio Seguro',2],['fa-school','Cámaras de Colegios',3],['fa-video','Listado de cámaras fijas',4],['fa-calendar-day','Creación de Estaciones/Pares - Turno',5],['fa-tower-observation','Tótems de cámaras',6],['fa-chart-pie','Ver estadística de cámaras',7]];
+ let panel;
+ function close(){if(panel)panel.hidden=true;}
+ window.cioeToggleNavigation=function(e){
+  if(e){e.preventDefault();e.stopPropagation();}
+  if(!panel){panel=document.createElement('div');panel.id='cioeQuickNavigation';document.body.appendChild(panel);}
+  if(!panel.hidden && panel.dataset.open==='1'){close();panel.dataset.open='0';return false;}
+  panel.replaceChildren();
+  const source=document.querySelectorAll('#ocurrenciasMenu > button');
+  items.forEach(([icon,label,index])=>{
+   const original=index===null?null:source[index];
+   if(index!==null && (!original || original.hidden || original.classList.contains('hidden') || getComputedStyle(original).display==='none'))return;
+   const btn=document.createElement('button');btn.type='button';
+   const ico=document.createElement('i');ico.className='fa-solid '+icon;
+   const span=document.createElement('span');span.textContent=label;btn.append(ico,span);
+   btn.addEventListener('click',()=>{close();panel.dataset.open='0';if(index===null){window.showMainDashboardView();}else{original.click();}});
+   panel.appendChild(btn);
+  });
+  panel.hidden=false;panel.dataset.open='1';
+  const rect=e.currentTarget.getBoundingClientRect();
+  panel.style.left=Math.max(12,Math.min(rect.right-290,innerWidth-302))+'px';
+  panel.style.top=(rect.bottom+8+Math.min(490,innerHeight-rect.bottom-20)>innerHeight?Math.max(8,rect.top-Math.min(panel.scrollHeight,490)-8):rect.bottom+8)+'px';
+  return false;
+ };
+ document.addEventListener('click',e=>{if(panel&&!panel.contains(e.target)&&!e.target.closest('[onclick*="cioeToggleNavigation"]')){close();panel.dataset.open='0';}});
+ document.addEventListener('keydown',e=>{if(e.key==='Escape'){close();if(panel)panel.dataset.open='0';}});
+})();
+</script>
+
+</body></html>`;
 
     const blob=new Blob(['\ufeff',html],{type:'application/vnd.ms-excel;charset=utf-8;'});
     const url=URL.createObjectURL(blob);
@@ -9502,6 +9611,45 @@ window.addEventListener('load',function(){
     TURNO MAÑANA
   </div>
 </div>
+
+<!-- CIOE: Navegación rápida entre módulos, sin modificar los filtros ni la lógica existente -->
+<style>
+#cioeQuickNavigation{position:fixed;z-index:99999;width:min(290px,calc(100vw - 24px));max-height:min(65vh,490px);overflow:auto;background:#0a0f1d;border:1px solid #475569;border-radius:16px;padding:7px;box-shadow:0 20px 50px #000a}
+#cioeQuickNavigation button{display:flex;align-items:center;gap:10px;width:100%;padding:11px 12px;border-radius:10px;color:#e2e8f0;text-align:left;font-size:12px;font-weight:700}
+#cioeQuickNavigation button:hover{background:#334155;color:white}
+#cioeQuickNavigation button i{width:18px;color:#fbbf24}
+</style>
+<script>
+(function(){
+ const items=[['fa-house','Centro de Control',null],['fa-magnifying-glass','Buscar reporte de cámara',0],['fa-calendar-days','Calendario / Historial de reportes',1],['fa-users-viewfinder','Cámaras vecinales / Barrio Seguro',2],['fa-school','Cámaras de Colegios',3],['fa-video','Listado de cámaras fijas',4],['fa-calendar-day','Creación de Estaciones/Pares - Turno',5],['fa-tower-observation','Tótems de cámaras',6],['fa-chart-pie','Ver estadística de cámaras',7]];
+ let panel;
+ function close(){if(panel)panel.hidden=true;}
+ window.cioeToggleNavigation=function(e){
+  if(e){e.preventDefault();e.stopPropagation();}
+  if(!panel){panel=document.createElement('div');panel.id='cioeQuickNavigation';document.body.appendChild(panel);}
+  if(!panel.hidden && panel.dataset.open==='1'){close();panel.dataset.open='0';return false;}
+  panel.replaceChildren();
+  const source=document.querySelectorAll('#ocurrenciasMenu > button');
+  items.forEach(([icon,label,index])=>{
+   const original=index===null?null:source[index];
+   if(index!==null && (!original || original.hidden || original.classList.contains('hidden') || getComputedStyle(original).display==='none'))return;
+   const btn=document.createElement('button');btn.type='button';
+   const ico=document.createElement('i');ico.className='fa-solid '+icon;
+   const span=document.createElement('span');span.textContent=label;btn.append(ico,span);
+   btn.addEventListener('click',()=>{close();panel.dataset.open='0';if(index===null){window.showMainDashboardView();}else{original.click();}});
+   panel.appendChild(btn);
+  });
+  panel.hidden=false;panel.dataset.open='1';
+  const rect=e.currentTarget.getBoundingClientRect();
+  panel.style.left=Math.max(12,Math.min(rect.right-290,innerWidth-302))+'px';
+  panel.style.top=(rect.bottom+8+Math.min(490,innerHeight-rect.bottom-20)>innerHeight?Math.max(8,rect.top-Math.min(panel.scrollHeight,490)-8):rect.bottom+8)+'px';
+  return false;
+ };
+ document.addEventListener('click',e=>{if(panel&&!panel.contains(e.target)&&!e.target.closest('[onclick*="cioeToggleNavigation"]')){close();panel.dataset.open='0';}});
+ document.addEventListener('keydown',e=>{if(e.key==='Escape'){close();if(panel)panel.dataset.open='0';}});
+})();
+</script>
+
 </body></html>`;
 
     const blob=new Blob(['\ufeff',html],{type:'application/msword;charset=utf-8;'});
@@ -9566,9 +9714,7 @@ window.addEventListener('load',function(){
       <button type="button" onclick="openSchoolCameraModal()" class="bg-yellow-400 hover:bg-yellow-300 text-black px-4 py-2 rounded-xl text-xs font-black flex items-center gap-2">
         <i class="fa-solid fa-plus"></i> Añadir Cámara
       </button>
-      <button type="button" onclick="showMainDashboardView()" class="bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2">
-        <i class="fa-solid fa-arrow-left text-yellow-300"></i> Volver al Centro de Control
-      </button>
+      <button type="button" onclick="cioeToggleNavigation(event)" class="bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2"><i class="fa-solid fa-compass text-amber-400"></i> Ir a otras opciones <i class="fa-solid fa-chevron-down text-[10px]"></i></button>
     </div>
   </header>
 
@@ -9943,6 +10089,45 @@ window.addEventListener('load',function(){
  document.addEventListener('DOMContentLoaded',start,{once:true});
  window.addEventListener('focus',()=>setTimeout(()=>loadCioeMessages(false),150));
  document.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey&&document.activeElement?.id==='cioeMessageText'){e.preventDefault();sendCioeMessage()}});
+})();
+</script>
+
+
+<!-- CIOE: Navegación rápida entre módulos, sin modificar los filtros ni la lógica existente -->
+<style>
+#cioeQuickNavigation{position:fixed;z-index:99999;width:min(290px,calc(100vw - 24px));max-height:min(65vh,490px);overflow:auto;background:#0a0f1d;border:1px solid #475569;border-radius:16px;padding:7px;box-shadow:0 20px 50px #000a}
+#cioeQuickNavigation button{display:flex;align-items:center;gap:10px;width:100%;padding:11px 12px;border-radius:10px;color:#e2e8f0;text-align:left;font-size:12px;font-weight:700}
+#cioeQuickNavigation button:hover{background:#334155;color:white}
+#cioeQuickNavigation button i{width:18px;color:#fbbf24}
+</style>
+<script>
+(function(){
+ const items=[['fa-house','Centro de Control',null],['fa-magnifying-glass','Buscar reporte de cámara',0],['fa-calendar-days','Calendario / Historial de reportes',1],['fa-users-viewfinder','Cámaras vecinales / Barrio Seguro',2],['fa-school','Cámaras de Colegios',3],['fa-video','Listado de cámaras fijas',4],['fa-calendar-day','Creación de Estaciones/Pares - Turno',5],['fa-tower-observation','Tótems de cámaras',6],['fa-chart-pie','Ver estadística de cámaras',7]];
+ let panel;
+ function close(){if(panel)panel.hidden=true;}
+ window.cioeToggleNavigation=function(e){
+  if(e){e.preventDefault();e.stopPropagation();}
+  if(!panel){panel=document.createElement('div');panel.id='cioeQuickNavigation';document.body.appendChild(panel);}
+  if(!panel.hidden && panel.dataset.open==='1'){close();panel.dataset.open='0';return false;}
+  panel.replaceChildren();
+  const source=document.querySelectorAll('#ocurrenciasMenu > button');
+  items.forEach(([icon,label,index])=>{
+   const original=index===null?null:source[index];
+   if(index!==null && (!original || original.hidden || original.classList.contains('hidden') || getComputedStyle(original).display==='none'))return;
+   const btn=document.createElement('button');btn.type='button';
+   const ico=document.createElement('i');ico.className='fa-solid '+icon;
+   const span=document.createElement('span');span.textContent=label;btn.append(ico,span);
+   btn.addEventListener('click',()=>{close();panel.dataset.open='0';if(index===null){window.showMainDashboardView();}else{original.click();}});
+   panel.appendChild(btn);
+  });
+  panel.hidden=false;panel.dataset.open='1';
+  const rect=e.currentTarget.getBoundingClientRect();
+  panel.style.left=Math.max(12,Math.min(rect.right-290,innerWidth-302))+'px';
+  panel.style.top=(rect.bottom+8+Math.min(490,innerHeight-rect.bottom-20)>innerHeight?Math.max(8,rect.top-Math.min(panel.scrollHeight,490)-8):rect.bottom+8)+'px';
+  return false;
+ };
+ document.addEventListener('click',e=>{if(panel&&!panel.contains(e.target)&&!e.target.closest('[onclick*="cioeToggleNavigation"]')){close();panel.dataset.open='0';}});
+ document.addEventListener('keydown',e=>{if(e.key==='Escape'){close();if(panel)panel.dataset.open='0';}});
 })();
 </script>
 
