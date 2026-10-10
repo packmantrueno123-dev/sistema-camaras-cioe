@@ -1461,6 +1461,15 @@ body.cioe-custom-theme #themeCustomizerBtn{background-color:var(--cioe-accent)!i
 }
 </style>
 
+
+<style id="cioeSpotifyStyle">
+#cioeSpotifyPlayer{display:flex;align-items:center;gap:9px;max-width:370px;min-width:220px;padding:7px 10px;border:1px solid #22563d;background:#0c211b;border-radius:12px;color:#e2e8f0;font-size:11px}
+#cioeSpotifyCover{width:36px;height:36px;object-fit:cover;border-radius:6px;display:none}
+#cioeSpotifyPlayer button{border:1px solid #1db954;color:#1ed760;border-radius:9px;padding:5px 8px;font-weight:800;white-space:nowrap}
+#cioeSpotifyTitle{font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:150px}
+#cioeSpotifyArtist{color:#94a3b8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:150px}
+@media(max-width:1350px){#cioeSpotifyPlayer{max-width:260px;min-width:190px}}
+</style>
 </head>
 <body class="min-h-screen flex flex-col p-3 md:p-5 space-y-4 w-full">
 
@@ -1552,6 +1561,11 @@ body.cioe-custom-theme #themeCustomizerBtn{background-color:var(--cioe-accent)!i
           <span id="cioeMessagesBadge" style="display:none" class="absolute -top-2 -right-2 min-w-[21px] h-[21px] px-1 rounded-full bg-red-600 text-white text-[10px] font-black items-center justify-center border-2 border-[#0a0f1d] shadow-lg shadow-red-600/40 animate-pulse">0</span>
         </button>
 
+        <div id="cioeSpotifyPlayer" title="Spotify: canción en reproducción">
+          <img id="cioeSpotifyCover" alt="Portada de Spotify">
+          <div style="min-width:0;flex:1"><div style="color:#1ed760;font-size:9px;font-weight:900">♫ SPOTIFY</div><div id="cioeSpotifyTitle">Sin conectar</div><div id="cioeSpotifyArtist">Conecta tu cuenta</div></div>
+          <button type="button" id="cioeSpotifyAction" onclick="cioeSpotifyConnect()">Conectar</button>
+        </div>
         <div class="relative">
           <button type="button" id="ocurrenciasBtn" onclick="toggleOcurrenciasMenu(event)" class="flex items-center gap-2 bg-[#030712] border border-slate-800 px-3.5 py-2 rounded-xl text-xs font-bold text-amber-400 hover:border-slate-700 hover:bg-slate-900/60 transition select-none">
             <i class="fa-solid fa-clipboard-list text-amber-500 text-sm pointer-events-none"></i>
@@ -9979,6 +9993,29 @@ window.addEventListener('load',function(){
  };
  document.addEventListener('click',e=>{if(panel&&!panel.contains(e.target)&&!e.target.closest('[onclick*="cioeToggleNavigation"]')){close();panel.dataset.open='0';}});
  document.addEventListener('keydown',e=>{if(e.key==='Escape'){close();if(panel)panel.dataset.open='0';}});
+})();
+</script>
+
+<script id="cioeSpotifyClient">
+(function(){
+ let spotifyTimer=null,connected=false;
+ const api='https://sistema-camaras-cioe-api.onrender.com';
+ const title=document.getElementById('cioeSpotifyTitle'),artist=document.getElementById('cioeSpotifyArtist'),cover=document.getElementById('cioeSpotifyCover'),btn=document.getElementById('cioeSpotifyAction');
+ const token=()=>sessionStorage.getItem('cioe_api_token')||'';
+ const update=(t,a,img)=>{title.textContent=t;artist.textContent=a;cover.style.display=img?'block':'none';if(img)cover.src=img;else cover.removeAttribute('src')};
+ window.cioeSpotifyConnect=async function(){
+  if(!token()){update('Inicia sesión en CIOE','Para conectar Spotify');return}
+  if(connected){window.open('https://open.spotify.com/','_blank','noopener,noreferrer');return}
+  try{btn.disabled=true;const r=await fetch(api+'/api/spotify/connect',{headers:{Authorization:'Bearer '+token()}});const d=await r.json();if(!r.ok||!d.url)throw Error(d.error||'No se pudo conectar');location.href=d.url}catch(e){update('Spotify no disponible',e.message)}finally{btn.disabled=false}
+ };
+ async function refresh(){
+  if(!token()||document.getElementById('mainDashboardView')?.classList.contains('hidden'))return;
+  try{const r=await fetch(api+'/api/spotify/now-playing',{headers:{Authorization:'Bearer '+token()},signal:AbortSignal.timeout(7000)});const d=await r.json();if(!r.ok)throw Error(d.error||'Spotify no disponible');connected=!!d.connected;btn.textContent=connected?'Abrir':'Conectar';if(!connected){update('Sin conectar','Conecta tu cuenta');return}if(d.track){update(d.track.name,d.track.artist,d.track.image)}else update('Sin reproducción','Abre Spotify y reproduce música');}catch(e){update('Spotify no disponible','CIOE continúa funcionando')}
+ }
+ const qs=new URLSearchParams(location.search);
+ if(qs.has('spotify')){history.replaceState(null,'',location.pathname+location.hash)}
+ spotifyTimer=setInterval(refresh,30000);setTimeout(refresh,2000);
+ document.addEventListener('visibilitychange',()=>{if(!document.hidden)refresh()});
 })();
 </script>
 </body>
