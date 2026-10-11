@@ -2245,8 +2245,25 @@ body.cioe-background-active #ocurrenciasMenu {backdrop-filter:blur(12px);-webkit
   <div id="creacionTurnoView" class="hidden space-y-4 flex-col flex-1">
     <header class="bg-[#0a0f1d] border border-fuchsia-500/30 rounded-2xl p-4 shadow-xl flex flex-col lg:flex-row justify-between items-center gap-4 w-full">
       <div class="flex items-center gap-3"><div class="p-3 bg-fuchsia-600 rounded-xl text-white"><i class="fa-solid fa-calendar-day text-xl"></i></div><div><h1 class="text-xl font-black text-white uppercase">CREACIÓN DE ESTACIONES / PARES POR TURNO</h1><p class="text-xs text-slate-400">Selecciona tu turno y crea Estaciones/Pares con sus cámaras y operador.</p></div></div>
+      <div class="flex flex-wrap items-center gap-2">
+        <button type="button" onclick="cioeTogglePanelOperadoresTurno()" class="bg-fuchsia-700 hover:bg-fuchsia-600 text-white border border-fuchsia-500/60 px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2"><i class="fa-solid fa-user-group"></i> Operadores y apoyo <i class="fa-solid fa-chevron-down text-[10px]"></i></button>
       <button type="button" onclick="cioeToggleNavigation(event)" class="bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2"><i class="fa-solid fa-compass text-amber-400"></i> Ir a otras opciones <i class="fa-solid fa-chevron-down text-[10px]"></i></button>
+      </div>
     </header>
+    <section id="cioePanelOperadoresTurno" class="hidden bg-[#0a0f1d] border border-fuchsia-500/40 rounded-2xl p-4 shadow-xl space-y-3">
+      <div class="flex items-center justify-between gap-2"><div><h2 class="font-black text-white"><i class="fa-solid fa-users text-fuchsia-400 mr-2"></i>ASIGNACIÓN RÁPIDA DE OPERADORES</h2><p class="text-xs text-slate-400">Registra al operador, su apoyo y las estaciones que vigilarán, separados por turno.</p></div><button type="button" onclick="cioeTogglePanelOperadoresTurno(false)" class="text-slate-300 hover:text-white p-2" title="Cerrar"><i class="fa-solid fa-xmark"></i></button></div>
+      <div class="flex flex-wrap gap-2 items-center text-xs"><span class="text-slate-400 font-bold">Turno:</span><select id="cioeAsignacionTurno" onchange="cioeRenderAsignacionesTurno()" class="bg-[#030712] border border-fuchsia-500/40 rounded-lg p-2 text-white font-bold"><option value="MAÑANA">MAÑANA</option><option value="TARDE">TARDE</option><option value="NOCHE">NOCHE</option></select></div>
+      <form onsubmit="cioeGuardarAsignacionTurno(event)" class="grid grid-cols-1 md:grid-cols-4 gap-3 items-end">
+        <input id="cioeAsignacionEditId" type="hidden">
+        <label class="text-xs text-slate-300 font-bold">Operador<input id="cioeAsignacionOperador" required maxlength="100" placeholder="Nombre del operador" class="mt-1 w-full bg-[#030712] border border-slate-700 rounded-xl p-3 text-white font-normal"></label>
+        <label class="text-xs text-slate-300 font-bold">Apoyo<input id="cioeAsignacionApoyo" maxlength="100" placeholder="Nombre de apoyo (opcional)" class="mt-1 w-full bg-[#030712] border border-slate-700 rounded-xl p-3 text-white font-normal"></label>
+        <label class="text-xs text-slate-300 font-bold">Estación donde estará asignado<select id="cioeAsignacionBase" required class="mt-1 w-full bg-[#030712] border border-slate-700 rounded-xl p-3 text-white font-normal"><option value="">Seleccionar estación...</option></select></label>
+        <div class="md:col-span-4"><label class="text-xs text-slate-300 font-bold">Estaciones que vigilará (puedes marcar varias)</label><div id="cioeAsignacionEstacionesLista" class="mt-2 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2 max-h-44 overflow-y-auto p-2 bg-[#030712] border border-slate-700 rounded-xl"></div><input id="cioeAsignacionEstaciones" type="hidden"></div>
+        <div class="flex gap-2"><button type="submit" class="flex-1 bg-emerald-600 hover:bg-emerald-500 rounded-xl p-3 text-xs font-black"><i class="fa-solid fa-floppy-disk mr-1"></i>Guardar</button><button type="button" onclick="cioeLimpiarAsignacionTurno()" class="bg-slate-800 hover:bg-slate-700 rounded-xl px-3 text-xs font-bold">Limpiar</button></div>
+      </form>
+      <div id="cioeListaAsignacionesTurno" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-2"></div>
+      <p class="text-[11px] text-slate-500">Las asignaciones se guardan en este navegador. Para compartirlas entre computadoras es necesaria sincronización con el servidor.</p>
+    </section>
     <section id="turnoSelectorPanel" class="bg-[#0a0f1d] border border-slate-800 rounded-2xl p-6 shadow-xl">
       <div class="text-center mb-6"><h2 class="text-lg font-black text-white">¿QUÉ TURNO ERES?</h2><p class="text-xs text-slate-400 mt-1">Escoge el turno para continuar.</p></div>
       <div class="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-4xl mx-auto">
@@ -7510,6 +7527,76 @@ body.cioe-background-active #ocurrenciasMenu {backdrop-filter:blur(12px);-webkit
     // V46: cálculo inicial del total general, sin alterar los módulos.
     updateTotalGeneral();
 
+    // ===== ASIGNACIÓN RÁPIDA DE OPERADORES Y APOYO POR TURNO =====
+    const CIOE_ASIGNACIONES_KEY='cioe_asignaciones_operadores_apoyo_v1';
+    function cioeGetAsignacionesTurno(){
+      try{const v=JSON.parse(localStorage.getItem(CIOE_ASIGNACIONES_KEY)||'[]');return Array.isArray(v)?v:[];}catch(e){return [];}
+    }
+    function cioeTogglePanelOperadoresTurno(forzar){
+      const p=document.getElementById('cioePanelOperadoresTurno');if(!p)return;
+      const mostrar=typeof forzar==='boolean'?forzar:p.classList.contains('hidden');
+      p.classList.toggle('hidden',!mostrar);
+      if(mostrar){
+        const turno=document.getElementById('cioeAsignacionTurno');
+        if(turno&&turnoCreadorActual)turno.value=turnoCreadorActual;
+        cioeRenderAsignacionesTurno();
+      }
+    }
+    function cioeLimpiarAsignacionTurno(){
+      document.querySelectorAll('#cioeAsignacionEstacionesLista input').forEach(x=>x.checked=false);
+      ['cioeAsignacionEditId','cioeAsignacionOperador','cioeAsignacionApoyo','cioeAsignacionEstaciones','cioeAsignacionBase'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});
+    }
+    function cioeGuardarAsignacionTurno(e){
+      e.preventDefault();
+      const turno=document.getElementById('cioeAsignacionTurno').value;
+      const operador=document.getElementById('cioeAsignacionOperador').value.trim();
+      const apoyo=document.getElementById('cioeAsignacionApoyo').value.trim();
+      const estacionBase=document.getElementById('cioeAsignacionBase').value;
+      const estaciones=[...document.querySelectorAll('#cioeAsignacionEstacionesLista input:checked')].map(x=>x.value).join(', ');
+      if(!operador||!estacionBase||!estaciones){alert('Selecciona una estación de asignación y al menos una estación para vigilar.');return;}
+      const editId=document.getElementById('cioeAsignacionEditId').value;
+      const registros=cioeGetAsignacionesTurno();
+      if(editId){
+        const r=registros.find(x=>String(x.id)===editId);
+        if(r){r.turno=turno;r.operador=operador;r.apoyo=apoyo;r.estaciones=estaciones;r.estacionBase=estacionBase;}
+      }else registros.push({id:String(Date.now())+'_'+Math.floor(Math.random()*100000),turno,operador,apoyo,estaciones,estacionBase});
+      try{localStorage.setItem(CIOE_ASIGNACIONES_KEY,JSON.stringify(registros));}
+      catch(err){alert('No se pudo guardar la asignación en este navegador.');return;}
+      cioeLimpiarAsignacionTurno();cioeRenderAsignacionesTurno();
+    }
+    function cioeEditarAsignacionTurno(id){
+      const r=cioeGetAsignacionesTurno().find(x=>String(x.id)===String(id));if(!r)return;
+      document.getElementById('cioeAsignacionTurno').value=r.turno;
+      document.getElementById('cioeAsignacionEditId').value=r.id;
+      document.getElementById('cioeAsignacionOperador').value=r.operador;
+      document.getElementById('cioeAsignacionApoyo').value=r.apoyo||'';
+      cioeRenderAsignacionesTurno();
+      document.getElementById('cioeAsignacionBase').value=r.estacionBase||'';
+      const vigila=(r.estaciones||'').split(',').map(x=>x.trim());
+      document.querySelectorAll('#cioeAsignacionEstacionesLista input').forEach(x=>x.checked=vigila.includes(x.value));
+      document.getElementById('cioeAsignacionOperador').focus();
+    }
+    function cioeEliminarAsignacionTurno(id){
+      if(!confirm('¿Eliminar esta asignación de operador?'))return;
+      localStorage.setItem(CIOE_ASIGNACIONES_KEY,JSON.stringify(cioeGetAsignacionesTurno().filter(x=>String(x.id)!==String(id))));
+      cioeRenderAsignacionesTurno();
+    }
+    function cioeRenderAsignacionesTurno(){
+      const turno=document.getElementById('cioeAsignacionTurno')?.value||'MAÑANA';
+      const lista=document.getElementById('cioeListaAsignacionesTurno');if(!lista)return;
+      const grupos=typeof getRegistrosTurno==='function'?getRegistrosTurno().filter(x=>x.turno===turno):[];
+      const nombres=[...new Set(grupos.map(g=>String(g.nombre||'').trim()).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'es',{numeric:true}));
+      const base=document.getElementById('cioeAsignacionBase');
+      const baseAnterior=base?.value||'';
+      if(base){base.innerHTML='<option value="">Seleccionar estación...</option>'+nombres.map(n=>'<option value="'+escapeHtml(n)+'">'+escapeHtml(n)+'</option>').join('');base.value=nombres.includes(baseAnterior)?baseAnterior:'';}
+      const checks=document.getElementById('cioeAsignacionEstacionesLista');
+      const marcadas=new Set([...checks.querySelectorAll('input:checked')].map(x=>x.value));
+      checks.innerHTML=nombres.length?nombres.map((n,i)=>'<label class="flex items-center gap-2 text-xs text-slate-200 p-2 border border-slate-700 rounded-lg cursor-pointer"><input type="checkbox" value="'+escapeHtml(n)+'" '+(marcadas.has(n)?'checked':'')+' class="accent-fuchsia-500">'+escapeHtml(n)+'</label>').join(''):'<p class="text-xs text-amber-300 col-span-full">Primero crea estaciones o pares en este turno para poder seleccionarlos.</p>';
+      const regs=cioeGetAsignacionesTurno().filter(x=>x.turno===turno);
+      lista.innerHTML=regs.length?regs.map(r=>'<div class="bg-[#030712]/90 border border-slate-700 rounded-xl p-3 flex justify-between items-start gap-2"><div class="min-w-0"><p class="text-xs font-black text-white break-words"><i class="fa-solid fa-user text-fuchsia-400 mr-1"></i>'+escapeHtml(r.operador)+'</p><p class="text-xs text-amber-300 break-words mt-1">Asignado a: '+escapeHtml(r.estacionBase||'Sin especificar')+'</p><p class="text-xs text-cyan-300 break-words mt-1">Apoyo: '+escapeHtml(r.apoyo||'Sin apoyo')+'</p><p class="text-xs text-slate-300 break-words mt-1">Vigila: '+escapeHtml(r.estaciones)+'</p></div><div class="flex shrink-0"><button type="button" data-asignacion-editar="'+escapeHtml(String(r.id))+'" class="p-2 text-sky-400" title="Editar"><i class="fa-solid fa-pen"></i></button><button type="button" data-asignacion-borrar="'+escapeHtml(String(r.id))+'" class="p-2 text-rose-400" title="Eliminar"><i class="fa-solid fa-trash"></i></button></div></div>').join(''):'<p class="text-xs text-slate-400 p-3">Todavía no hay operadores asignados a este turno.</p>';
+      lista.querySelectorAll('[data-asignacion-editar]').forEach(b=>b.addEventListener('click',()=>cioeEditarAsignacionTurno(b.dataset.asignacionEditar)));
+      lista.querySelectorAll('[data-asignacion-borrar]').forEach(b=>b.addEventListener('click',()=>cioeEliminarAsignacionTurno(b.dataset.asignacionBorrar)));
+    }
     // ===== CREACIÓN DE ESTACIONES / PARES POR TURNO =====
     const TURNO_CREACION_KEY = 'cioe_creacion_estaciones_pares_turno_v2';
     let turnoCreadorActual = '';
@@ -7522,7 +7609,7 @@ body.cioe-background-active #ocurrenciasMenu {backdrop-filter:blur(12px);-webkit
       hideAllViewsV36();
       const v=document.getElementById('creacionTurnoView'); v.classList.remove('hidden'); v.classList.add('flex');
       const menu=document.getElementById('ocurrenciasMenu'); if(menu) menu.classList.add('hidden');
-      turnoCreadorActual=''; document.getElementById('turnoSelectorPanel').classList.remove('hidden'); document.getElementById('turnoTrabajoPanel').classList.add('hidden');
+      turnoCreadorActual=''; document.getElementById('cioePanelOperadoresTurno')?.classList.add('hidden'); document.getElementById('turnoSelectorPanel').classList.remove('hidden'); document.getElementById('turnoTrabajoPanel').classList.add('hidden');
     }
     function seleccionarTurnoCreador(turno){
       const permisoTurno = {'MAÑANA':'turno_manana','TARDE':'turno_tarde','NOCHE':'turno_noche'}[turno];
