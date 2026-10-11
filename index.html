@@ -1701,22 +1701,21 @@ body.cioe-custom-theme #themeCustomizerBtn{background-color:var(--cioe-accent)!i
         <form id="cioeSpotifySearchForm" class="spotify-controls" onsubmit="return cioeSpotifySearch(event)">
           <input id="cioeSpotifySearchInput" type="search" placeholder="Buscar canción, artista o álbum..." autocomplete="off" aria-label="Buscar música en Spotify">
           <button type="submit" class="spotify-search"><i class="fa-solid fa-magnifying-glass mr-1"></i> Buscar</button>
-          <button type="button" class="spotify-secondary" onclick="cioeSpotifyOpenLikes()"><i class="fa-solid fa-heart mr-1"></i> Canciones que te gustan</button>
         </form>
         <form class="spotify-controls" onsubmit="return cioeSpotifyLoadAlbum(event)">
-          <input id="cioeSpotifyAlbumUrl" type="url" placeholder="Pega el enlace de tu playlist o álbum de Spotify..." aria-label="Enlace de playlist o álbum de Spotify">
+          <input id="cioeSpotifyAlbumUrl" type="url" placeholder="Pega el enlace de una canción, artista, álbum o playlist..." aria-label="Enlace de Spotify">
           <button type="submit" class="spotify-search"><i class="fa-solid fa-play mr-1"></i> Reproducir</button>
         </form>
-        <p class="spotify-favorites-hint">Pulsa <b>Canciones que te gustan</b> para abrir tus favoritos en Spotify. Para verlos en el reproductor de la derecha, crea una playlist con esas canciones y pega su enlace arriba. Spotify no permite insertar directamente la colección privada de Me gusta.</p>
+        <p class="spotify-favorites-hint">Pega el enlace de una canción, álbum, artista o playlist. El reproductor se actualizará a la derecha.</p>
       </div>
       <div class="spotify-player-box">
         <div class="spotify-player-title">
           <span><i class="fa-brands fa-spotify" style="color:#1ed760"></i> REPRODUCTOR</span>
-          <button type="button" class="spotify-secondary" style="padding:5px 8px;font-size:10px" onclick="cioeSpotifyOpenLikes()">Mis favoritos <i class="fa-solid fa-arrow-up-right-from-square"></i></button>
+          <span style="font-size:10px;color:#86efac"><i class="fa-solid fa-link"></i> Enlaces Spotify</span>
         </div>
         <div id="cioeSpotifyEmbed">
           <div id="cioeSpotifyPlaceholder" class="spotify-placeholder"><span><i class="fa-solid fa-compact-disc" style="font-size:22px;color:#1ed760"></i><br>Pega el enlace de una playlist o álbum para escucharlo aquí.</span></div>
-          <iframe id="cioeSpotifyAlbumFrame" title="Álbum de Spotify" loading="lazy" style="display:none" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" referrerpolicy="strict-origin-when-cross-origin"></iframe>
+          <iframe id="cioeSpotifyAlbumFrame" title="Reproductor de Spotify" loading="lazy" style="display:none" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" referrerpolicy="strict-origin-when-cross-origin"></iframe>
           <p id="cioeSpotifyMessage">La reproducción completa depende de las condiciones de Spotify.</p>
         </div>
       </div>
@@ -10054,30 +10053,78 @@ window.addEventListener('load',function(){
 
 <script id="cioeSpotifyClient">
 (function(){
- window.cioeSpotifyOpenLikes=function(){window.open('https://open.spotify.com/collection/tracks','_blank','noopener,noreferrer');const msg=document.getElementById('cioeSpotifyMessage');if(msg)msg.textContent='Tus canciones favoritas se abrieron en Spotify. Para mostrarlas aquí, comparte una playlist creada con esas canciones.';};
- window.cioeSpotifyTogglePanel=function(){const panel=document.getElementById('cioeSpotifyMini');const btn=document.getElementById('cioeSpotifyCollapseBtn');if(!panel||!btn)return;const collapsed=panel.classList.toggle('spotify-collapsed');btn.setAttribute('aria-expanded',String(!collapsed));btn.innerHTML=collapsed?'<i class="fa-solid fa-chevron-down"></i> Mostrar':'<i class="fa-solid fa-chevron-up"></i> Ocultar';try{localStorage.setItem('cioeSpotifyCollapsed',collapsed?'1':'0')}catch(e){}};
- document.addEventListener('DOMContentLoaded',()=>{try{if(localStorage.getItem('cioeSpotifyCollapsed')==='1'){window.cioeSpotifyTogglePanel()}}catch(e){}},{once:true});
- window.cioeSpotifyFocus=function(){const el=document.getElementById('cioeSpotifySearchInput');if(el){el.scrollIntoView({behavior:'smooth',block:'center'});el.focus();}};
- window.cioeSpotifySearch=function(event){if(event)event.preventDefault();const el=document.getElementById('cioeSpotifySearchInput');const q=el?.value.trim();if(!q){el?.focus();return false;}window.open('https://open.spotify.com/search/'+encodeURIComponent(q),'_blank','noopener,noreferrer');return false;};
- document.addEventListener('DOMContentLoaded',()=>{try{const saved=localStorage.getItem('cioeSpotifySavedLink');if(saved){const input=document.getElementById('cioeSpotifyAlbumUrl');if(input)input.value=saved;window.cioeSpotifyLoadAlbum();}}catch(e){}},{once:true});
- window.cioeSpotifyLoadAlbum=function(event){
-   if(event)event.preventDefault();
-   const input=document.getElementById('cioeSpotifyAlbumUrl');const msg=document.getElementById('cioeSpotifyMessage');
-   const raw=(input?.value||'').trim();let url;
-   try{url=new URL(raw);}catch(e){if(msg)msg.textContent='Pega un enlace válido de Spotify (playlist, álbum o canción).';return false;}
-   const host=url.hostname.toLowerCase();const parts=url.pathname.split('/').filter(Boolean);
-   const kind=['playlist','album','track'].find(k=>parts.includes(k));const idx=kind?parts.indexOf(kind):-1;const id=idx>=0?parts[idx+1]:null;
-   if(url.pathname.includes('/collection/tracks')){if(msg)msg.textContent='Canciones que te gustan es una colección privada. Crea una playlist con tus favoritas y pega su enlace.';return false;}
-   if(!['open.spotify.com','play.spotify.com'].includes(host)||!id||!/^[a-zA-Z0-9]{15,30}$/.test(id)){
-     if(msg)msg.textContent='Usa un enlace de playlist o álbum compartido de Spotify.';return false;
-   }
-   const frame=document.getElementById('cioeSpotifyAlbumFrame');const placeholder=document.getElementById('cioeSpotifyPlaceholder');
-   if(frame){frame.src='https://open.spotify.com/embed/'+kind+'/'+encodeURIComponent(id)+'?utm_source=generator';frame.style.display='block';}
-   if(placeholder)placeholder.style.display='none';
-   if(msg)msg.textContent='Contenido cargado. La reproducción depende de las condiciones de Spotify.';
-   try{localStorage.setItem('cioeSpotifySavedLink',raw)}catch(e){}
-   return false;
- };
+  const STORAGE_LINK='cioeSpotifySavedLink';
+  function status(text){const el=document.getElementById('cioeSpotifyMessage');if(el)el.textContent=text;}
+  function clearPlayer(){
+    const frame=document.getElementById('cioeSpotifyAlbumFrame');
+    const placeholder=document.getElementById('cioeSpotifyPlaceholder');
+    if(frame){frame.removeAttribute('src');frame.style.display='none';}
+    if(placeholder)placeholder.style.display='flex';
+  }
+  window.cioeSpotifyTogglePanel=function(){
+    const panel=document.getElementById('cioeSpotifyMini');const btn=document.getElementById('cioeSpotifyCollapseBtn');
+    if(!panel||!btn)return;
+    const collapsed=panel.classList.toggle('spotify-collapsed');
+    btn.setAttribute('aria-expanded',String(!collapsed));
+    btn.innerHTML=collapsed?'<i class="fa-solid fa-chevron-down"></i> Mostrar':'<i class="fa-solid fa-chevron-up"></i> Ocultar';
+    try{localStorage.setItem('cioeSpotifyCollapsed',collapsed?'1':'0');}catch(e){}
+  };
+  window.cioeSpotifyFocus=function(){
+    const panel=document.getElementById('cioeSpotifyMini');
+    if(panel?.classList.contains('spotify-collapsed'))window.cioeSpotifyTogglePanel();
+    const el=document.getElementById('cioeSpotifySearchInput');
+    if(el){el.scrollIntoView({behavior:'smooth',block:'center'});el.focus();}
+  };
+  window.cioeSpotifySearch=function(event){
+    if(event)event.preventDefault();
+    const el=document.getElementById('cioeSpotifySearchInput');const q=(el?.value||'').trim();
+    if(!q){el?.focus();return false;}
+    window.open('https://open.spotify.com/search/'+encodeURIComponent(q),'_blank','noopener,noreferrer');
+    return false;
+  };
+  window.cioeSpotifyLoadAlbum=function(event){
+    if(event)event.preventDefault();
+    const input=document.getElementById('cioeSpotifyAlbumUrl');
+    const raw=(input?.value||'').trim();
+    if(!raw){clearPlayer();status('Pega un enlace de Spotify para cargarlo.');return false;}
+    let kind=null,id=null;
+    const uri=raw.match(/^spotify:(track|album|playlist|artist):([a-zA-Z0-9]{22})$/i);
+    if(uri){kind=uri[1].toLowerCase();id=uri[2];}
+    else{
+      let url;
+      try{url=new URL(raw);}catch(e){clearPlayer();status('Enlace no válido. Copia el enlace desde Compartir en Spotify.');return false;}
+      const host=url.hostname.toLowerCase();
+      if(!['open.spotify.com','play.spotify.com'].includes(host)){
+        clearPlayer();status('Utiliza un enlace de open.spotify.com.');return false;
+      }
+      const parts=url.pathname.split('/').filter(Boolean);
+      const index=parts.findIndex(p=>['track','album','playlist','artist'].includes(p.toLowerCase()));
+      if(index>=0){kind=parts[index].toLowerCase();id=parts[index+1];}
+    }
+    if(!id||!/^[a-zA-Z0-9]{22}$/.test(id)){
+      clearPlayer();
+      status(raw.includes('collection/tracks')?'La colección privada «Canciones que te gustan» no se puede insertar. Comparte una playlist propia.':'Enlace no compatible. Usa una canción, álbum, artista o playlist de Spotify.');
+      return false;
+    }
+    const frame=document.getElementById('cioeSpotifyAlbumFrame');
+    const placeholder=document.getElementById('cioeSpotifyPlaceholder');
+    if(frame){
+      const next='https://open.spotify.com/embed/'+kind+'/'+encodeURIComponent(id)+'?utm_source=generator';
+      // Al cambiar de enlace se sustituye el iframe anterior, evitando mostrar el contenido viejo.
+      frame.removeAttribute('src');frame.src=next;frame.style.display='block';
+    }
+    if(placeholder)placeholder.style.display='none';
+    status(kind==='artist'?'Artista cargado. La disponibilidad del reproductor depende de Spotify.':'Enlace cargado. La reproducción depende de las condiciones de Spotify.');
+    try{localStorage.setItem(STORAGE_LINK,raw);}catch(e){}
+    return false;
+  };
+  document.addEventListener('DOMContentLoaded',()=>{
+    try{
+      if(localStorage.getItem('cioeSpotifyCollapsed')==='1')window.cioeSpotifyTogglePanel();
+      const saved=localStorage.getItem(STORAGE_LINK);
+      if(saved){const input=document.getElementById('cioeSpotifyAlbumUrl');if(input){input.value=saved;window.cioeSpotifyLoadAlbum();}}
+    }catch(e){}
+  },{once:true});
 })();
 </script>
 </body>
