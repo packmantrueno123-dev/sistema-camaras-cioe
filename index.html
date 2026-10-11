@@ -1494,6 +1494,28 @@ body.cioe-custom-theme #themeCustomizerBtn{background-color:var(--cioe-accent)!i
 #cioeSpotifyMini .spotify-left .spotify-heading{display:none}
 #cioeSpotifyMini .spotify-favorites-hint{font-size:10px;color:#94a3b8;line-height:1.45}
 @media(max-width:650px){#cioeSpotifyMini{padding-top:52px}#cioeSpotifyMini .spotify-panel-top{left:10px;right:10px}}
+
+/* CIOE: vinilo decorativo, sin API y sin acceder al audio del iframe */
+#cioeSpotifyMini .spotify-left{display:grid;grid-template-columns:170px minmax(0,1fr);align-items:center;gap:16px}
+#cioeSpotifyMini .cioe-spotify-workspace{display:flex;flex-direction:column;justify-content:center;gap:10px;min-width:0}
+#cioeSpotifyMini .cioe-spotify-kicker{color:#a7f3d0;font-size:11px;font-weight:900;letter-spacing:.09em;display:flex;align-items:center;gap:7px}
+#cioeSpotifyMini .cioe-spotify-kicker span{color:#1ed760;font-size:16px}
+#cioeSpotifyMini .cioe-vinyl-widget{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:9px;padding:10px 8px;border:1px solid #1b5945;border-radius:13px;background:radial-gradient(circle at 50% 30%,#113c32 0%,#0b1a24 55%,#08131d 100%);overflow:hidden}
+#cioeSpotifyMini .cioe-vinyl-disc{width:126px;height:126px;border-radius:50%;display:grid;place-items:center;position:relative;flex-shrink:0;background:repeating-radial-gradient(circle,#0a1016 0px,#0a1016 3px,#1a232b 4px,#0c1119 6px);border:3px solid #20d77a;box-shadow:0 0 20px #0ac77333,inset 0 0 14px #000;animation:cioeVinylSpin 7s linear infinite}
+#cioeSpotifyMini .cioe-vinyl-disc:after{content:"";position:absolute;inset:11px;border-radius:50%;border:1px solid #ffffff16;pointer-events:none}
+#cioeSpotifyMini .cioe-vinyl-center{width:54px;height:54px;border-radius:50%;display:grid;place-items:center;background:#1ed760;color:#061b12;font-size:31px;box-shadow:0 0 10px #1ed76066}
+#cioeSpotifyMini .cioe-equalizer{height:27px;display:flex;gap:3px;align-items:end;justify-content:center}
+#cioeSpotifyMini .cioe-equalizer span{width:4px;height:calc(6px + (var(--n) * 1px));background:#20e79a;border-radius:3px 3px 0 0;animation:cioeEq 1s ease-in-out infinite alternate;animation-delay:calc(var(--n) * -85ms)}
+#cioeSpotifyMini .cioe-vinyl-label{font-size:9px;font-weight:900;letter-spacing:.18em;color:#7ce9b3}
+#cioeSpotifyMini .cioe-spotify-shortcuts{display:flex;flex-wrap:wrap;gap:7px}
+#cioeSpotifyMini .cioe-spotify-shortcuts span{border:1px solid #264d42;border-radius:7px;background:#0e2124;color:#a6e9cb;padding:5px 8px;font-size:10px}
+#cioeSpotifyMini .cioe-spotify-shortcuts i{color:#1ed760;margin-right:4px}
+#cioeSpotifyMini.spotify-collapsed .cioe-vinyl-disc,#cioeSpotifyMini.spotify-collapsed .cioe-equalizer span{animation-play-state:paused}
+@keyframes cioeVinylSpin{to{transform:rotate(360deg)}}
+@keyframes cioeEq{from{height:4px;opacity:.65}to{height:26px;opacity:1}}
+@media(max-width:1200px){#cioeSpotifyMini .spotify-left{grid-template-columns:130px minmax(0,1fr)}#cioeSpotifyMini .cioe-vinyl-disc{width:108px;height:108px}}
+@media(max-width:650px){#cioeSpotifyMini .spotify-left{grid-template-columns:1fr}#cioeSpotifyMini .cioe-vinyl-widget{display:none}}
+@media(prefers-reduced-motion:reduce){#cioeSpotifyMini .cioe-vinyl-disc,#cioeSpotifyMini .cioe-equalizer span{animation:none}}
 </style>
 </head>
 <body class="min-h-screen flex flex-col p-3 md:p-5 space-y-4 w-full">
@@ -1694,19 +1716,28 @@ body.cioe-custom-theme #themeCustomizerBtn{background-color:var(--cioe-accent)!i
         <button type="button" id="cioeSpotifyCollapseBtn" aria-expanded="true" aria-controls="cioeSpotifyMini" onclick="cioeSpotifyTogglePanel()"><i class="fa-solid fa-chevron-up"></i> Ocultar</button>
       </div>
       <div class="spotify-left">
-        <div class="spotify-heading">
-          <i class="fa-brands fa-spotify" style="color:#1ed760;font-size:19px"></i>
-          <span class="font-black text-xs text-white">SPOTIFY · MÚSICA</span>
+        <div class="cioe-vinyl-widget" aria-label="Disco decorativo animado de Spotify">
+          <div class="cioe-vinyl-disc"><div class="cioe-vinyl-center"><i class="fa-brands fa-spotify"></i></div></div>
+          <div class="cioe-equalizer" aria-hidden="true"><span style="--n:1"></span><span style="--n:2"></span><span style="--n:3"></span><span style="--n:4"></span><span style="--n:5"></span><span style="--n:6"></span><span style="--n:7"></span><span style="--n:8"></span><span style="--n:9"></span><span style="--n:10"></span><span style="--n:11"></span><span style="--n:12"></span><span style="--n:13"></span><span style="--n:14"></span><span style="--n:15"></span><span style="--n:16"></span><span style="--n:17"></span><span style="--n:18"></span><span style="--n:19"></span></div>
+          <span class="cioe-vinyl-label"><i class="fa-solid fa-music"></i> MUSIC VIBES</span>
         </div>
-        <form id="cioeSpotifySearchForm" class="spotify-controls" onsubmit="return cioeSpotifySearch(event)">
-          <input id="cioeSpotifySearchInput" type="search" placeholder="Buscar canción, artista o álbum..." autocomplete="off" aria-label="Buscar música en Spotify">
-          <button type="submit" class="spotify-search"><i class="fa-solid fa-magnifying-glass mr-1"></i> Buscar</button>
-        </form>
-        <form class="spotify-controls" onsubmit="return cioeSpotifyLoadAlbum(event)">
-          <input id="cioeSpotifyAlbumUrl" type="url" placeholder="Pega el enlace de una canción, artista, álbum o playlist..." aria-label="Enlace de Spotify">
-          <button type="submit" class="spotify-search"><i class="fa-solid fa-play mr-1"></i> Reproducir</button>
-        </form>
-        <p class="spotify-favorites-hint">Pega el enlace de una canción, álbum, artista o playlist. El reproductor se actualizará a la derecha.</p>
+        <div class="cioe-spotify-workspace">
+          <div class="cioe-spotify-kicker"><i class="fa-solid fa-headphones"></i> TU ESPACIO MUSICAL <span>♪</span></div>
+          <form id="cioeSpotifySearchForm" class="spotify-controls" onsubmit="return cioeSpotifySearch(event)">
+            <input id="cioeSpotifySearchInput" type="search" placeholder="Buscar canción, artista o álbum..." autocomplete="off" aria-label="Buscar música en Spotify">
+            <button type="submit" class="spotify-search"><i class="fa-solid fa-magnifying-glass mr-1"></i> Buscar</button>
+          </form>
+          <form class="spotify-controls" onsubmit="return cioeSpotifyLoadAlbum(event)">
+            <input id="cioeSpotifyAlbumUrl" type="url" placeholder="Pega el enlace de una canción, artista, álbum o playlist..." aria-label="Enlace de Spotify">
+            <button type="submit" class="spotify-search"><i class="fa-solid fa-play mr-1"></i> Reproducir</button>
+          </form>
+          <div class="cioe-spotify-shortcuts">
+            <span><i class="fa-solid fa-compact-disc"></i> Vinilo animado</span>
+            <span><i class="fa-solid fa-link"></i> Enlaces Spotify</span>
+            <span><i class="fa-solid fa-shield-halved"></i> Sin conectar CIOE</span>
+          </div>
+          <p class="spotify-favorites-hint">Busca en Spotify o pega un enlace. El reproductor se actualiza a la derecha.</p>
+        </div>
       </div>
       <div class="spotify-player-box">
         <div class="spotify-player-title">
