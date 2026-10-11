@@ -1594,6 +1594,29 @@ body.cioe-custom-theme #themeCustomizerBtn{background-color:var(--cioe-accent)!i
 #cioeSpotifyMini.cioe-spotify-playing:not(.spotify-collapsed) .cioe-equalizer span{animation-play-state:running!important}
 @media(prefers-reduced-motion:reduce){#cioeSpotifyMini.cioe-spotify-playing .cioe-vinyl-disc,#cioeSpotifyMini.cioe-spotify-playing .cioe-equalizer span{animation:none!important}}
 </style>
+
+<style id="cioeVinylFix2026">
+#cioeSpotifyMini .spotify-panel-top .cioe-vinyl-top-actions{display:flex;align-items:center;gap:8px}
+#cioeSpotifyMini .spotify-panel-top .cioe-vinyl-settings-btn{position:static;display:inline-flex;align-items:center;gap:6px;border:1px solid #286a57;border-radius:999px;background:#10261e;color:#a7f3d0;padding:6px 12px;font-size:11px;font-weight:700;cursor:pointer}
+#cioeSpotifyMini .spotify-panel-top .cioe-vinyl-settings-btn:hover{background:#194736}
+#cioeSpotifyMini>.cioe-vinyl-settings{position:absolute;top:46px;right:80px;left:auto;z-index:999;width:260px;max-width:calc(100vw - 25px);padding:13px;background:#091523;border:1px solid #287b6d;border-radius:12px;color:#e2e8f0;box-shadow:0 18px 35px #000b;font-size:11px}
+#cioeSpotifyMini>.cioe-vinyl-settings.hidden{display:none!important}
+#cioeSpotifyMini>.cioe-vinyl-settings label{display:block;margin:9px 0 5px;font-weight:700}
+#cioeSpotifyMini>.cioe-vinyl-settings select{width:100%;background:#0f2032;border:1px solid #36536b;border-radius:7px;padding:7px;color:white}
+#cioeSpotifyMini>.cioe-vinyl-settings .cioe-vinyl-settings-title{display:flex;justify-content:space-between;gap:8px;align-items:center;color:#a7f3d0}
+#cioeSpotifyMini>.cioe-vinyl-settings .cioe-vinyl-color-row{display:flex;gap:5px;align-items:center}
+#cioeSpotifyMini>.cioe-vinyl-settings .cioe-vinyl-color-row input{width:40px;height:32px}
+#cioeSpotifyMini>.cioe-vinyl-settings .cioe-vinyl-color-row button{padding:5px;border:1px solid #36536b;border-radius:6px;background:#132438}
+#cioeSpotifyMini>.cioe-vinyl-settings p{font-size:10px;color:#94a3b8;margin-top:9px}
+#cioeSpotifyMini .cioe-vinyl-widget{--cioe-vinyl-accent:#1ed760;--cioe-vinyl-speed:7s}
+#cioeSpotifyMini .cioe-vinyl-disc{border-color:var(--cioe-vinyl-accent)!important;animation-duration:var(--cioe-vinyl-speed)!important;box-shadow:0 0 20px color-mix(in srgb,var(--cioe-vinyl-accent) 38%,transparent),inset 0 0 20px #000!important}
+#cioeSpotifyMini .cioe-vinyl-center{background:var(--cioe-vinyl-accent)!important}
+#cioeSpotifyMini .cioe-equalizer span{background:var(--cioe-vinyl-accent)!important}
+#cioeSpotifyMini .cioe-vinyl-fx{position:absolute;inset:0;z-index:10;pointer-events:none;overflow:hidden;border-radius:12px}
+#cioeSpotifyMini .cioe-vinyl-particle{position:absolute;bottom:8px;left:var(--particle-left);font-size:var(--particle-size);opacity:0;animation:cioeVinylFloat var(--particle-time) linear infinite;animation-delay:var(--particle-delay);will-change:transform,opacity}
+@keyframes cioeVinylFloat{0%{opacity:0;transform:translate(0,0) scale(.7)}15%{opacity:1}80%{opacity:1}100%{opacity:0;transform:translate(var(--particle-drift),-195px) scale(1.3)}}
+@media(max-width:650px){#cioeSpotifyMini>.cioe-vinyl-settings{right:5px;top:48px}#cioeSpotifyMini .spotify-panel-top .cioe-vinyl-settings-btn{font-size:0}#cioeSpotifyMini .spotify-panel-top .cioe-vinyl-settings-btn i{font-size:13px}}
+</style>
 </head>
 <body class="min-h-screen flex flex-col p-3 md:p-5 space-y-4 w-full">
 
@@ -1790,12 +1813,8 @@ body.cioe-custom-theme #themeCustomizerBtn{background-color:var(--cioe-accent)!i
     <section id="cioeSpotifyMini" aria-label="Spotify: buscador y playlist">
       <div class="spotify-panel-top">
         <span class="font-black text-xs text-white"><i class="fa-brands fa-spotify" style="color:#1ed760;font-size:17px;margin-right:6px"></i> SPOTIFY · MÚSICA</span>
-        <button type="button" id="cioeSpotifyCollapseBtn" aria-expanded="true" aria-controls="cioeSpotifyMini" onclick="cioeSpotifyTogglePanel()"><i class="fa-solid fa-chevron-up"></i> Ocultar</button>
+        <div class="cioe-vinyl-top-actions"><button type="button" class="cioe-vinyl-settings-btn" id="cioeVinylSettingsBtn" onclick="cioeVinylToggleSettings()" title="Personalizar disco" aria-expanded="false"><i class="fa-solid fa-palette"></i> Personalizar disco</button><button type="button" id="cioeSpotifyCollapseBtn" aria-expanded="true" aria-controls="cioeSpotifyMini" onclick="cioeSpotifyTogglePanel()"><i class="fa-solid fa-chevron-up"></i> Ocultar</button></div>
       </div>
-      <div class="spotify-left">
-        <div class="cioe-vinyl-widget" aria-label="Vinilo decorativo giratorio">
-          <button type="button" class="cioe-vinyl-settings-btn" id="cioeVinylSettingsBtn" onclick="cioeVinylToggleSettings()" title="Personalizar vinilo" aria-label="Personalizar colores y animaciones del vinilo" aria-expanded="false"><i class="fa-solid fa-palette"></i></button>
-          <div class="cioe-vinyl-fx" id="cioeVinylFx" aria-hidden="true"></div>
           <div class="cioe-vinyl-settings hidden" id="cioeVinylSettings">
             <div class="cioe-vinyl-settings-title"><b><i class="fa-solid fa-wand-magic-sparkles"></i> Personalizar disco</b><button type="button" onclick="cioeVinylToggleSettings(false)" aria-label="Cerrar ajustes"><i class="fa-solid fa-xmark"></i></button></div>
             <label for="cioeVinylColor">Color del disco</label>
@@ -1806,6 +1825,9 @@ body.cioe-custom-theme #themeCustomizerBtn{background-color:var(--cioe-accent)!i
             <select id="cioeVinylSpeed" onchange="cioeVinylSetSpeed(this.value)"><option value="slow">Lenta</option><option value="normal">Normal</option><option value="fast">Rápida</option></select>
             <p>Los efectos son visuales; el disco seguirá el estado del reproductor cuando Spotify lo informe.</p>
           </div>
+      <div class="spotify-left">
+        <div class="cioe-vinyl-widget" aria-label="Vinilo decorativo giratorio">
+          <div class="cioe-vinyl-fx" id="cioeVinylFx" aria-hidden="true"></div>
           <div class="cioe-vinyl-stage"><div class="cioe-vinyl-disc"><div class="cioe-vinyl-center"><i class="fa-brands fa-spotify"></i></div></div><div class="cioe-tonearm"><span></span></div><span class="cioe-vinyl-note">♫</span></div>
           <div class="cioe-equalizer" aria-hidden="true"><span style="--n:1"></span><span style="--n:2"></span><span style="--n:3"></span><span style="--n:4"></span><span style="--n:5"></span><span style="--n:6"></span><span style="--n:7"></span><span style="--n:8"></span><span style="--n:9"></span><span style="--n:10"></span><span style="--n:11"></span><span style="--n:12"></span><span style="--n:13"></span><span style="--n:14"></span><span style="--n:15"></span><span style="--n:16"></span><span style="--n:17"></span><span style="--n:18"></span><span style="--n:19"></span><span style="--n:20"></span><span style="--n:21"></span><span style="--n:22"></span><span style="--n:23"></span></div>
           <span class="cioe-vinyl-label"><i class="fa-solid fa-music"></i> MUSIC VIBES</span>
