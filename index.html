@@ -1633,6 +1633,22 @@ body.cioe-background-active{
 }
 @media(max-width:720px){body.cioe-background-active{background-attachment:scroll!important}}
 </style>
+<style id="cioePanelTransparencyStyle">
+/* Solo superficies principales: evita reducir opacidad del contenido, controles y textos. */
+body.cioe-background-active #mainDashboardView > header,
+body.cioe-background-active #mainDashboardView > main,
+body.cioe-background-active #mainDashboardView > section:not(#cioeSpotifyMini),
+body.cioe-background-active #mainDashboardView > div.bg-\[\#0a0f1d\],
+body.cioe-background-active #mainDashboardView > section > div.bg-\[\#0a0f1d\],
+body.cioe-background-active #cioeSpotifyMini {
+  background-color:rgb(8 15 29 / var(--cioe-panel-alpha,1))!important;
+}
+body.cioe-background-active #mainDashboardView main tbody tr {
+  background-color:rgb(8 15 29 / var(--cioe-panel-alpha,1))!important;
+}
+/* Mantener cabeceras oscuras para legibilidad incluso con transparencia alta. */
+body.cioe-background-active #mainDashboardView main thead tr{background-color:rgba(0,0,0,.88)!important}
+</style>
 </head>
 <body class="min-h-screen flex flex-col p-3 md:p-5 space-y-4 w-full">
 
@@ -7951,13 +7967,15 @@ body.cioe-background-active{
     <label style="font-size:11px;display:flex;align-items:center;gap:7px;cursor:pointer"><input id="cioeBgEnabled" type="checkbox" onchange="cioeBgSetEnabled(this.checked)" style="accent-color:#10b981;width:16px;height:16px"> Activar fondo</label>
   </div>
   <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px">
-    <button type="button" onclick="cioeBgPreset()" style="background:#12364b;border:1px solid #28647d;border-radius:9px;padding:9px 12px;font-size:11px"><i class="fa-solid fa-image"></i> Fondo Spider-Man</button>
     <label style="background:#134e4a;border:1px solid #267c70;border-radius:9px;padding:9px 12px;font-size:11px;cursor:pointer"><i class="fa-solid fa-upload"></i> Subir mi imagen<input type="file" id="cioeBgFile" accept="image/png,image/jpeg,image/webp,image/gif" onchange="cioeBgUpload(this.files[0])" hidden></label>
     <button type="button" onclick="cioeBgRemove()" style="background:#3b1822;border:1px solid #7f3042;border-radius:9px;padding:9px 12px;font-size:11px"><i class="fa-solid fa-trash"></i> Quitar fondo</button>
   </div>
   <label style="display:block;font-size:11px;margin-top:12px">Oscurecer fondo: <strong id="cioeBgShadeValue">45%</strong></label>
   <input id="cioeBgShade" type="range" min="0" max="85" value="45" oninput="cioeBgSetShade(this.value)" style="width:100%;accent-color:#22c55e">
-  <p id="cioeBgStatus" style="font-size:10px;color:#94a3b8;margin-top:8px">El fondo se guarda en este navegador. Para mostrar la imagen de ejemplo en Render, sube también fondo-spiderman-cioe.jpg a GitHub.</p>
+  <label style="display:flex;justify-content:space-between;gap:8px;font-size:11px;margin-top:14px"><span><i class="fa-solid fa-layer-group" style="color:#38bdf8"></i> Transparencia de paneles</span><strong id="cioeBgTransparencyValue">0%</strong></label>
+  <input id="cioeBgTransparency" type="range" min="0" max="85" value="0" step="5" oninput="cioeBgSetTransparency(this.value)" style="width:100%;accent-color:#38bdf8" aria-label="Transparencia de paneles">
+  <p style="font-size:10px;color:#94a3b8;margin-top:3px">0% = paneles sólidos · 85% = fondo mucho más visible. Los textos y botones conservan su intensidad.</p>
+  <p id="cioeBgStatus" style="font-size:10px;color:#94a3b8;margin-top:8px">El fondo se guarda en este navegador. El fondo personalizado se guarda en este navegador.</p>
 </section>
 
         <p id="themeMessage" class="theme-redesign-message"></p>
@@ -10519,7 +10537,7 @@ window.addEventListener('load',function(){
 const SETTINGS='cioe_background_settings_v1';
 const PRESET='fondo-spiderman-cioe.jpg';
 let customUrl=null;
-let settings={enabled:false,mode:'preset',shade:45};
+let settings={enabled:false,mode:'preset',shade:45,transparency:0};
 try{settings={...settings,...JSON.parse(localStorage.getItem(SETTINGS)||'{}')}}catch(e){}
 function save(){try{localStorage.setItem(SETTINGS,JSON.stringify(settings))}catch(e){}}
 function status(message){const el=document.getElementById('cioeBgStatus');if(el)el.textContent=message;}
@@ -10562,12 +10580,17 @@ function updateUI(){
  const check=document.getElementById('cioeBgEnabled');
  const slider=document.getElementById('cioeBgShade');
  const value=document.getElementById('cioeBgShadeValue');
+ const trans=document.getElementById('cioeBgTransparency');
+ const transValue=document.getElementById('cioeBgTransparencyValue');
+ if(trans)trans.value=settings.transparency||0;
+ if(transValue)transValue.textContent=(settings.transparency||0)+'%';
  if(check)check.checked=!!settings.enabled;
  if(slider)slider.value=settings.shade;
  if(value)value.textContent=settings.shade+'%';
 }
 function apply(){
  updateUI();
+ document.body.style.setProperty('--cioe-panel-alpha',String(1-(Number(settings.transparency)||0)/100));
  if(!settings.enabled){document.body.classList.remove('cioe-background-active');document.body.style.removeProperty('background-image');return;}
  const url=settings.mode==='custom'?customUrl:PRESET;
  if(!url){document.body.classList.remove('cioe-background-active');document.body.style.removeProperty('background-image');status('No se encontró la imagen personalizada. Sube una nueva.');return;}
@@ -10579,7 +10602,7 @@ function apply(){
 }
 window.cioeBgSetEnabled=function(value){settings.enabled=!!value;save();apply();};
 window.cioeBgSetShade=function(value){settings.shade=Math.min(85,Math.max(0,Number(value)));save();apply();};
-window.cioeBgPreset=function(){settings.mode='preset';settings.enabled=true;save();apply();status('Fondo Spider-Man seleccionado.');};
+window.cioeBgSetTransparency=function(value){settings.transparency=Math.min(85,Math.max(0,Number(value)));save();apply();};
 window.cioeBgUpload=async function(file){
  if(!file)return;
  if(!/^image\/(png|jpeg|webp|gif)$/.test(file.type)){status('Solo se admiten imágenes JPG, PNG, WebP o GIF.');return;}
