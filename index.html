@@ -1649,6 +1649,39 @@ body.cioe-background-active #mainDashboardView main tbody tr {
 /* Mantener cabeceras oscuras para legibilidad incluso con transparencia alta. */
 body.cioe-background-active #mainDashboardView main thead tr{background-color:rgba(0,0,0,.88)!important}
 </style>
+
+<style id="cioeTransparencyAllViews">
+/* Transparencia global de superficies: los textos e iconos mantienen opacidad completa. */
+body.cioe-background-active #ocurrenciasMenu,
+body.cioe-background-active #searchReportView :is(header,main,section,article),
+body.cioe-background-active #camarasFijasView :is(header,main,section,article),
+body.cioe-background-active #creacionTurnoView :is(header,main,section,article),
+body.cioe-background-active #totemsView :is(header,main,section,article),
+body.cioe-background-active #estacionesParesView :is(header,main,section,article),
+body.cioe-background-active #cameraStatisticsView :is(header,main,section,article),
+body.cioe-background-active #vecinalesView :is(header,main,section,article),
+body.cioe-background-active #schoolCamerasView :is(header,main,section,article),
+body.cioe-background-active #mainDashboardView :is(.bg-\[\#0a0f1d\],.bg-\[\#030712\]),
+body.cioe-background-active #searchReportView :is(.bg-\[\#0a0f1d\],.bg-\[\#030712\]),
+body.cioe-background-active #camarasFijasView :is(.bg-\[\#0a0f1d\],.bg-\[\#030712\]),
+body.cioe-background-active #creacionTurnoView :is(.bg-\[\#0a0f1d\],.bg-\[\#030712\]),
+body.cioe-background-active #totemsView :is(.bg-\[\#0a0f1d\],.bg-\[\#030712\]),
+body.cioe-background-active #estacionesParesView :is(.bg-\[\#0a0f1d\],.bg-\[\#030712\]),
+body.cioe-background-active #cameraStatisticsView :is(.bg-\[\#0a0f1d\],.bg-\[\#030712\]),
+body.cioe-background-active #vecinalesView :is(.bg-\[\#0a0f1d\],.bg-\[\#030712\]),
+body.cioe-background-active #schoolCamerasView :is(.bg-\[\#0a0f1d\],.bg-\[\#030712\]) {
+ background-color:rgba(8,15,29,var(--cioe-panel-alpha,1))!important;
+}
+/* Filas de tablas de todos los módulos, pero sin afectar el color de estado de los controles. */
+body.cioe-background-active :is(#searchReportView,#camarasFijasView,#creacionTurnoView,#totemsView,#estacionesParesView,#cameraStatisticsView,#vecinalesView,#schoolCamerasView) tbody tr{
+ background-color:rgba(8,15,29,var(--cioe-panel-alpha,1))!important;
+}
+body.cioe-background-active :is(#searchReportView,#camarasFijasView,#creacionTurnoView,#totemsView,#estacionesParesView,#cameraStatisticsView,#vecinalesView,#schoolCamerasView) thead tr{
+ background-color:rgba(0,0,0,.85)!important;
+}
+/* Menú desplegable de Ocurrencias con la misma transparencia. */
+body.cioe-background-active #ocurrenciasMenu {backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
+</style>
 </head>
 <body class="min-h-screen flex flex-col p-3 md:p-5 space-y-4 w-full">
 
@@ -1828,7 +1861,7 @@ body.cioe-background-active #mainDashboardView main thead tr{background-color:rg
         </span>
 
         <button id="themeCustomizerBtn" onclick="openThemeCustomizer()" class="hidden bg-cyan-600 hover:bg-cyan-500 text-white px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2">
-          <i class="fa-solid fa-palette"></i> Personalizar colores
+          <i class="fa-solid fa-palette"></i> Personalizar
         </button>
 
         <button id="manageUsersBtn" onclick="openUserManager()" class="hidden bg-violet-600 hover:bg-violet-500 text-white px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2">
@@ -7972,7 +8005,7 @@ body.cioe-background-active #mainDashboardView main thead tr{background-color:rg
   </div>
   <label style="display:block;font-size:11px;margin-top:12px">Oscurecer fondo: <strong id="cioeBgShadeValue">45%</strong></label>
   <input id="cioeBgShade" type="range" min="0" max="85" value="45" oninput="cioeBgSetShade(this.value)" style="width:100%;accent-color:#22c55e">
-  <label style="display:flex;justify-content:space-between;gap:8px;font-size:11px;margin-top:14px"><span><i class="fa-solid fa-layer-group" style="color:#38bdf8"></i> Transparencia de paneles</span><strong id="cioeBgTransparencyValue">0%</strong></label>
+  <label style="display:flex;justify-content:space-between;gap:8px;font-size:11px;margin-top:14px"><span><i class="fa-solid fa-layer-group" style="color:#38bdf8"></i> Transparencia de todas las secciones</span><strong id="cioeBgTransparencyValue">0%</strong></label>
   <input id="cioeBgTransparency" type="range" min="0" max="85" value="0" step="5" oninput="cioeBgSetTransparency(this.value)" style="width:100%;accent-color:#38bdf8" aria-label="Transparencia de paneles">
   <p style="font-size:10px;color:#94a3b8;margin-top:3px">0% = paneles sólidos · 85% = fondo mucho más visible. Los textos y botones conservan su intensidad.</p>
   <p id="cioeBgStatus" style="font-size:10px;color:#94a3b8;margin-top:8px">El fondo se guarda en este navegador. El fondo personalizado se guarda en este navegador.</p>
