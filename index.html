@@ -2252,13 +2252,13 @@ body.cioe-background-active #ocurrenciasMenu {backdrop-filter:blur(12px);-webkit
     </header>
     <section id="cioePanelOperadoresTurno" class="hidden bg-[#0a0f1d] border border-fuchsia-500/40 rounded-2xl p-4 shadow-xl space-y-3">
       <div class="flex items-center justify-between gap-2"><div><h2 class="font-black text-white"><i class="fa-solid fa-users text-fuchsia-400 mr-2"></i>ASIGNACIÓN RÁPIDA DE OPERADORES</h2><p class="text-xs text-slate-400">Registra al operador, su apoyo y las estaciones que vigilarán, separados por turno.</p></div><button type="button" onclick="cioeTogglePanelOperadoresTurno(false)" class="text-slate-300 hover:text-white p-2" title="Cerrar"><i class="fa-solid fa-xmark"></i></button></div>
-      <div class="flex flex-wrap gap-2 items-center text-xs"><span class="text-slate-400 font-bold">Turno:</span><select id="cioeAsignacionTurno" onchange="cioeRenderAsignacionesTurno()" class="bg-[#030712] border border-fuchsia-500/40 rounded-lg p-2 text-white font-bold"><option value="MAÑANA">MAÑANA</option><option value="TARDE">TARDE</option><option value="NOCHE">NOCHE</option></select></div>
-      <form onsubmit="cioeGuardarAsignacionTurno(event)" class="grid grid-cols-1 md:grid-cols-4 gap-3 items-end">
+      <div class="flex flex-wrap gap-2 items-center text-xs"><span class="text-slate-400 font-bold">Turno seleccionado:</span><span id="cioeAsignacionTurnoTexto" class="bg-fuchsia-950/60 border border-fuchsia-500/40 rounded-lg px-3 py-2 text-fuchsia-200 font-black">MAÑANA</span><input id="cioeAsignacionTurno" type="hidden" value="MAÑANA"></div>
+      <form onsubmit="cioeGuardarAsignacionTurno(event)" class="grid grid-cols-1 md:grid-cols-3 gap-3 items-end">
         <input id="cioeAsignacionEditId" type="hidden">
         <label class="text-xs text-slate-300 font-bold">Operador<input id="cioeAsignacionOperador" required maxlength="100" placeholder="Nombre del operador" class="mt-1 w-full bg-[#030712] border border-slate-700 rounded-xl p-3 text-white font-normal"></label>
         <label class="text-xs text-slate-300 font-bold">Apoyo<input id="cioeAsignacionApoyo" maxlength="100" placeholder="Nombre de apoyo (opcional)" class="mt-1 w-full bg-[#030712] border border-slate-700 rounded-xl p-3 text-white font-normal"></label>
-        <label class="text-xs text-slate-300 font-bold">Estación donde estará asignado<select id="cioeAsignacionBase" required class="mt-1 w-full bg-[#030712] border border-slate-700 rounded-xl p-3 text-white font-normal"><option value="">Seleccionar estación...</option></select></label>
-        <div class="md:col-span-4"><label class="text-xs text-slate-300 font-bold">Estaciones que vigilará (puedes marcar varias)</label><div id="cioeAsignacionEstacionesLista" class="mt-2 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2 max-h-44 overflow-y-auto p-2 bg-[#030712] border border-slate-700 rounded-xl"></div><input id="cioeAsignacionEstaciones" type="hidden"></div>
+        <label class="text-xs text-slate-300 font-bold">Estación donde estará asignado<select id="cioeAsignacionBase" required class="mt-1 w-full min-w-0 bg-[#030712] border border-slate-700 rounded-xl p-3 text-white font-normal" style="color-scheme:dark;max-width:100%"><option value="">Seleccionar estación...</option></select></label>
+        <div class="md:col-span-3"><label class="text-xs text-slate-300 font-bold">Estaciones que vigilará (puedes marcar varias)</label><div id="cioeAsignacionEstacionesLista" class="mt-2 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2 max-h-44 overflow-y-auto p-2 bg-[#030712] border border-slate-700 rounded-xl"></div><input id="cioeAsignacionEstaciones" type="hidden"></div>
         <div class="flex gap-2"><button type="submit" class="flex-1 bg-emerald-600 hover:bg-emerald-500 rounded-xl p-3 text-xs font-black"><i class="fa-solid fa-floppy-disk mr-1"></i>Guardar</button><button type="button" onclick="cioeLimpiarAsignacionTurno()" class="bg-slate-800 hover:bg-slate-700 rounded-xl px-3 text-xs font-bold">Limpiar</button></div>
       </form>
       <div id="cioeListaAsignacionesTurno" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-2"></div>
@@ -7538,7 +7538,9 @@ body.cioe-background-active #ocurrenciasMenu {backdrop-filter:blur(12px);-webkit
       p.classList.toggle('hidden',!mostrar);
       if(mostrar){
         const turno=document.getElementById('cioeAsignacionTurno');
-        if(turno&&turnoCreadorActual)turno.value=turnoCreadorActual;
+        if(!turnoCreadorActual){p.classList.add('hidden');alert('Primero selecciona el turno para asignar operadores.');return;}
+        if(turno)turno.value=turnoCreadorActual;
+        const turnoTexto=document.getElementById('cioeAsignacionTurnoTexto');if(turnoTexto)turnoTexto.textContent='TURNO '+turnoCreadorActual;
         cioeRenderAsignacionesTurno();
       }
     }
@@ -7566,7 +7568,8 @@ body.cioe-background-active #ocurrenciasMenu {backdrop-filter:blur(12px);-webkit
     }
     function cioeEditarAsignacionTurno(id){
       const r=cioeGetAsignacionesTurno().find(x=>String(x.id)===String(id));if(!r)return;
-      document.getElementById('cioeAsignacionTurno').value=r.turno;
+      if(r.turno!==turnoCreadorActual)return;
+      document.getElementById('cioeAsignacionTurno').value=turnoCreadorActual;
       document.getElementById('cioeAsignacionEditId').value=r.id;
       document.getElementById('cioeAsignacionOperador').value=r.operador;
       document.getElementById('cioeAsignacionApoyo').value=r.apoyo||'';
@@ -7582,13 +7585,15 @@ body.cioe-background-active #ocurrenciasMenu {backdrop-filter:blur(12px);-webkit
       cioeRenderAsignacionesTurno();
     }
     function cioeRenderAsignacionesTurno(){
-      const turno=document.getElementById('cioeAsignacionTurno')?.value||'MAÑANA';
+      const turno=turnoCreadorActual||'MAÑANA';
+      const turnoInput=document.getElementById('cioeAsignacionTurno');if(turnoInput)turnoInput.value=turno;
+      const turnoTexto=document.getElementById('cioeAsignacionTurnoTexto');if(turnoTexto)turnoTexto.textContent='TURNO '+turno;
       const lista=document.getElementById('cioeListaAsignacionesTurno');if(!lista)return;
       const grupos=typeof getRegistrosTurno==='function'?getRegistrosTurno().filter(x=>x.turno===turno):[];
       const nombres=[...new Set(grupos.map(g=>String(g.nombre||'').trim()).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'es',{numeric:true}));
       const base=document.getElementById('cioeAsignacionBase');
       const baseAnterior=base?.value||'';
-      if(base){base.innerHTML='<option value="">Seleccionar estación...</option>'+nombres.map(n=>'<option value="'+escapeHtml(n)+'">'+escapeHtml(n)+'</option>').join('');base.value=nombres.includes(baseAnterior)?baseAnterior:'';}
+      if(base){base.innerHTML='<option value="" style="background:#030712;color:#fff">Seleccionar estación...</option>'+nombres.map(n=>'<option style="background:#030712;color:#fff" value="'+escapeHtml(n)+'">'+escapeHtml(n)+'</option>').join('');base.value=nombres.includes(baseAnterior)?baseAnterior:'';}
       const checks=document.getElementById('cioeAsignacionEstacionesLista');
       const marcadas=new Set([...checks.querySelectorAll('input:checked')].map(x=>x.value));
       checks.innerHTML=nombres.length?nombres.map((n,i)=>'<label class="flex items-center gap-2 text-xs text-slate-200 p-2 border border-slate-700 rounded-lg cursor-pointer"><input type="checkbox" value="'+escapeHtml(n)+'" '+(marcadas.has(n)?'checked':'')+' class="accent-fuchsia-500">'+escapeHtml(n)+'</label>').join(''):'<p class="text-xs text-amber-300 col-span-full">Primero crea estaciones o pares en este turno para poder seleccionarlos.</p>';
@@ -7615,9 +7620,9 @@ body.cioe-background-active #ocurrenciasMenu {backdrop-filter:blur(12px);-webkit
       const permisoTurno = {'MAÑANA':'turno_manana','TARDE':'turno_tarde','NOCHE':'turno_noche'}[turno];
       if (permisoTurno && !hasPermission(permisoTurno)) { permissionDenied('acceder al TURNO '+turno); return; }
       if(turno==='MAÑANA') migrarEstacionesParesAManana();
-      turnoCreadorActual=turno; const busquedaTurno=document.getElementById('turnoBuscarCamara'); if(busquedaTurno)busquedaTurno.value=''; const saltoTurno=document.getElementById('turnoIrCamara');if(saltoTurno)saltoTurno.value=''; document.getElementById('turnoActualLabel').textContent='TURNO '+turno; document.getElementById('turnoSelectorPanel').classList.add('hidden'); document.getElementById('turnoTrabajoPanel').classList.remove('hidden'); limpiarFormularioTurno(); renderRegistrosTurno();
+      turnoCreadorActual=turno; document.getElementById('cioePanelOperadoresTurno')?.classList.add('hidden'); const busquedaTurno=document.getElementById('turnoBuscarCamara'); if(busquedaTurno)busquedaTurno.value=''; const saltoTurno=document.getElementById('turnoIrCamara');if(saltoTurno)saltoTurno.value=''; document.getElementById('turnoActualLabel').textContent='TURNO '+turno; document.getElementById('turnoSelectorPanel').classList.add('hidden'); document.getElementById('turnoTrabajoPanel').classList.remove('hidden'); limpiarFormularioTurno(); renderRegistrosTurno();
     }
-    function cambiarTurnoCreador(){ turnoCreadorActual=''; document.getElementById('turnoSelectorPanel').classList.remove('hidden'); document.getElementById('turnoTrabajoPanel').classList.add('hidden'); }
+    function cambiarTurnoCreador(){ document.getElementById('cioePanelOperadoresTurno')?.classList.add('hidden'); turnoCreadorActual=''; document.getElementById('turnoSelectorPanel').classList.remove('hidden'); document.getElementById('turnoTrabajoPanel').classList.add('hidden'); }
     function limpiarFormularioTurno(){ document.getElementById('turnoEditId').value=''; document.getElementById('turnoTipo').value='ESTACIÓN'; document.getElementById('turnoNombre').value=''; document.getElementById('turnoResponsable').value=''; }
     function guardarCreacionTurno(e){
       e.preventDefault(); if(!turnoCreadorActual)return;
