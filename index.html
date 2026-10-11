@@ -7599,7 +7599,7 @@ body.cioe-background-active #ocurrenciasMenu {backdrop-filter:blur(12px);-webkit
       if(numero)return 'CAMARA-'+numero[1].padStart(2,'0');
       return original;
     }
-    // Búsqueda directa: 1, 01, CAMARA-01 y CÁMARA 01 encuentran el mismo registro.
+    // Búsqueda directa exacta por el campo cámara (nunca por número de orden).
     function cioeNormalizarNumeroCamaraTurno(valor){
       const texto=String(valor??'').trim().toUpperCase();
       const match=texto.match(/^(?:C[ÁA]MARA\s*(?:N[°º.]*)?\s*[-:#]?\s*)?(\d+)$/);
@@ -7608,7 +7608,7 @@ body.cioe-background-active #ocurrenciasMenu {backdrop-filter:blur(12px);-webkit
     function cioeCoincideCamaraTurno(c,consulta){
       if(!consulta)return true;
       const numero=cioeNormalizarNumeroCamaraTurno(consulta);
-      const valores=[c.camara,c.numeroOrden].filter(v=>v!==undefined&&v!==null&&String(v).trim());
+      const valores=[c.camara].filter(v=>v!==undefined&&v!==null&&String(v).trim());
       if(numero!==null)return valores.some(v=>cioeNormalizarNumeroCamaraTurno(v)===numero);
       return valores.some(v=>formatearCamaraTurno(v).toLocaleLowerCase('es').includes(consulta.toLocaleLowerCase('es')));
     }
