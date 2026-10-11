@@ -6330,9 +6330,12 @@ body.cioe-background-active #ocurrenciasMenu {backdrop-filter:blur(12px);-webkit
       ["exportar_csv", "Exportar CSV", "Descargar/exportar información del sistema", "fa-file-csv", "Reportes y datos"],
 
       // APARIENCIA
-      ["personalizar_colores", "Personalizar colores", "Permitir abrir el panel de personalización", "fa-palette", "Apariencia"],
+      ["personalizar_colores", "Personalizar", "Permitir abrir el panel de personalización", "fa-palette", "Apariencia"],
       ["diseno_colores", "Diseño de colores", "Permitir activar, desactivar y cambiar el diseño de colores", "fa-paint-roller", "Apariencia"],
       ["mascotas_encabezado", "Mascotas del encabezado", "Permitir configurar las mascotas, paisaje, movimiento y pelota", "fa-paw", "Apariencia"],
+      ["usar_spotify", "Mostrar Spotify", "Mostrar u ocultar el módulo musical para este usuario", "fa-music", "Apariencia"],
+      ["subir_fondos", "Añadir o quitar fondos", "Permitir subir, activar y quitar imágenes de fondo", "fa-image", "Apariencia"],
+      ["ajustar_transparencia", "Ajustar transparencia", "Permitir cambiar la transparencia de los paneles", "fa-layer-group", "Apariencia"],
 
       // PERIFONEO
       ["telefono_perifoneo", "Ver teléfono / perifoneo", "Consultar números y datos de perifoneo", "fa-phone", "Perifoneo"],
@@ -6412,6 +6415,18 @@ body.cioe-background-active #ocurrenciasMenu {backdrop-filter:blur(12px);-webkit
       setPermissionElements('[onclick*="copySummary"]', hasPermission("reporte_whatsapp"));
       setPermissionElements('[onclick*="exportCSV"]', hasPermission("exportar_csv"));
       setPermissionElements('#themeCustomizerBtn', hasPermission("personalizar_colores"));
+      // Controles independientes de Spotify, fondos y transparencia.
+      const spotifyAllowed=hasPermission('usar_spotify');
+      setPermissionElements('#cioeSpotifyPlayer',spotifyAllowed);
+      const spotifyPanel=document.getElementById('cioeSpotifyMini');
+      if(spotifyPanel)spotifyPanel.classList.toggle('hidden',!spotifyAllowed);
+      const bgSettings=document.getElementById('cioeBackgroundSettings');
+      if(bgSettings)bgSettings.classList.toggle('hidden',!hasPermission('subir_fondos')&&!hasPermission('ajustar_transparencia'));
+      const bgControls=document.getElementById('cioeBackgroundControls');
+      if(bgControls)bgControls.classList.toggle('hidden',!hasPermission('subir_fondos'));
+      const transparencyControls=document.getElementById('cioeTransparencyControls');
+      if(transparencyControls)transparencyControls.classList.toggle('hidden',!hasPermission('ajustar_transparencia'));
+
 
       // Permisos independientes dentro de Personalizar colores.
       const themeColorsSection = document.getElementById("themeColorsPermissionSection");
@@ -7995,6 +8010,7 @@ body.cioe-background-active #ocurrenciasMenu {backdrop-filter:blur(12px);-webkit
         </section>
 
 <section id="cioeBackgroundSettings" class="theme-redesign-section" style="border:1px solid #265f75;border-radius:14px;padding:15px;background:#091827;color:#e2e8f0">
+  <div id="cioeBackgroundControls">
   <div style="display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap">
     <div><h3 style="font-size:14px;font-weight:900"><i class="fa-solid fa-image" style="color:#38bdf8;margin-right:7px"></i>AÑADIR FONDO</h3><p style="font-size:11px;color:#94a3b8">Coloca una imagen detrás de todo el Centro de Control.</p></div>
     <label style="font-size:11px;display:flex;align-items:center;gap:7px;cursor:pointer"><input id="cioeBgEnabled" type="checkbox" onchange="cioeBgSetEnabled(this.checked)" style="accent-color:#10b981;width:16px;height:16px"> Activar fondo</label>
@@ -8005,9 +8021,12 @@ body.cioe-background-active #ocurrenciasMenu {backdrop-filter:blur(12px);-webkit
   </div>
   <label style="display:block;font-size:11px;margin-top:12px">Oscurecer fondo: <strong id="cioeBgShadeValue">45%</strong></label>
   <input id="cioeBgShade" type="range" min="0" max="85" value="45" oninput="cioeBgSetShade(this.value)" style="width:100%;accent-color:#22c55e">
+  </div>
+  <div id="cioeTransparencyControls">
   <label style="display:flex;justify-content:space-between;gap:8px;font-size:11px;margin-top:14px"><span><i class="fa-solid fa-layer-group" style="color:#38bdf8"></i> Transparencia de todas las secciones</span><strong id="cioeBgTransparencyValue">0%</strong></label>
   <input id="cioeBgTransparency" type="range" min="0" max="85" value="0" step="5" oninput="cioeBgSetTransparency(this.value)" style="width:100%;accent-color:#38bdf8" aria-label="Transparencia de paneles">
   <p style="font-size:10px;color:#94a3b8;margin-top:3px">0% = paneles sólidos · 85% = fondo mucho más visible. Los textos y botones conservan su intensidad.</p>
+  </div>
   <p id="cioeBgStatus" style="font-size:10px;color:#94a3b8;margin-top:8px">El fondo se guarda en este navegador. El fondo personalizado se guarda en este navegador.</p>
 </section>
 
@@ -10316,24 +10335,44 @@ window.addEventListener('load',function(){
     const frame=document.getElementById('cioeSpotifyAlbumFrame');
     if(!frame)return;
     const version=++playerVersion;
-    // Destruir el controlador anterior antes de cambiar de lista.
     if(embedController){try{embedController.destroy();}catch(e){}embedController=null;}
     frame.replaceChildren();
     const match=/^spotify:(track|album|playlist|artist):([a-zA-Z0-9]{22})$/.exec(uri);
     if(!match)return;
-    // El iframe independiente se recrea siempre: incluso si la API de Spotify falla.
-    const iframe=document.createElement('iframe');
-    iframe.title='Spotify: '+match[1];
-    iframe.src='https://open.spotify.com/embed/'+match[1]+'/'+match[2]+'?utm_source=generator';
-    iframe.width='100%';iframe.height='152';iframe.style.border='0';
-    iframe.style.borderRadius='12px';iframe.allow='autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture';
-    iframe.loading='eager';iframe.referrerPolicy='strict-origin-when-cross-origin';
-    frame.appendChild(iframe);
-    // La interfaz de Spotify controla la reproducción. El iframe no expone
-    // su estado de play/pause al sitio padre sin su API de control.
-    status('Nuevo enlace cargado. Pulsa Reproducir en el reproductor de Spotify.');
+    function fallback(){
+      if(version!==playerVersion)return;
+      frame.replaceChildren();
+      const iframe=document.createElement('iframe');
+      iframe.title='Spotify: '+match[1];
+      iframe.src='https://open.spotify.com/embed/'+match[1]+'/'+match[2]+'?utm_source=generator';
+      iframe.width='100%';iframe.height='152';iframe.style.border='0';
+      iframe.style.borderRadius='12px';iframe.allow='autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture';
+      iframe.loading='eager';iframe.referrerPolicy='strict-origin-when-cross-origin';
+      frame.appendChild(iframe);
+      syncVinyl(false);
+      status('Reproductor cargado. Si el vinilo no gira, Spotify no ha comunicado el estado de reproducción.');
+    }
+    if(!embedApi){fallback();return;}
+    try{
+      const holder=document.createElement('div');holder.id='cioeSpotifyEmbedHost'+version;
+      frame.appendChild(holder);
+      embedApi.createController(holder,{uri,width:'100%',height:152},function(controller){
+        if(version!==playerVersion){try{controller.destroy();}catch(e){}return;}
+        embedController=controller;
+        controller.addListener('playback_update',function(e){
+          if(version!==playerVersion)return;
+          const data=e&&e.data||{};
+          syncVinyl(Boolean(!data.isPaused&&!data.isBuffering));
+        });
+        controller.addListener('ready',function(){if(version===playerVersion)status('Spotify listo. El vinilo seguirá los eventos de reproducción disponibles.');});
+      });
+    }catch(e){fallback();}
   }
-  window.onSpotifyIframeApiReady=function(api){embedApi=api;};
+  window.onSpotifyIframeApiReady=function(api){
+    embedApi=api;
+    // Si la API llega después de cargar el iframe, crear el controlador para recibir play/pause.
+    if(pendingEmbedUri)loadWithEmbedApi(pendingEmbedUri);
+  };
   function status(text){const el=document.getElementById('cioeSpotifyMessage');if(el)el.textContent=text;}
   function clearPlayer(){
     const frame=document.getElementById('cioeSpotifyAlbumFrame');
@@ -10350,7 +10389,7 @@ window.addEventListener('load',function(){
     btn.innerHTML=collapsed?'<i class="fa-solid fa-chevron-down"></i> Mostrar':'<i class="fa-solid fa-chevron-up"></i> Ocultar';
     try{localStorage.setItem('cioeSpotifyCollapsed',collapsed?'1':'0');}catch(e){}
   };
-  window.cioeSpotifyFocus=function(){
+  window.cioeSpotifyFocus=function(){if(typeof hasPermission==='function'&&!hasPermission('usar_spotify'))return;
     const panel=document.getElementById('cioeSpotifyMini');
     if(panel?.classList.contains('spotify-collapsed'))window.cioeSpotifyTogglePanel();
     const el=document.getElementById('cioeSpotifySearchInput');
@@ -10363,7 +10402,7 @@ window.addEventListener('load',function(){
     window.open('https://open.spotify.com/search/'+encodeURIComponent(q),'_blank','noopener,noreferrer');
     return false;
   };
-  window.cioeSpotifyLoadAlbum=function(event){
+  window.cioeSpotifyLoadAlbum=function(event){if(typeof hasPermission==='function'&&!hasPermission('usar_spotify')){if(event)event.preventDefault();return false;}
     if(event)event.preventDefault();
     const input=document.getElementById('cioeSpotifyAlbumUrl');
     const raw=(input?.value||'').trim();
@@ -10634,10 +10673,10 @@ function apply(){
  document.body.style.setProperty('background-image',layer+', url("'+url+'")','important');
  document.body.classList.add('cioe-background-active');
 }
-window.cioeBgSetEnabled=function(value){settings.enabled=!!value;save();apply();};
-window.cioeBgSetShade=function(value){settings.shade=Math.min(85,Math.max(0,Number(value)));save();apply();};
-window.cioeBgSetTransparency=function(value){settings.transparency=Math.min(85,Math.max(0,Number(value)));save();apply();};
-window.cioeBgUpload=async function(file){
+window.cioeBgSetEnabled=function(value){if(typeof hasPermission==='function'&&!hasPermission('subir_fondos'))return;settings.enabled=!!value;save();apply();};
+window.cioeBgSetShade=function(value){if(typeof hasPermission==='function'&&!hasPermission('subir_fondos'))return;settings.shade=Math.min(85,Math.max(0,Number(value)));save();apply();};
+window.cioeBgSetTransparency=function(value){if(typeof hasPermission==='function'&&!hasPermission('ajustar_transparencia'))return;settings.transparency=Math.min(85,Math.max(0,Number(value)));save();apply();};
+window.cioeBgUpload=async function(file){if(typeof hasPermission==='function'&&!hasPermission('subir_fondos'))return;
  if(!file)return;
  if(!/^image\/(png|jpeg|webp|gif)$/.test(file.type)){status('Solo se admiten imágenes JPG, PNG, WebP o GIF.');return;}
  if(file.size>15*1024*1024){status('La imagen supera 15 MB. Usa una imagen más pequeña.');return;}
@@ -10649,7 +10688,7 @@ window.cioeBgUpload=async function(file){
   status('Fondo personalizado guardado en este navegador.');
  }catch(e){status('No se pudo guardar la imagen. Comprueba el almacenamiento del navegador.');}
 };
-window.cioeBgRemove=function(){settings.enabled=false;settings.mode='preset';save();apply();status('Fondo desactivado.');};
+window.cioeBgRemove=function(){if(typeof hasPermission==='function'&&!hasPermission('subir_fondos'))return;settings.enabled=false;settings.mode='preset';save();apply();status('Fondo desactivado.');};
 document.addEventListener('DOMContentLoaded',async function(){
  if(settings.mode==='custom'){
   try{const blob=await dbGet();if(blob)customUrl=URL.createObjectURL(blob);}catch(e){}
