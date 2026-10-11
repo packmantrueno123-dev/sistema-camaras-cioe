@@ -215,6 +215,29 @@
 #themeModal .bg-rose-600{background:#e11d48!important}
 @media(max-width:640px){#themeModal .dog-config-box{grid-template-columns:1fr}}
 
+
+/* Personalización independiente del vinilo: sin cambios al reproductor ni a cámaras */
+#cioeSpotifyMini .cioe-vinyl-widget{position:relative;--cioe-vinyl-accent:#1ed760;--cioe-vinyl-speed:7s;overflow:visible}
+#cioeSpotifyMini .cioe-vinyl-disc{border-color:var(--cioe-vinyl-accent);animation-duration:var(--cioe-vinyl-speed)}
+#cioeSpotifyMini .cioe-vinyl-center{background:var(--cioe-vinyl-accent)}
+#cioeSpotifyMini .cioe-vinyl-settings-btn{position:absolute;top:5px;right:5px;z-index:8;width:24px;height:24px;border-radius:50%;border:1px solid #315a61;background:#122636;color:#a7f3d0;display:grid;place-items:center;font-size:11px}
+#cioeSpotifyMini .cioe-vinyl-settings-btn:hover{background:#1b4148}
+#cioeSpotifyMini .cioe-vinyl-settings{position:absolute;top:33px;left:calc(100% + 7px);width:245px;max-width:calc(100vw - 35px);z-index:70;border:1px solid #287b6d;border-radius:12px;background:#091523;box-shadow:0 14px 36px #000c;padding:12px;text-align:left;color:#e2e8f0;font-size:11px}
+#cioeSpotifyMini .cioe-vinyl-settings.hidden{display:none}
+#cioeSpotifyMini .cioe-vinyl-settings-title{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;color:#a7f3d0}
+#cioeSpotifyMini .cioe-vinyl-settings-title button{padding:3px 6px}
+#cioeSpotifyMini .cioe-vinyl-settings label{display:block;margin:9px 0 5px;font-weight:700}
+#cioeSpotifyMini .cioe-vinyl-settings select{width:100%;background:#0f2032;border:1px solid #36536b;border-radius:7px;padding:7px;color:#fff}
+#cioeSpotifyMini .cioe-vinyl-color-row{display:flex;align-items:center;gap:4px}
+#cioeSpotifyMini .cioe-vinyl-color-row input{width:36px;height:29px;cursor:pointer;background:transparent}
+#cioeSpotifyMini .cioe-vinyl-color-row button{border:1px solid #36536b;border-radius:6px;background:#132438;padding:5px;font-size:10px}
+#cioeSpotifyMini .cioe-vinyl-settings p{font-size:10px;color:#94a3b8;margin-top:10px;line-height:1.4}
+#cioeSpotifyMini .cioe-vinyl-fx{position:absolute;inset:0;pointer-events:none;overflow:hidden;border-radius:12px;z-index:2}
+#cioeSpotifyMini .cioe-vinyl-particle{position:absolute;bottom:10px;left:var(--particle-left);font-size:var(--particle-size);animation:cioeVinylFloat var(--particle-time) linear infinite;animation-delay:var(--particle-delay);opacity:0;filter:drop-shadow(0 0 3px #000)}
+@keyframes cioeVinylFloat{0%{opacity:0;transform:translateY(0) translateX(0) scale(.7)}20%{opacity:.9}80%{opacity:.85}100%{opacity:0;transform:translateY(-175px) translateX(var(--particle-drift)) scale(1.2)}}
+#cioeSpotifyMini.spotify-collapsed .cioe-vinyl-particle{animation-play-state:paused}
+@media(max-width:850px){#cioeSpotifyMini .cioe-vinyl-settings{left:0;top:31px}}
+@media(prefers-reduced-motion:reduce){#cioeSpotifyMini .cioe-vinyl-particle{animation:none!important;display:none}}
 </style>
 <style id="cioeThemeStyles">
 :root{--cioe-bg:#030712;--cioe-panel:#0a0f1d;--cioe-accent:#06b6d4;--cioe-border:#1e293b}
@@ -1771,6 +1794,18 @@ body.cioe-custom-theme #themeCustomizerBtn{background-color:var(--cioe-accent)!i
       </div>
       <div class="spotify-left">
         <div class="cioe-vinyl-widget" aria-label="Vinilo decorativo giratorio">
+          <button type="button" class="cioe-vinyl-settings-btn" id="cioeVinylSettingsBtn" onclick="cioeVinylToggleSettings()" title="Personalizar vinilo" aria-label="Personalizar colores y animaciones del vinilo" aria-expanded="false"><i class="fa-solid fa-palette"></i></button>
+          <div class="cioe-vinyl-fx" id="cioeVinylFx" aria-hidden="true"></div>
+          <div class="cioe-vinyl-settings hidden" id="cioeVinylSettings">
+            <div class="cioe-vinyl-settings-title"><b><i class="fa-solid fa-wand-magic-sparkles"></i> Personalizar disco</b><button type="button" onclick="cioeVinylToggleSettings(false)" aria-label="Cerrar ajustes"><i class="fa-solid fa-xmark"></i></button></div>
+            <label for="cioeVinylColor">Color del disco</label>
+            <div class="cioe-vinyl-color-row"><input type="color" id="cioeVinylColor" value="#1ed760" oninput="cioeVinylSetColor(this.value)"><button type="button" onclick="cioeVinylSetColor('#1ed760')">Original</button><button type="button" onclick="cioeVinylSetColor('#a855f7')">Morado</button><button type="button" onclick="cioeVinylSetColor('#38bdf8')">Azul</button></div>
+            <label for="cioeVinylEffect">Efectos alrededor</label>
+            <select id="cioeVinylEffect" onchange="cioeVinylSetEffect(this.value)"><option value="none">Sin efectos</option><option value="hearts">❤️ Corazones</option><option value="notes">🎵 Notas musicales</option><option value="both">❤️🎵 Ambos</option></select>
+            <label for="cioeVinylSpeed">Velocidad del disco</label>
+            <select id="cioeVinylSpeed" onchange="cioeVinylSetSpeed(this.value)"><option value="slow">Lenta</option><option value="normal">Normal</option><option value="fast">Rápida</option></select>
+            <p>Los efectos son visuales; el disco seguirá el estado del reproductor cuando Spotify lo informe.</p>
+          </div>
           <div class="cioe-vinyl-stage"><div class="cioe-vinyl-disc"><div class="cioe-vinyl-center"><i class="fa-brands fa-spotify"></i></div></div><div class="cioe-tonearm"><span></span></div><span class="cioe-vinyl-note">♫</span></div>
           <div class="cioe-equalizer" aria-hidden="true"><span style="--n:1"></span><span style="--n:2"></span><span style="--n:3"></span><span style="--n:4"></span><span style="--n:5"></span><span style="--n:6"></span><span style="--n:7"></span><span style="--n:8"></span><span style="--n:9"></span><span style="--n:10"></span><span style="--n:11"></span><span style="--n:12"></span><span style="--n:13"></span><span style="--n:14"></span><span style="--n:15"></span><span style="--n:16"></span><span style="--n:17"></span><span style="--n:18"></span><span style="--n:19"></span><span style="--n:20"></span><span style="--n:21"></span><span style="--n:22"></span><span style="--n:23"></span></div>
           <span class="cioe-vinyl-label"><i class="fa-solid fa-music"></i> MUSIC VIBES</span>
@@ -10371,5 +10406,59 @@ window.addEventListener('load',function(){
 })();
 </script>
 
+
+<script>
+/* Preferencias visuales locales del vinilo: no usan Spotify Web API. */
+(function(){
+ const STORE='cioe_vinyl_visual_v1';
+ const root=document.getElementById('cioeSpotifyMini');
+ if(!root)return;
+ const widget=root.querySelector('.cioe-vinyl-widget');
+ const layer=document.getElementById('cioeVinylFx');
+ const colorInput=document.getElementById('cioeVinylColor');
+ const effectInput=document.getElementById('cioeVinylEffect');
+ const speedInput=document.getElementById('cioeVinylSpeed');
+ let cfg={color:'#1ed760',effect:'none',speed:'normal'};
+ try{const v=JSON.parse(localStorage.getItem(STORE)||'null');if(v&&typeof v==='object')cfg={...cfg,...v};}catch(e){}
+ const colors=/^#[0-9a-f]{6}$/i;
+ const speeds={slow:'12s',normal:'7s',fast:'3.5s'};
+ function save(){try{localStorage.setItem(STORE,JSON.stringify(cfg));}catch(e){}}
+ function render(){
+   if(!colors.test(cfg.color))cfg.color='#1ed760';
+   if(!['none','hearts','notes','both'].includes(cfg.effect))cfg.effect='none';
+   if(!speeds[cfg.speed])cfg.speed='normal';
+   widget.style.setProperty('--cioe-vinyl-accent',cfg.color);
+   widget.style.setProperty('--cioe-vinyl-speed',speeds[cfg.speed]);
+   colorInput.value=cfg.color;effectInput.value=cfg.effect;speedInput.value=cfg.speed;
+   layer.replaceChildren();
+   const glyphs=cfg.effect==='hearts'?['❤️']:cfg.effect==='notes'?['♫','♪','🎵']:cfg.effect==='both'?['❤️','♫','🎵']:[];
+   if(!glyphs.length)return;
+   for(let i=0;i<9;i++){
+     const el=document.createElement('span');el.className='cioe-vinyl-particle';
+     el.textContent=glyphs[i%glyphs.length];
+     el.style.setProperty('--particle-left',(9+(i*11)%82)+'%');
+     el.style.setProperty('--particle-size',(12+(i%3)*3)+'px');
+     el.style.setProperty('--particle-time',(3.5+(i%4)*.7)+'s');
+     el.style.setProperty('--particle-delay',(-i*.55)+'s');
+     el.style.setProperty('--particle-drift',((i%2?1:-1)*(10+i*3))+'px');
+     layer.appendChild(el);
+   }
+ }
+ window.cioeVinylSetColor=function(v){cfg.color=v;render();save()};
+ window.cioeVinylSetEffect=function(v){cfg.effect=v;render();save()};
+ window.cioeVinylSetSpeed=function(v){cfg.speed=v;render();save()};
+ window.cioeVinylToggleSettings=function(force){
+   const panel=document.getElementById('cioeVinylSettings');
+   const btn=document.getElementById('cioeVinylSettingsBtn');
+   const show=typeof force==='boolean'?force:panel.classList.contains('hidden');
+   panel.classList.toggle('hidden',!show);btn.setAttribute('aria-expanded',String(show));
+ };
+ document.addEventListener('click',function(e){
+   const panel=document.getElementById('cioeVinylSettings');
+   if(!panel.classList.contains('hidden')&&!panel.contains(e.target)&&!document.getElementById('cioeVinylSettingsBtn').contains(e.target))window.cioeVinylToggleSettings(false);
+ });
+ render();
+})();
+</script>
 </body>
 </html>
