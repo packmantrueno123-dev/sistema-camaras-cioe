@@ -10275,31 +10275,32 @@ window.addEventListener('load',function(){
     const panel=document.getElementById('cioeSpotifyMini');
     if(panel)panel.classList.toggle('cioe-spotify-playing',spotifyPlaying);
   }
+  // Cada enlace crea un reproductor nuevo para evitar que Spotify conserve la lista anterior.
+  let playerVersion=0;
   function loadWithEmbedApi(uri){
     pendingEmbedUri=uri;
     syncVinyl(false);
     const frame=document.getElementById('cioeSpotifyAlbumFrame');
     if(!frame)return;
-    if(embedController){
-      try{embedController.loadUri(uri);}catch(e){status('No se pudo cargar el enlace en Spotify.');}
-      return;
-    }
-    if(!embedApi||embedReady)return;
-    embedReady=true;
-    const options={uri,width:'100%',height:152};
-    try{
-      embedApi.createController(frame,options,controller=>{
-        embedController=controller;
-        controller.addListener('playback_update',event=>{
-          const data=event?.data;
-          if(data&&typeof data.isPaused==='boolean')syncVinyl(!data.isPaused);
-        });
-        controller.addListener('ready',()=>{if(pendingEmbedUri&&pendingEmbedUri!==uri)controller.loadUri(pendingEmbedUri);});
-      });
-    }catch(e){embedReady=false;status('Spotify no pudo inicializar el reproductor.');}
+    const version=++playerVersion;
+    // Destruir el controlador anterior antes de cambiar de lista.
+    if(embedController){try{embedController.destroy();}catch(e){}embedController=null;}
+    frame.replaceChildren();
+    const match=/^spotify:(track|album|playlist|artist):([a-zA-Z0-9]{22})$/.exec(uri);
+    if(!match)return;
+    // El iframe independiente se recrea siempre: incluso si la API de Spotify falla.
+    const iframe=document.createElement('iframe');
+    iframe.title='Spotify: '+match[1];
+    iframe.src='https://open.spotify.com/embed/'+match[1]+'/'+match[2]+'?utm_source=generator';
+    iframe.width='100%';iframe.height='152';iframe.style.border='0';
+    iframe.style.borderRadius='12px';iframe.allow='autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture';
+    iframe.loading='eager';iframe.referrerPolicy='strict-origin-when-cross-origin';
+    frame.appendChild(iframe);
+    // La interfaz de Spotify controla la reproducción. El iframe no expone
+    // su estado de play/pause al sitio padre sin su API de control.
+    status('Nuevo enlace cargado. Pulsa Reproducir en el reproductor de Spotify.');
   }
-  // La API del iframe no requiere credenciales de la Spotify Web API.
-  window.onSpotifyIframeApiReady=function(api){embedApi=api;if(pendingEmbedUri)loadWithEmbedApi(pendingEmbedUri);};
+  window.onSpotifyIframeApiReady=function(api){embedApi=api;};
   function status(text){const el=document.getElementById('cioeSpotifyMessage');if(el)el.textContent=text;}
   function clearPlayer(){
     const frame=document.getElementById('cioeSpotifyAlbumFrame');
@@ -10360,7 +10361,7 @@ window.addEventListener('load',function(){
       loadWithEmbedApi('spotify:'+kind+':'+id);
     }
     if(placeholder)placeholder.style.display='none';
-    status(kind==='artist'?'Artista cargado. La disponibilidad del reproductor depende de Spotify.':'Enlace cargado. La reproducción depende de las condiciones de Spotify.');
+    status('Enlace actualizado. Pulsa reproducir en el nuevo contenido de Spotify.');
     try{
       localStorage.setItem(STORAGE_LINK,raw);
       const url='https://open.spotify.com/'+kind+'/'+id;
