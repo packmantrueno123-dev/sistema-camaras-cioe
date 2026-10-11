@@ -238,6 +238,13 @@
 #cioeSpotifyMini.spotify-collapsed .cioe-vinyl-particle{animation-play-state:paused}
 @media(max-width:850px){#cioeSpotifyMini .cioe-vinyl-settings{left:0;top:31px}}
 @media(prefers-reduced-motion:reduce){#cioeSpotifyMini .cioe-vinyl-particle{animation:none!important;display:none}}
+
+/* CIOE: separar Personalizar disco y Ocultar sin solapamientos */
+#cioeSpotifyMini .spotify-panel-top{min-width:0;flex-wrap:nowrap;isolation:isolate}
+#cioeSpotifyMini .spotify-panel-top .cioe-vinyl-top-actions{display:flex!important;flex:0 0 auto!important;align-items:center!important;justify-content:flex-end!important;gap:12px!important;min-width:max-content;margin-left:auto}
+#cioeSpotifyMini .spotify-panel-top .cioe-vinyl-top-actions>button{position:relative!important;display:inline-flex!important;flex:0 0 auto!important;align-items:center;justify-content:center;white-space:nowrap!important;width:auto!important;min-width:max-content!important;margin:0!important;padding:7px 12px!important;line-height:1.2!important;z-index:1}
+#cioeSpotifyMini .spotify-panel-top #cioeSpotifyCollapseBtn{z-index:2}
+@media(max-width:600px){#cioeSpotifyMini .spotify-panel-top .cioe-vinyl-top-actions{gap:6px!important}#cioeSpotifyMini .spotify-panel-top .cioe-vinyl-top-actions>button{padding:6px 9px!important}#cioeSpotifyMini .spotify-panel-top #cioeVinylSettingsBtn{font-size:0!important}#cioeSpotifyMini .spotify-panel-top #cioeVinylSettingsBtn i{font-size:13px!important}}
 </style>
 <style id="cioeThemeStyles">
 :root{--cioe-bg:#030712;--cioe-panel:#0a0f1d;--cioe-accent:#06b6d4;--cioe-border:#1e293b}
