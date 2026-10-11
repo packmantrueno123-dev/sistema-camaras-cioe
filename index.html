@@ -1885,7 +1885,7 @@ body.cioe-background-active #ocurrenciasMenu {backdrop-filter:blur(12px);-webkit
             <label for="cioeVinylColor">Color del disco</label>
             <div class="cioe-vinyl-color-row"><input type="color" id="cioeVinylColor" value="#1ed760" oninput="cioeVinylSetColor(this.value)"><button type="button" onclick="cioeVinylSetColor('#1ed760')">Original</button><button type="button" onclick="cioeVinylSetColor('#a855f7')">Morado</button><button type="button" onclick="cioeVinylSetColor('#38bdf8')">Azul</button></div>
             <label for="cioeVinylEffect">Efectos alrededor</label>
-            <select id="cioeVinylEffect" onchange="cioeVinylSetEffect(this.value)"><option value="none">Sin efectos</option><option value="hearts">❤️ Corazones</option><option value="notes">🎵 Notas musicales</option><option value="both">❤️🎵 Ambos</option><option value="kitty">🎀🐱 Gatita con lazo</option><option value="kuromi">🖤😈 Kuromi (emojis)</option><option value="spider">🕷️🕸️ Arañas</option><option value="stars">✨🌟 Estrellas</option><option value="butterflies">🦋🌸 Mariposas y flores</option><option value="cute">💖🌈 Emojis tiernos</option><option value="all">🎉 Todos mezclados</option></select>
+            <select id="cioeVinylEffect" onchange="cioeVinylSetEffect(this.value)"><option value="none">Sin efectos</option><option value="hearts">❤️ Corazones</option><option value="notes">🎵 Notas musicales</option><option value="both">❤️🎵 Ambos</option><option value="kitty">🎀🐱 Gatita con lazo</option><option value="kuromi">🖤 Corazones negros</option><option value="spider">🕷️🕸️ Arañas</option><option value="stars">✨🌟 Estrellas</option><option value="butterflies">🦋🌸 Mariposas y flores</option><option value="cute">💖🌈 Emojis tiernos</option><option value="all">🎉 Todos mezclados</option></select>
             <label for="cioeVinylSpeed">Velocidad del disco</label>
             <select id="cioeVinylSpeed" onchange="cioeVinylSetSpeed(this.value)"><option value="slow">Lenta</option><option value="normal">Normal</option><option value="fast">Rápida</option></select>
             <p>Los efectos son visuales; el disco seguirá el estado del reproductor cuando Spotify lo informe.</p>
@@ -2266,7 +2266,10 @@ body.cioe-background-active #ocurrenciasMenu {backdrop-filter:blur(12px);-webkit
         </form>
       </div>
       <div class="bg-[#0a0f1d] border border-slate-800 rounded-2xl overflow-hidden">
-        <div class="p-4 border-b border-slate-800 flex justify-between items-center"><h3 class="font-black text-white">REGISTROS DEL TURNO</h3><span id="turnoCount" class="text-xs font-bold text-fuchsia-400">0 cámaras</span></div>
+        <div class="p-4 border-b border-slate-800 flex flex-col md:flex-row md:items-center gap-3 justify-between">
+          <div class="flex items-center gap-3"><h3 class="font-black text-white">REGISTROS DEL TURNO</h3><span id="turnoCount" class="text-xs font-bold text-fuchsia-400">0 cámaras</span></div>
+          <div class="flex items-center gap-2 w-full md:w-auto"><div class="relative flex-1 md:w-80"><i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-cyan-400"></i><input id="turnoBuscarCamara" type="search" oninput="renderRegistrosTurno()" placeholder="Buscar cámara N°, estación, ubicación..." aria-label="Buscar cámaras en el turno seleccionado" class="w-full bg-[#030712] border border-cyan-800/70 rounded-xl py-2.5 pl-9 pr-3 text-xs text-white focus:outline-none focus:border-cyan-400" /></div><button type="button" onclick="document.getElementById('turnoBuscarCamara').value='';renderRegistrosTurno()" class="bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-xs font-bold hover:bg-slate-700" title="Limpiar búsqueda"><i class="fa-solid fa-xmark"></i></button></div>
+        </div>
         <div class="overflow-x-auto"><table class="w-full text-[11px] min-w-[1500px]"><thead class="bg-black text-white uppercase"><tr><th class="p-3">N°</th><th class="p-3">Sistema</th><th class="p-3">Cámara</th><th class="p-3">Estado</th><th class="p-3">Ubicación</th><th class="p-3">Zona / Sector</th><th class="p-3">Detalle</th><th class="p-3">N° Perifoneo</th><th class="p-3">Estado Perifoneo</th><th class="p-3">Operador</th><th class="p-3 text-center">Acciones</th></tr></thead><tbody id="turnoRegistrosBody"></tbody></table></div>
       </div>
     </section>
@@ -7524,7 +7527,7 @@ body.cioe-background-active #ocurrenciasMenu {backdrop-filter:blur(12px);-webkit
       const permisoTurno = {'MAÑANA':'turno_manana','TARDE':'turno_tarde','NOCHE':'turno_noche'}[turno];
       if (permisoTurno && !hasPermission(permisoTurno)) { permissionDenied('acceder al TURNO '+turno); return; }
       if(turno==='MAÑANA') migrarEstacionesParesAManana();
-      turnoCreadorActual=turno; document.getElementById('turnoActualLabel').textContent='TURNO '+turno; document.getElementById('turnoSelectorPanel').classList.add('hidden'); document.getElementById('turnoTrabajoPanel').classList.remove('hidden'); limpiarFormularioTurno(); renderRegistrosTurno();
+      turnoCreadorActual=turno; const busquedaTurno=document.getElementById('turnoBuscarCamara'); if(busquedaTurno)busquedaTurno.value=''; document.getElementById('turnoActualLabel').textContent='TURNO '+turno; document.getElementById('turnoSelectorPanel').classList.add('hidden'); document.getElementById('turnoTrabajoPanel').classList.remove('hidden'); limpiarFormularioTurno(); renderRegistrosTurno();
     }
     function cambiarTurnoCreador(){ turnoCreadorActual=''; document.getElementById('turnoSelectorPanel').classList.remove('hidden'); document.getElementById('turnoTrabajoPanel').classList.add('hidden'); }
     function limpiarFormularioTurno(){ document.getElementById('turnoEditId').value=''; document.getElementById('turnoTipo').value='ESTACIÓN'; document.getElementById('turnoNombre').value=''; document.getElementById('turnoResponsable').value=''; }
@@ -7573,11 +7576,16 @@ body.cioe-background-active #ocurrenciasMenu {backdrop-filter:blur(12px);-webkit
     function renderRegistrosTurno(){
       const body=document.getElementById('turnoRegistrosBody'); if(!body)return;
       const grupos=getRegistrosTurno().filter(x=>x.turno===turnoCreadorActual);
+      const filtro=(document.getElementById('turnoBuscarCamara')?.value||'').trim().toLocaleLowerCase('es');
       let total=0, html='';
       grupos.forEach(g=>{
-        const cams=Array.isArray(g.camaras)?g.camaras:[]; total+=cams.length;
+        const todas=Array.isArray(g.camaras)?g.camaras:[];
+        const grupoCoincide=[g.tipo,g.nombre,g.responsable].some(v=>String(v||'').toLocaleLowerCase('es').includes(filtro));
+        const cams=!filtro||grupoCoincide?todas:todas.filter(c=>[c.camara,c.sistema,c.estado,c.ubicacion,c.zona,c.detalle,c.perifoneo,c.estadoPerifoneo,c.operador,c.numeroOrden].some(v=>String(v||'').toLocaleLowerCase('es').includes(filtro)));
+        if(filtro&&!grupoCoincide&&!cams.length)return;
+        total+=cams.length;
         html += `<tr class="bg-violet-950/70 border-y border-violet-700/50"><td colspan="11" class="p-3"><div class="flex items-center justify-between gap-3"><div class="flex items-center gap-3"><span class="font-black text-violet-300"><i class="fa-solid fa-tower-broadcast mr-2"></i>${escapeHtml(g.tipo)} ${escapeHtml(g.nombre)}</span><span class="text-slate-400">OPERADOR: <b class="text-white">${escapeHtml(g.responsable||'—')}</b></span></div><div class="flex gap-2"><button type="button" data-turno-add="${g.id}" onclick="abrirTurnoCamaraModal(${g.id}); return false;" class="bg-amber-500 hover:bg-amber-400 text-black px-3 py-2 rounded-xl font-black cursor-pointer"><i class="fa-solid fa-plus mr-1"></i>AÑADIR</button><button onclick="editarRegistroTurno(${g.id})" class="text-sky-400 p-2" title="Editar estación/par"><i class="fa-solid fa-pen-to-square"></i></button><button onclick="eliminarRegistroTurno(${g.id})" class="text-rose-400 p-2" title="Eliminar estación/par"><i class="fa-solid fa-trash"></i></button></div></div></td></tr>`;
-        if(!cams.length){ html += `<tr><td colspan="11" class="p-5 text-center text-slate-500">Sin cámaras. Usa + AÑADIR.</td></tr>`; }
+        if(!cams.length){ if(!filtro) html += `<tr><td colspan="11" class="p-5 text-center text-slate-500">Sin cámaras. Usa + AÑADIR.</td></tr>`; }
         cams.forEach((c,i)=>{
           const estadoClass=c.estado==='OPERATIVA'?'text-emerald-400':c.estado==='MANTENIMIENTO'?'text-blue-400':'text-rose-400';
           const perClass=c.estadoPerifoneo==='OPERATIVO'?'text-emerald-400':c.estadoPerifoneo==='MANTENIMIENTO'?'text-blue-400':'text-rose-400';
@@ -7585,7 +7593,7 @@ body.cioe-background-active #ocurrenciasMenu {backdrop-filter:blur(12px);-webkit
         });
       });
       body.innerHTML=html || '<tr><td colspan="11" class="p-8 text-center text-slate-500">Todavía no hay Estaciones/Pares en este turno.</td></tr>';
-      document.getElementById('turnoCount').textContent=total+' cámaras';
+      document.getElementById('turnoCount').textContent=total+(filtro?' coincidencias':' cámaras');
     }
     function editarRegistroTurno(id){ const x=getRegistrosTurno().find(r=>r.id===id); if(!x)return; document.getElementById('turnoEditId').value=x.id;document.getElementById('turnoTipo').value=x.tipo;document.getElementById('turnoNombre').value=x.nombre;document.getElementById('turnoResponsable').value=x.responsable||'';window.scrollTo({top:0,behavior:'smooth'}); }
     function eliminarRegistroTurno(id){ if(!confirm('¿Eliminar esta Estación/Par y todas sus cámaras?'))return; setRegistrosTurno(getRegistrosTurno().filter(x=>x.id!==id)); renderRegistrosTurno(); }
@@ -10586,7 +10594,7 @@ window.addEventListener('load',function(){
    widget.style.setProperty('--cioe-vinyl-speed',speeds[cfg.speed]);
    colorInput.value=cfg.color;effectInput.value=cfg.effect;speedInput.value=cfg.speed;
    layer.replaceChildren();
-   const effectGlyphs={hearts:['❤️','💗','💕'],notes:['♫','♪','🎵','🎶'],both:['❤️','♫','🎵','💕'],kitty:['🐱','🎀','🤍','💗'],kuromi:['🖤','😈','💜','🎀'],spider:['🕷️','🕸️','🕷️','✨'],stars:['✨','⭐','🌟','💫'],butterflies:['🦋','🌸','🌷','✨'],cute:['💖','🌈','🍓','🧸','🎀'],all:['🐱','🎀','🖤','😈','🕷️','🕸️','🎵','❤️','✨','🦋']};
+   const effectGlyphs={hearts:['❤️','💗','💕'],notes:['♫','♪','🎵','🎶'],both:['❤️','♫','🎵','💕'],kitty:['🐱','🎀','🤍','💗'],kuromi:['🖤','♥️','🖤','♥️'],spider:['🕷️','🕸️','🕷️','✨'],stars:['✨','⭐','🌟','💫'],butterflies:['🦋','🌸','🌷','✨'],cute:['💖','🌈','🍓','🧸','🎀'],all:['🐱','🎀','🖤','😈','🕷️','🕸️','🎵','❤️','✨','🦋']};
    const glyphs=effectGlyphs[cfg.effect]||[];
    if(!glyphs.length)return;
    for(let i=0;i<12;i++){
