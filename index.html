@@ -7580,6 +7580,15 @@ body.cioe-background-active #ocurrenciasMenu {backdrop-filter:blur(12px);-webkit
       }else registros.push({id:String(Date.now())+'_'+Math.floor(Math.random()*100000),turno,operador,apoyo,estaciones,estacionBase});
       try{localStorage.setItem(CIOE_ASIGNACIONES_KEY,JSON.stringify(registros));}
       catch(err){alert('No se pudo guardar la asignación en este navegador.');return;}
+      if(anterior && anterior.estacionBase!==estacionBase){
+        const grupos=getRegistrosTurno();
+        const viejo=grupos.find(g=>g.turno===turno && String(g.nombre).trim().toUpperCase()===String(anterior.estacionBase).trim().toUpperCase());
+        if(viejo && String(viejo.responsable||'').trim().toUpperCase()===String(anterior.operador||'').trim().toUpperCase()){
+          viejo.responsable='';viejo.apoyo='';
+          (viejo.camaras||[]).forEach(c=>{if(String(c.operador||'').trim().toUpperCase()===String(anterior.operador||'').trim().toUpperCase())c.operador='';});
+          setRegistrosTurno(grupos);
+        }
+      }
       const actualizado=cioeAplicarOperadorEnEstacion(turno,estacionBase,operador,apoyo,anterior?.estacionBase===estacionBase?anterior?.operador:'');
       cioeLimpiarAsignacionTurno();cioeRenderAsignacionesTurno();
       if(!actualizado)alert('Asignación guardada, pero no se encontró la estación en este turno para actualizar la celda.');
@@ -7599,8 +7608,18 @@ body.cioe-background-active #ocurrenciasMenu {backdrop-filter:blur(12px);-webkit
     }
     function cioeEliminarAsignacionTurno(id){
       if(!confirm('¿Eliminar esta asignación de operador?'))return;
-      localStorage.setItem(CIOE_ASIGNACIONES_KEY,JSON.stringify(cioeGetAsignacionesTurno().filter(x=>String(x.id)!==String(id))));
-      cioeRenderAsignacionesTurno();
+      const asignaciones=cioeGetAsignacionesTurno();
+      const asignacion=asignaciones.find(x=>String(x.id)===String(id));
+      if(!asignacion)return;
+      localStorage.setItem(CIOE_ASIGNACIONES_KEY,JSON.stringify(asignaciones.filter(x=>String(x.id)!==String(id))));
+      const regs=getRegistrosTurno();
+      const grupo=regs.find(g=>g.turno===asignacion.turno && String(g.nombre).trim().toUpperCase()===String(asignacion.estacionBase).trim().toUpperCase());
+      if(grupo && String(grupo.responsable||'').trim().toUpperCase()===String(asignacion.operador||'').trim().toUpperCase()){
+        grupo.responsable='';grupo.apoyo='';
+        (grupo.camaras||[]).forEach(c=>{if(String(c.operador||'').trim().toUpperCase()===String(asignacion.operador||'').trim().toUpperCase())c.operador='';});
+        setRegistrosTurno(regs);renderRegistrosTurno();
+      }
+      cioeLimpiarAsignacionTurno();cioeRenderAsignacionesTurno();
     }
     function cioeRenderAsignacionesTurno(){
       const turno=turnoCreadorActual||'MAÑANA';
@@ -7734,7 +7753,7 @@ body.cioe-background-active #ocurrenciasMenu {backdrop-filter:blur(12px);-webkit
         const cams=(!filtro||grupoCoincide?todas:todas.filter(c=>[c.camara,formatearCamaraTurno(c.camara),c.sistema,c.estado,c.ubicacion,c.zona,c.detalle,c.perifoneo,c.estadoPerifoneo,c.operador,c.numeroOrden].some(v=>String(v||'').toLocaleLowerCase('es').includes(filtro)))).filter(c=>cioeCoincideCamaraTurno(c,salto));
         if((filtro||salto)&&!cams.length)return;
         total+=cams.length;
-        html += `<tr class="bg-violet-950/70 border-y border-violet-700/50"><td colspan="11" class="p-3"><div class="flex items-center justify-between gap-3"><div class="flex items-center gap-3"><span class="font-black text-violet-300"><i class="fa-solid fa-tower-broadcast mr-2"></i>${escapeHtml(g.tipo)} ${escapeHtml(g.nombre)}</span><span class="text-slate-400">OPERADOR: <b class="text-white">${escapeHtml(g.responsable||'—')}</b></span></div><div class="flex gap-2"><button type="button" data-turno-add="${g.id}" onclick="abrirTurnoCamaraModal(${g.id}); return false;" class="bg-amber-500 hover:bg-amber-400 text-black px-3 py-2 rounded-xl font-black cursor-pointer"><i class="fa-solid fa-plus mr-1"></i>AÑADIR</button><button onclick="editarRegistroTurno(${g.id})" class="text-sky-400 p-2" title="Editar estación/par"><i class="fa-solid fa-pen-to-square"></i></button><button onclick="eliminarRegistroTurno(${g.id})" class="text-rose-400 p-2" title="Eliminar estación/par"><i class="fa-solid fa-trash"></i></button></div></div></td></tr>`;
+        html += `<tr class="bg-violet-950/70 border-y border-violet-700/50"><td colspan="11" class="p-3"><div class="flex items-center justify-between gap-3"><div class="flex items-center gap-3"><span class="font-black text-violet-300"><i class="fa-solid fa-tower-broadcast mr-2"></i>${escapeHtml(g.tipo)} ${escapeHtml(g.nombre)}</span><span class="text-slate-400">OPERADOR: <b class="text-white">${escapeHtml(g.responsable||'—')}</b></span></div><div class="flex gap-2"><button type="button" data-turno-add="${g.id}" onclick="abrirTurnoCamaraModal(${g.id}); return false;" class="bg-amber-500 hover:bg-amber-400 text-black px-3 py-2 rounded-xl font-black cursor-pointer"><i class="fa-solid fa-plus mr-1"></i>AÑADIR</button><button type="button" onclick="cioeEditarOperadorEstacion(${g.id}); return false;" class="text-sky-400 p-2" title="Editar operador de esta estación"><i class="fa-solid fa-pen-to-square"></i></button><button onclick="cioeQuitarOperadorEstacion(${g.id})" class="text-rose-400 p-2" title="Quitar operador sin borrar estación ni cámaras"><i class="fa-solid fa-trash"></i></button></div></div></td></tr>`;
         if(!cams.length){ if(!filtro&&!salto) html += `<tr><td colspan="11" class="p-5 text-center text-slate-500">Sin cámaras. Usa + AÑADIR.</td></tr>`; }
         cams.forEach((c,i)=>{
           const estadoClass=c.estado==='OPERATIVA'?'text-emerald-400':c.estado==='MANTENIMIENTO'?'text-blue-400':'text-rose-400';
@@ -7744,6 +7763,84 @@ body.cioe-background-active #ocurrenciasMenu {backdrop-filter:blur(12px);-webkit
       });
       body.innerHTML=html || '<tr><td colspan="11" class="p-8 text-center text-slate-500">'+((filtro||salto)?'No se encontró esa cámara en este turno.':'Todavía no hay Estaciones/Pares en este turno.')+'</td></tr>';
       document.getElementById('turnoCount').textContent=total+((filtro||salto)?' coincidencias':' cámaras');
+    }
+    // Acciones del encabezado de estación: modifican SOLO el operador.
+    // No eliminan la estación ni las cámaras asociadas.
+    // Edición directa de la estación y su operador, sin saltar al formulario superior.
+    function cioeEditarOperadorEstacion(id){
+      const regs=getRegistrosTurno();
+      const g=regs.find(r=>String(r.id)===String(id) && r.turno===turnoCreadorActual);
+      if(!g)return;
+      document.getElementById('cioeModalEditarGrupoTurno')?.remove();
+      const fondo=document.createElement('div');
+      fondo.id='cioeModalEditarGrupoTurno';
+      fondo.style.cssText='position:fixed;inset:0;z-index:2147483000;background:rgba(0,0,0,.78);display:flex;align-items:center;justify-content:center;padding:18px';
+      fondo.innerHTML=`<form id="cioeFormEditarGrupoTurno" style="background:#0b1425;border:1px solid #475569;border-radius:16px;padding:22px;width:min(100%,460px);box-shadow:0 25px 80px #000;color:white">
+        <h3 style="font-size:16px;font-weight:900;margin-bottom:8px">✏️ EDITAR ESTACIÓN Y OPERADOR</h3>
+        <p style="font-size:12px;color:#94a3b8;margin-bottom:18px">Los cambios se reflejarán en las celdas de este turno.</p>
+        <label style="display:block;font-size:12px;margin-bottom:6px">Nombre o número de estación</label>
+        <input name="estacion" required style="width:100%;padding:11px;border:1px solid #475569;border-radius:9px;background:#020617;color:white;margin-bottom:15px" />
+        <label style="display:block;font-size:12px;margin-bottom:6px">Nombre del operador (opcional)</label>
+        <input name="operador" style="width:100%;padding:11px;border:1px solid #475569;border-radius:9px;background:#020617;color:white;margin-bottom:18px" />
+        <div style="display:flex;gap:10px;justify-content:flex-end"><button type="button" data-cancelar style="padding:10px 15px;background:#334155;border-radius:9px">Cancelar</button><button type="submit" style="padding:10px 15px;background:#059669;border-radius:9px;font-weight:800">Guardar cambios</button></div>
+      </form>`;
+      document.body.appendChild(fondo);
+      const form=fondo.querySelector('form');
+      form.elements.estacion.value=g.nombre||'';
+      form.elements.operador.value=g.responsable||'';
+      form.elements.estacion.focus();
+      fondo.querySelector('[data-cancelar]').onclick=()=>fondo.remove();
+      fondo.addEventListener('click',e=>{if(e.target===fondo)fondo.remove();});
+      form.addEventListener('submit',e=>{
+        e.preventDefault();
+        const nombre=form.elements.estacion.value.trim().toUpperCase();
+        const operador=form.elements.operador.value.trim().toUpperCase();
+        if(!nombre){form.elements.estacion.focus();return;}
+        const actuales=getRegistrosTurno();
+        const grupo=actuales.find(r=>String(r.id)===String(id)&&r.turno===turnoCreadorActual);
+        if(!grupo)return;
+        const repetido=actuales.some(r=>r!==grupo&&r.turno===grupo.turno&&r.tipo===grupo.tipo&&String(r.nombre||'').trim().toUpperCase()===nombre);
+        if(repetido){alert('Ya existe una estación o par con ese nombre en este turno.');return;}
+        const anterior=String(grupo.nombre||'').trim().toUpperCase();
+        const anteriorOperador=String(grupo.responsable||'').trim().toUpperCase();
+        grupo.nombre=nombre;
+        grupo.responsable=operador;
+        (grupo.camaras||[]).forEach(c=>{if(!c.operador||String(c.operador).trim().toUpperCase()===anteriorOperador)c.operador=operador;});
+        setRegistrosTurno(actuales);
+        try{
+          const asignaciones=cioeGetAsignacionesTurno();
+          asignaciones.forEach(a=>{
+            if(a.turno===grupo.turno&&String(a.estacionBase||'').trim().toUpperCase()===anterior){
+              a.estacionBase=nombre;a.operador=operador;
+            }
+          });
+          localStorage.setItem(CIOE_ASIGNACIONES_KEY,JSON.stringify(asignaciones));
+          cioeRenderAsignacionesTurno();
+        }catch(err){console.warn('No se pudo actualizar el panel de asignaciones',err);}
+        fondo.remove();
+        renderRegistrosTurno();
+      });
+    }
+    function cioeQuitarOperadorEstacion(id){
+      const regs=getRegistrosTurno();
+      const g=regs.find(r=>String(r.id)===String(id) && r.turno===turnoCreadorActual);
+      if(!g)return;
+      if(!g.responsable && !(g.camaras||[]).some(c=>c.operador))return;
+      if(!confirm('¿Quitar el operador de '+g.tipo+' '+g.nombre+'? Las cámaras y la estación se conservarán.'))return;
+      cioeActualizarOperadorEstacion(g,regs,'');
+    }
+    function cioeActualizarOperadorEstacion(g,regs,nombre){
+      g.responsable=nombre;
+      if(!nombre)g.apoyo='';
+      (g.camaras||[]).forEach(c=>{c.operador=nombre;});
+      setRegistrosTurno(regs);
+      const asignaciones=cioeGetAsignacionesTurno();
+      const normalizar=v=>String(v||'').trim().toLocaleUpperCase('es');
+      const filtradas=asignaciones.filter(a=>!(a.turno===g.turno && normalizar(a.estacionBase)===normalizar(g.nombre)));
+      if(nombre)filtradas.push({id:String(Date.now()),turno:g.turno,operador:nombre,apoyo:g.apoyo||'',estacionBase:g.nombre,estaciones:''});
+      localStorage.setItem(CIOE_ASIGNACIONES_KEY,JSON.stringify(filtradas));
+      renderRegistrosTurno();
+      cioeRenderAsignacionesTurno();
     }
     function editarRegistroTurno(id){ const x=getRegistrosTurno().find(r=>r.id===id); if(!x)return; document.getElementById('turnoEditId').value=x.id;document.getElementById('turnoTipo').value=x.tipo;document.getElementById('turnoNombre').value=x.nombre;document.getElementById('turnoResponsable').value=x.responsable||'';window.scrollTo({top:0,behavior:'smooth'}); }
     function eliminarRegistroTurno(id){ if(!confirm('¿Eliminar esta Estación/Par y todas sus cámaras?'))return; setRegistrosTurno(getRegistrosTurno().filter(x=>x.id!==id)); renderRegistrosTurno(); }
