@@ -1516,6 +1516,53 @@ body.cioe-custom-theme #themeCustomizerBtn{background-color:var(--cioe-accent)!i
 @media(max-width:1200px){#cioeSpotifyMini .spotify-left{grid-template-columns:130px minmax(0,1fr)}#cioeSpotifyMini .cioe-vinyl-disc{width:108px;height:108px}}
 @media(max-width:650px){#cioeSpotifyMini .spotify-left{grid-template-columns:1fr}#cioeSpotifyMini .cioe-vinyl-widget{display:none}}
 @media(prefers-reduced-motion:reduce){#cioeSpotifyMini .cioe-vinyl-disc,#cioeSpotifyMini .cioe-equalizer span{animation:none}}
+
+/* Dashboard Spotify CIOE: diseño completo en cuatro columnas */
+#cioeSpotifyMini{grid-template-columns:minmax(0,1fr) minmax(285px,24%);gap:12px;align-items:stretch;padding:52px 12px 12px}
+#cioeSpotifyMini .spotify-left{display:grid;grid-template-columns:190px minmax(360px,1fr) 250px;align-items:stretch;gap:12px;min-width:0}
+#cioeSpotifyMini .cioe-vinyl-widget{min-height:248px;gap:7px;padding:12px 7px;background:radial-gradient(ellipse at center,#10372e 0%,#081621 75%)}
+#cioeSpotifyMini .cioe-vinyl-stage{width:166px;height:166px;position:relative;display:grid;place-items:center}
+#cioeSpotifyMini .cioe-vinyl-disc{width:155px;height:155px;box-shadow:0 0 22px #0ac77344,inset 0 0 20px #000}
+#cioeSpotifyMini .cioe-vinyl-center{width:65px;height:65px;font-size:36px}
+#cioeSpotifyMini .cioe-tonearm{position:absolute;right:6px;top:-4px;width:9px;height:114px;border-radius:8px;background:linear-gradient(90deg,#9ba4ac,#eff6ff,#555f69);transform:rotate(19deg);transform-origin:top center;box-shadow:2px 3px 5px #000a;pointer-events:none}
+#cioeSpotifyMini .cioe-tonearm:before{content:'';position:absolute;width:21px;height:21px;top:-8px;left:-6px;border-radius:50%;background:radial-gradient(circle,#f0f4f7,#707a85 60%,#121a22 70%)}
+#cioeSpotifyMini .cioe-tonearm span{position:absolute;bottom:-1px;left:-4px;width:17px;height:15px;background:#8d959d;border-radius:3px}
+#cioeSpotifyMini .cioe-vinyl-note{position:absolute;left:0;top:9px;color:#20e79a;font-size:20px;opacity:.75}
+#cioeSpotifyMini .cioe-equalizer{height:34px;gap:3px}
+#cioeSpotifyMini .cioe-equalizer span{width:5px}
+#cioeSpotifyMini .cioe-spotify-workspace{justify-content:space-between;gap:11px}
+#cioeSpotifyMini .spotify-controls{margin:0}
+#cioeSpotifyMini .spotify-controls input{height:40px}
+#cioeSpotifyMini .spotify-controls button{height:40px}
+#cioeSpotifyMini .cioe-spotify-actions{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:7px}
+#cioeSpotifyMini .cioe-spotify-actions button{background:linear-gradient(145deg,#102332,#081622);border:1px solid #254655;color:#f0fdfa;border-radius:10px;min-height:60px;padding:8px 6px;display:grid;grid-template-columns:25px 1fr;grid-template-rows:1fr 1fr;align-items:center;gap:0 5px;text-align:left;white-space:normal}
+#cioeSpotifyMini .cioe-spotify-actions button:hover{border-color:#1ed760;background:#123329}
+#cioeSpotifyMini .cioe-spotify-actions button i{grid-row:1/3;color:#20dba5;font-size:21px}
+#cioeSpotifyMini .cioe-spotify-actions button b{font-size:10px}
+#cioeSpotifyMini .cioe-spotify-actions button small{color:#8da8b6;font-size:9px}
+#cioeSpotifyMini .cioe-spotify-stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:7px}
+#cioeSpotifyMini .cioe-spotify-stats>div{display:flex;align-items:center;gap:7px;padding:10px 6px;border:1px solid #254655;background:#0b1b27;border-radius:10px;min-width:0}
+#cioeSpotifyMini .cioe-spotify-stats i{color:#1ed760;font-size:17px}
+#cioeSpotifyMini .cioe-spotify-stats span{font-size:9px;color:#94a3b8;min-width:0}
+#cioeSpotifyMini .cioe-spotify-stats strong{display:block;font-size:11px;color:#d1fae5;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#cioeSpotifyMini .cioe-spotify-history{background:#0a1823;border:1px solid #23473d;border-radius:12px;padding:10px;min-width:0;display:flex;flex-direction:column;gap:8px}
+#cioeSpotifyMini .cioe-spotify-history-title{font-size:11px;font-weight:800;color:#e2e8f0;display:flex;align-items:center;gap:6px}
+#cioeSpotifyMini .cioe-spotify-history-title i{color:#1ed760}
+#cioeSpotifyMini .cioe-spotify-history-title button{margin-left:auto;padding:3px 6px;color:#94a3b8;border:1px solid #315047;font-size:9px}
+#cioeSpotifyMini .cioe-spotify-history-list{display:flex;flex-direction:column;gap:5px;max-height:225px;overflow:auto}
+#cioeSpotifyMini .cioe-history-entry{width:100%;display:flex;align-items:center;gap:8px;background:#101f2b;border:1px solid #243e4a;color:#e2e8f0;border-radius:7px;text-align:left;padding:8px;min-width:0;cursor:pointer}
+#cioeSpotifyMini .cioe-history-entry:hover{border-color:#1ed760}
+#cioeSpotifyMini .cioe-history-entry i{color:#1ed760}
+#cioeSpotifyMini .cioe-history-entry span{flex:1;min-width:0;font-size:10px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#cioeSpotifyMini .cioe-history-entry small{color:#8ca6b5;font-size:9px}
+#cioeSpotifyMini .cioe-history-empty{font-size:10px;color:#94a3b8;padding:14px 6px;text-align:center}
+#cioeSpotifyMini .spotify-player-box{display:flex;flex-direction:column;justify-content:center}
+#cioeSpotifyMini #cioeSpotifyEmbed iframe{height:200px}
+#cioeSpotifyMini .spotify-placeholder{height:200px}
+@media(max-width:1650px){#cioeSpotifyMini .spotify-left{grid-template-columns:145px minmax(300px,1fr) 205px}#cioeSpotifyMini .cioe-vinyl-stage{width:128px;height:128px}#cioeSpotifyMini .cioe-vinyl-disc{width:123px;height:123px}#cioeSpotifyMini .cioe-vinyl-widget{min-height:225px}#cioeSpotifyMini .cioe-spotify-actions button small{display:none}#cioeSpotifyMini .cioe-spotify-actions button{min-height:46px}}
+@media(max-width:1250px){#cioeSpotifyMini{grid-template-columns:1fr}#cioeSpotifyMini .spotify-left{grid-template-columns:145px minmax(0,1fr) 215px}#cioeSpotifyMini .spotify-player-box{max-width:none}#cioeSpotifyMini #cioeSpotifyEmbed iframe{height:152px}}
+@media(max-width:850px){#cioeSpotifyMini .spotify-left{grid-template-columns:125px minmax(0,1fr)}#cioeSpotifyMini .cioe-spotify-history{grid-column:1/-1}#cioeSpotifyMini .cioe-spotify-history-list{max-height:145px}}
+@media(max-width:650px){#cioeSpotifyMini .spotify-left{grid-template-columns:1fr}#cioeSpotifyMini .cioe-vinyl-widget{display:flex}#cioeSpotifyMini .cioe-spotify-actions,#cioeSpotifyMini .cioe-spotify-stats{grid-template-columns:repeat(2,minmax(0,1fr))}}
 </style>
 </head>
 <body class="min-h-screen flex flex-col p-3 md:p-5 space-y-4 w-full">
@@ -1716,33 +1763,42 @@ body.cioe-custom-theme #themeCustomizerBtn{background-color:var(--cioe-accent)!i
         <button type="button" id="cioeSpotifyCollapseBtn" aria-expanded="true" aria-controls="cioeSpotifyMini" onclick="cioeSpotifyTogglePanel()"><i class="fa-solid fa-chevron-up"></i> Ocultar</button>
       </div>
       <div class="spotify-left">
-        <div class="cioe-vinyl-widget" aria-label="Disco decorativo animado de Spotify">
-          <div class="cioe-vinyl-disc"><div class="cioe-vinyl-center"><i class="fa-brands fa-spotify"></i></div></div>
-          <div class="cioe-equalizer" aria-hidden="true"><span style="--n:1"></span><span style="--n:2"></span><span style="--n:3"></span><span style="--n:4"></span><span style="--n:5"></span><span style="--n:6"></span><span style="--n:7"></span><span style="--n:8"></span><span style="--n:9"></span><span style="--n:10"></span><span style="--n:11"></span><span style="--n:12"></span><span style="--n:13"></span><span style="--n:14"></span><span style="--n:15"></span><span style="--n:16"></span><span style="--n:17"></span><span style="--n:18"></span><span style="--n:19"></span></div>
+        <div class="cioe-vinyl-widget" aria-label="Vinilo decorativo giratorio">
+          <div class="cioe-vinyl-stage"><div class="cioe-vinyl-disc"><div class="cioe-vinyl-center"><i class="fa-brands fa-spotify"></i></div></div><div class="cioe-tonearm"><span></span></div><span class="cioe-vinyl-note">♫</span></div>
+          <div class="cioe-equalizer" aria-hidden="true"><span style="--n:1"></span><span style="--n:2"></span><span style="--n:3"></span><span style="--n:4"></span><span style="--n:5"></span><span style="--n:6"></span><span style="--n:7"></span><span style="--n:8"></span><span style="--n:9"></span><span style="--n:10"></span><span style="--n:11"></span><span style="--n:12"></span><span style="--n:13"></span><span style="--n:14"></span><span style="--n:15"></span><span style="--n:16"></span><span style="--n:17"></span><span style="--n:18"></span><span style="--n:19"></span><span style="--n:20"></span><span style="--n:21"></span><span style="--n:22"></span><span style="--n:23"></span></div>
           <span class="cioe-vinyl-label"><i class="fa-solid fa-music"></i> MUSIC VIBES</span>
         </div>
         <div class="cioe-spotify-workspace">
-          <div class="cioe-spotify-kicker"><i class="fa-solid fa-headphones"></i> TU ESPACIO MUSICAL <span>♪</span></div>
           <form id="cioeSpotifySearchForm" class="spotify-controls" onsubmit="return cioeSpotifySearch(event)">
             <input id="cioeSpotifySearchInput" type="search" placeholder="Buscar canción, artista o álbum..." autocomplete="off" aria-label="Buscar música en Spotify">
-            <button type="submit" class="spotify-search"><i class="fa-solid fa-magnifying-glass mr-1"></i> Buscar</button>
+            <button type="submit" class="spotify-search"><i class="fa-solid fa-magnifying-glass"></i> Buscar</button>
           </form>
           <form class="spotify-controls" onsubmit="return cioeSpotifyLoadAlbum(event)">
-            <input id="cioeSpotifyAlbumUrl" type="url" placeholder="Pega el enlace de una canción, artista, álbum o playlist..." aria-label="Enlace de Spotify">
-            <button type="submit" class="spotify-search"><i class="fa-solid fa-play mr-1"></i> Reproducir</button>
+            <input id="cioeSpotifyAlbumUrl" type="text" placeholder="Pega el enlace de una canción, álbum, artista o playlist..." aria-label="Enlace de Spotify">
+            <button type="submit" class="spotify-search"><i class="fa-solid fa-play"></i> Reproducir</button>
           </form>
-          <div class="cioe-spotify-shortcuts">
-            <span><i class="fa-solid fa-compact-disc"></i> Vinilo animado</span>
-            <span><i class="fa-solid fa-link"></i> Enlaces Spotify</span>
-            <span><i class="fa-solid fa-shield-halved"></i> Sin conectar CIOE</span>
+          <div class="cioe-spotify-actions">
+            <button type="button" onclick="cioeSpotifyFocus()"><i class="fa-solid fa-music"></i><b>Buscar música</b><small>Encuentra tu artista</small></button>
+            <button type="button" onclick="cioeSpotifyExplore('artist')"><i class="fa-solid fa-user"></i><b>Artistas</b><small>Ver en Spotify</small></button>
+            <button type="button" onclick="cioeSpotifyExplore('album')"><i class="fa-solid fa-compact-disc"></i><b>Álbumes</b><small>Explorar</small></button>
+            <button type="button" onclick="cioeSpotifyExplore('playlist')"><i class="fa-solid fa-list"></i><b>Playlists</b><small>Descubrir</small></button>
           </div>
-          <p class="spotify-favorites-hint">Busca en Spotify o pega un enlace. El reproductor se actualiza a la derecha.</p>
+          <div class="cioe-spotify-stats">
+            <div><i class="fa-solid fa-headphones"></i><span>Enlace actual<strong id="cioeSpCurrent">Sin cargar</strong></span></div>
+            <div><i class="fa-solid fa-link"></i><span>Enlaces usados<strong id="cioeSpCount">0</strong></span></div>
+            <div><i class="fa-solid fa-clock-rotate-left"></i><span>Cargas realizadas<strong id="cioeSpLoads">0</strong></span></div>
+            <div><i class="fa-regular fa-clock"></i><span>Última carga<strong id="cioeSpLast">—</strong></span></div>
+          </div>
+        </div>
+        <div class="cioe-spotify-history">
+          <div class="cioe-spotify-history-title"><i class="fa-regular fa-clock"></i> Enlaces recientes <button type="button" onclick="cioeSpotifyClearHistory()" title="Limpiar historial de Spotify">Limpiar</button></div>
+          <div id="cioeSpotifyHistoryList" class="cioe-spotify-history-list"><div class="cioe-history-empty">Los enlaces que reproduzcas aparecerán aquí.</div></div>
         </div>
       </div>
       <div class="spotify-player-box">
         <div class="spotify-player-title">
           <span><i class="fa-brands fa-spotify" style="color:#1ed760"></i> REPRODUCTOR</span>
-          <span style="font-size:10px;color:#86efac"><i class="fa-solid fa-link"></i> Enlaces Spotify</span>
+          <span style="font-size:10px;color:#86efac"><i class="fa-solid fa-link"></i> Abrir en Spotify</span>
         </div>
         <div id="cioeSpotifyEmbed">
           <div id="cioeSpotifyPlaceholder" class="spotify-placeholder"><span><i class="fa-solid fa-compact-disc" style="font-size:22px;color:#1ed760"></i><br>Pega el enlace de una playlist o álbum para escucharlo aquí.</span></div>
@@ -10146,11 +10202,51 @@ window.addEventListener('load',function(){
     }
     if(placeholder)placeholder.style.display='none';
     status(kind==='artist'?'Artista cargado. La disponibilidad del reproductor depende de Spotify.':'Enlace cargado. La reproducción depende de las condiciones de Spotify.');
-    try{localStorage.setItem(STORAGE_LINK,raw);}catch(e){}
+    try{
+      localStorage.setItem(STORAGE_LINK,raw);
+      const url='https://open.spotify.com/'+kind+'/'+id;
+      const history=getHistory().filter(x=>x.url!==url);
+      history.unshift({url,kind,id});localStorage.setItem(HISTORY_KEY,JSON.stringify(history.slice(0,6)));
+      const metrics=getMetrics();metrics.loads=(Number(metrics.loads)||0)+1;metrics.kind=kind;metrics.at=Date.now();
+      localStorage.setItem(METRICS_KEY,JSON.stringify(metrics));
+    }catch(e){}
+    renderHistory();
     return false;
   };
+  const HISTORY_KEY='cioeSpotifyHistoryV2';
+  const METRICS_KEY='cioeSpotifyMetricsV2';
+  function getHistory(){try{const h=JSON.parse(localStorage.getItem(HISTORY_KEY)||'[]');return Array.isArray(h)?h.slice(0,6):[];}catch(e){return [];}}
+  function getMetrics(){try{return JSON.parse(localStorage.getItem(METRICS_KEY)||'{}')||{};}catch(e){return {};}}
+  function renderHistory(){
+    const list=document.getElementById('cioeSpotifyHistoryList');
+    if(!list)return;
+    list.replaceChildren();
+    const history=getHistory();
+    if(!history.length){const d=document.createElement('div');d.className='cioe-history-empty';d.textContent='Los enlaces que cargues aparecerán aquí.';list.appendChild(d);}
+    history.forEach((item)=>{
+      const btn=document.createElement('button');btn.type='button';btn.className='cioe-history-entry';
+      const ico=document.createElement('i');ico.className='fa-solid fa-compact-disc';
+      const name=document.createElement('span');name.textContent=item.kind==='artist'?'Artista · '+item.id:item.kind==='playlist'?'Playlist · '+item.id:item.kind==='album'?'Álbum · '+item.id:'Canción · '+item.id;
+      const arrow=document.createElement('i');arrow.className='fa-solid fa-arrow-up-right-from-square';
+      btn.append(ico,name,arrow);
+      btn.title='Cargar este enlace de Spotify';
+      btn.addEventListener('click',()=>{const input=document.getElementById('cioeSpotifyAlbumUrl');if(input){input.value=item.url;window.cioeSpotifyLoadAlbum();}});
+      list.appendChild(btn);
+    });
+    const m=getMetrics();
+    const count=document.getElementById('cioeSpCount');if(count)count.textContent=String(history.length);
+    const loads=document.getElementById('cioeSpLoads');if(loads)loads.textContent=String(m.loads||0);
+    const current=document.getElementById('cioeSpCurrent');if(current)current.textContent=m.kind?({artist:'Artista',album:'Álbum',playlist:'Playlist',track:'Canción'}[m.kind]||'Enlace')+' cargado':'Sin cargar';
+    const last=document.getElementById('cioeSpLast');if(last)last.textContent=m.at?new Date(m.at).toLocaleTimeString('es-PE',{hour:'2-digit',minute:'2-digit'}):'—';
+  }
+  window.cioeSpotifyExplore=function(type){
+    const paths={artist:'https://open.spotify.com/search/',album:'https://open.spotify.com/search/',playlist:'https://open.spotify.com/search/'};
+    window.open(paths[type]||'https://open.spotify.com/','_blank','noopener,noreferrer');
+  };
+  window.cioeSpotifyClearHistory=function(){try{localStorage.removeItem(HISTORY_KEY);localStorage.removeItem(METRICS_KEY);}catch(e){}renderHistory();};
   document.addEventListener('DOMContentLoaded',()=>{
     try{
+      renderHistory();
       if(localStorage.getItem('cioeSpotifyCollapsed')==='1')window.cioeSpotifyTogglePanel();
       const saved=localStorage.getItem(STORAGE_LINK);
       if(saved){const input=document.getElementById('cioeSpotifyAlbumUrl');if(input){input.value=saved;window.cioeSpotifyLoadAlbum();}}
