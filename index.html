@@ -1563,6 +1563,13 @@ body.cioe-custom-theme #themeCustomizerBtn{background-color:var(--cioe-accent)!i
 @media(max-width:1250px){#cioeSpotifyMini{grid-template-columns:1fr}#cioeSpotifyMini .spotify-left{grid-template-columns:145px minmax(0,1fr) 215px}#cioeSpotifyMini .spotify-player-box{max-width:none}#cioeSpotifyMini #cioeSpotifyEmbed iframe{height:152px}}
 @media(max-width:850px){#cioeSpotifyMini .spotify-left{grid-template-columns:125px minmax(0,1fr)}#cioeSpotifyMini .cioe-spotify-history{grid-column:1/-1}#cioeSpotifyMini .cioe-spotify-history-list{max-height:145px}}
 @media(max-width:650px){#cioeSpotifyMini .spotify-left{grid-template-columns:1fr}#cioeSpotifyMini .cioe-vinyl-widget{display:flex}#cioeSpotifyMini .cioe-spotify-actions,#cioeSpotifyMini .cioe-spotify-stats{grid-template-columns:repeat(2,minmax(0,1fr))}}
+
+/* Giro sincronizado con eventos oficiales de Spotify Embed iFrame API */
+#cioeSpotifyMini .cioe-vinyl-disc,
+#cioeSpotifyMini .cioe-equalizer span{animation-play-state:paused!important}
+#cioeSpotifyMini.cioe-spotify-playing:not(.spotify-collapsed) .cioe-vinyl-disc,
+#cioeSpotifyMini.cioe-spotify-playing:not(.spotify-collapsed) .cioe-equalizer span{animation-play-state:running!important}
+@media(prefers-reduced-motion:reduce){#cioeSpotifyMini.cioe-spotify-playing .cioe-vinyl-disc,#cioeSpotifyMini.cioe-spotify-playing .cioe-equalizer span{animation:none!important}}
 </style>
 </head>
 <body class="min-h-screen flex flex-col p-3 md:p-5 space-y-4 w-full">
@@ -1802,7 +1809,7 @@ body.cioe-custom-theme #themeCustomizerBtn{background-color:var(--cioe-accent)!i
         </div>
         <div id="cioeSpotifyEmbed">
           <div id="cioeSpotifyPlaceholder" class="spotify-placeholder"><span><i class="fa-solid fa-compact-disc" style="font-size:22px;color:#1ed760"></i><br>Pega el enlace de una playlist o álbum para escucharlo aquí.</span></div>
-          <iframe id="cioeSpotifyAlbumFrame" title="Reproductor de Spotify" loading="lazy" style="display:none" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" referrerpolicy="strict-origin-when-cross-origin"></iframe>
+          <div id="cioeSpotifyAlbumFrame" title="Reproductor de Spotify" style="display:none"></div>
           <p id="cioeSpotifyMessage">La reproducción completa depende de las condiciones de Spotify.</p>
         </div>
       </div>
@@ -10141,11 +10148,47 @@ window.addEventListener('load',function(){
 <script id="cioeSpotifyClient">
 (function(){
   const STORAGE_LINK='cioeSpotifySavedLink';
+  let embedController=null;
+  let embedApi=null;
+  let pendingEmbedUri=null;
+  let embedReady=false;
+  let spotifyPlaying=false;
+  function syncVinyl(playing){
+    spotifyPlaying=Boolean(playing);
+    const panel=document.getElementById('cioeSpotifyMini');
+    if(panel)panel.classList.toggle('cioe-spotify-playing',spotifyPlaying);
+  }
+  function loadWithEmbedApi(uri){
+    pendingEmbedUri=uri;
+    syncVinyl(false);
+    const frame=document.getElementById('cioeSpotifyAlbumFrame');
+    if(!frame)return;
+    if(embedController){
+      try{embedController.loadUri(uri);}catch(e){status('No se pudo cargar el enlace en Spotify.');}
+      return;
+    }
+    if(!embedApi||embedReady)return;
+    embedReady=true;
+    const options={uri,width:'100%',height:152};
+    try{
+      embedApi.createController(frame,options,controller=>{
+        embedController=controller;
+        controller.addListener('playback_update',event=>{
+          const data=event?.data;
+          if(data&&typeof data.isPaused==='boolean')syncVinyl(!data.isPaused);
+        });
+        controller.addListener('ready',()=>{if(pendingEmbedUri&&pendingEmbedUri!==uri)controller.loadUri(pendingEmbedUri);});
+      });
+    }catch(e){embedReady=false;status('Spotify no pudo inicializar el reproductor.');}
+  }
+  // La API del iframe no requiere credenciales de la Spotify Web API.
+  window.onSpotifyIframeApiReady=function(api){embedApi=api;if(pendingEmbedUri)loadWithEmbedApi(pendingEmbedUri);};
   function status(text){const el=document.getElementById('cioeSpotifyMessage');if(el)el.textContent=text;}
   function clearPlayer(){
     const frame=document.getElementById('cioeSpotifyAlbumFrame');
     const placeholder=document.getElementById('cioeSpotifyPlaceholder');
-    if(frame){frame.removeAttribute('src');frame.style.display='none';}
+    syncVinyl(false);
+    if(frame){frame.style.display='none';}
     if(placeholder)placeholder.style.display='flex';
   }
   window.cioeSpotifyTogglePanel=function(){
@@ -10196,9 +10239,8 @@ window.addEventListener('load',function(){
     const frame=document.getElementById('cioeSpotifyAlbumFrame');
     const placeholder=document.getElementById('cioeSpotifyPlaceholder');
     if(frame){
-      const next='https://open.spotify.com/embed/'+kind+'/'+encodeURIComponent(id)+'?utm_source=generator';
-      // Al cambiar de enlace se sustituye el iframe anterior, evitando mostrar el contenido viejo.
-      frame.removeAttribute('src');frame.src=next;frame.style.display='block';
+      frame.style.display='block';
+      loadWithEmbedApi('spotify:'+kind+':'+id);
     }
     if(placeholder)placeholder.style.display='none';
     status(kind==='artist'?'Artista cargado. La disponibilidad del reproductor depende de Spotify.':'Enlace cargado. La reproducción depende de las condiciones de Spotify.');
@@ -10254,5 +10296,6 @@ window.addEventListener('load',function(){
   },{once:true});
 })();
 </script>
+<script async src="https://open.spotify.com/embed/iframe-api/v1"></script>
 </body>
 </html>
