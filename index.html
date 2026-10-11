@@ -4227,6 +4227,8 @@ body.cioe-custom-theme #themeCustomizerBtn{background-color:var(--cioe-accent)!i
             <button onclick="editModal(${cam.id})" class="p-1.5 text-blue-400 hover:text-blue-300 rounded-lg hover:bg-slate-800 transition" title="Editar Cámara">
               <i class="fa-solid fa-pen-to-square"></i>
             </button>
+            <button onclick="cioeOpenCameraMap(${cam.id})" class="p-1.5 text-emerald-400 hover:text-emerald-300 rounded-lg hover:bg-slate-800 transition" title="Abrir Google My Maps" aria-label="Abrir mapa de ${formatCamName(cam.camara)}"><i class="fa-solid fa-map-location-dot"></i></button>
+            <button onclick="cioeShowCameraMap(${cam.id})" class="p-1.5 text-violet-400 hover:text-violet-300 rounded-lg hover:bg-slate-800 transition" title="Ver mapa en CIOE" aria-label="Vista previa del mapa de ${formatCamName(cam.camara)}"><i class="fa-solid fa-map"></i></button>
             <button onclick="deleteCamera(${cam.id})" class="p-1.5 text-rose-400 hover:text-rose-300 rounded-lg hover:bg-slate-800 transition" title="Eliminar">
               <i class="fa-solid fa-trash"></i>
             </button>
@@ -10306,5 +10308,68 @@ window.addEventListener('load',function(){
 })();
 </script>
 <script async src="https://open.spotify.com/embed/iframe-api/v1"></script>
+
+<!-- CIOE: mapa por cámara reutilizando coordenadas de Buscar reporte de cámara -->
+<div id="cioeCameraMapModal" role="dialog" aria-modal="true" aria-labelledby="cioeCameraMapTitle" class="fixed inset-0 z-[99999] hidden items-center justify-center p-3 sm:p-6" style="background:rgba(1,5,13,.88)">
+  <div class="w-full max-w-3xl rounded-2xl border border-emerald-700/50 bg-[#0a1222] shadow-2xl overflow-hidden">
+    <div class="flex items-start justify-between gap-4 p-4 border-b border-slate-700">
+      <div><h2 id="cioeCameraMapTitle" class="font-black text-emerald-300 text-base">Ubicación de cámara</h2><p id="cioeCameraMapAddress" class="text-slate-300 text-xs mt-1"></p><p id="cioeCameraMapCoordinates" class="text-emerald-300/80 text-xs mt-1"></p></div>
+      <button type="button" onclick="cioeCloseCameraMap()" class="px-3 py-2 text-white hover:bg-slate-700 rounded-lg" aria-label="Cerrar mapa"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div class="p-3 sm:p-4">
+      <p id="cioeCameraMapNotice" class="text-xs text-slate-300 mb-3">Mapa centrado en la cámara seleccionada, utilizando las coordenadas de Buscar reporte de cámara.</p>
+      <iframe id="cioeCameraMapFrame" title="Ubicación de cámara CIOE" loading="lazy" referrerpolicy="no-referrer-when-downgrade" class="w-full rounded-xl border border-slate-700 bg-slate-900" style="height:min(55vh,460px)" allowfullscreen></iframe>
+      <div class="flex flex-wrap gap-2 mt-3">
+        <button type="button" id="cioeCameraMapOpen" class="bg-emerald-700 hover:bg-emerald-600 text-white text-xs font-bold px-4 py-2 rounded-lg"><i class="fa-solid fa-arrow-up-right-from-square mr-1"></i> Abrir cámara en My Maps</button>
+        <a id="cioeCameraMapSearch" target="_blank" rel="noopener noreferrer" class="bg-sky-800 hover:bg-sky-700 text-white text-xs font-bold px-4 py-2 rounded-lg" href="#"><i class="fa-solid fa-location-dot mr-1"></i> Ver ubicación en Google Maps</a>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+(function(){
+  const MID='1h9cYoq4S3YqbqDyx_9tgsSK3yzGGJro';
+  const FALLBACK='https://www.google.com/maps/d/u/0/viewer?mid='+MID;
+  function getCamera(id){return typeof cameras!=='undefined'&&Array.isArray(cameras)?cameras.find(c=>String(c.id)===String(id)):null;}
+  function getCoords(id){
+    const n=Number(id);
+    if(typeof CAMERA_MYMAPS_COORDS==='undefined'||!Array.isArray(CAMERA_MYMAPS_COORDS))return null;
+    const p=CAMERA_MYMAPS_COORDS[n];
+    return Array.isArray(p)&&p.length===2&&p.every(Number.isFinite)?p:null;
+  }
+  function myMapsUrl(id,embed){
+    const coords=getCoords(id);
+    const base='https://www.google.com/maps/d/'+(embed?'embed':'u/0/viewer')+'?mid='+MID;
+    return coords?base+'&ll='+coords[0]+'%2C'+coords[1]+'&z=20':base;
+  }
+  window.cioeOpenCameraMap=function(id){
+    if(!getCamera(id))return;
+    // Reutiliza exactamente la función de Buscar reporte de cámara.
+    if(typeof openCameraMap==='function'){openCameraMap(id);return;}
+    window.open(myMapsUrl(id,false),'_blank','noopener,noreferrer');
+  };
+  window.cioeShowCameraMap=function(id){
+    const cam=getCamera(id);if(!cam)return;
+    const coords=getCoords(id);
+    const modal=document.getElementById('cioeCameraMapModal');
+    document.getElementById('cioeCameraMapTitle').textContent='Mapa · '+(typeof formatCamName==='function'?formatCamName(cam.camara):'CÁMARA-'+cam.camara);
+    document.getElementById('cioeCameraMapAddress').textContent=cam.ubicacion||'Sin dirección registrada';
+    document.getElementById('cioeCameraMapCoordinates').textContent=coords?'Coordenadas: '+coords[0].toFixed(6)+', '+coords[1].toFixed(6):'Coordenadas no registradas';
+    document.getElementById('cioeCameraMapNotice').textContent=coords?'Mapa centrado en la ubicación registrada de esta cámara. El marcador individual puede depender de Google My Maps.':'No hay coordenadas para esta cámara; se mostrará el mapa general.';
+    document.getElementById('cioeCameraMapFrame').src=myMapsUrl(id,true);
+    document.getElementById('cioeCameraMapOpen').onclick=function(){window.cioeOpenCameraMap(id);};
+    document.getElementById('cioeCameraMapSearch').href=coords?'https://www.google.com/maps/search/?api=1&query='+coords[0]+'%2C'+coords[1]:'https://www.google.com/maps/search/?api=1&query='+encodeURIComponent((cam.ubicacion||'')+', Los Olivos, Lima, Perú');
+    modal.classList.remove('hidden');modal.classList.add('flex');
+  };
+  window.cioeCloseCameraMap=function(){
+    const modal=document.getElementById('cioeCameraMapModal');
+    modal.classList.add('hidden');modal.classList.remove('flex');
+    document.getElementById('cioeCameraMapFrame').removeAttribute('src');
+  };
+  document.getElementById('cioeCameraMapModal').addEventListener('click',function(e){if(e.target===this)window.cioeCloseCameraMap();});
+  document.addEventListener('keydown',function(e){if(e.key==='Escape'&&!document.getElementById('cioeCameraMapModal').classList.contains('hidden'))window.cioeCloseCameraMap();});
+})();
+</script>
+
 </body>
 </html>
