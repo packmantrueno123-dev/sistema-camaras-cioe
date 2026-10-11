@@ -1888,6 +1888,15 @@ body.cioe-custom-theme #themeCustomizerBtn{background-color:var(--cioe-accent)!i
         <select id="mainCameraFilter" onchange="renderTable()" class="bg-[#030712] border border-slate-800 text-amber-400 font-bold text-xs rounded-xl px-3 py-2.5 focus:outline-none focus:border-amber-500 w-full md:w-52">
           <option value="ALL">TODAS LAS CÁMARAS</option>
         </select>
+        <!-- Accesos externos a asistentes IA: no alteran los filtros de cámaras -->
+        <div class="flex items-center gap-1.5 shrink-0" aria-label="Asistentes de inteligencia artificial">
+          <a href="https://gemini.google.com/app" target="_blank" rel="noopener noreferrer" title="Abrir Gemini en otra pestaña" aria-label="Abrir Gemini en otra pestaña" class="inline-flex items-center justify-center gap-1.5 px-2.5 py-2 rounded-xl border border-violet-500/40 bg-violet-500/10 text-violet-200 hover:bg-violet-500/20 transition text-xs font-bold whitespace-nowrap">
+            <i class="fa-solid fa-wand-magic-sparkles text-violet-300" aria-hidden="true"></i><span>Gemini</span>
+          </a>
+          <a href="https://chatgpt.com/" target="_blank" rel="noopener noreferrer" title="Abrir ChatGPT en otra pestaña" aria-label="Abrir ChatGPT en otra pestaña" class="inline-flex items-center justify-center gap-1.5 px-2.5 py-2 rounded-xl border border-emerald-500/40 bg-emerald-500/10 text-emerald-200 hover:bg-emerald-500/20 transition text-xs font-bold whitespace-nowrap">
+            <i class="fa-solid fa-robot text-emerald-300" aria-hidden="true"></i><span>ChatGPT</span>
+          </a>
+        </div>
       </div>
 
       <!-- Buscador exacto tipo BUSCARV: adicional, no altera filtros existentes -->
