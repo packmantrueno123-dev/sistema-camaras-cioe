@@ -1885,7 +1885,7 @@ body.cioe-background-active #ocurrenciasMenu {backdrop-filter:blur(12px);-webkit
             <label for="cioeVinylColor">Color del disco</label>
             <div class="cioe-vinyl-color-row"><input type="color" id="cioeVinylColor" value="#1ed760" oninput="cioeVinylSetColor(this.value)"><button type="button" onclick="cioeVinylSetColor('#1ed760')">Original</button><button type="button" onclick="cioeVinylSetColor('#a855f7')">Morado</button><button type="button" onclick="cioeVinylSetColor('#38bdf8')">Azul</button></div>
             <label for="cioeVinylEffect">Efectos alrededor</label>
-            <select id="cioeVinylEffect" onchange="cioeVinylSetEffect(this.value)"><option value="none">Sin efectos</option><option value="hearts">❤️ Corazones</option><option value="notes">🎵 Notas musicales</option><option value="both">❤️🎵 Ambos</option></select>
+            <select id="cioeVinylEffect" onchange="cioeVinylSetEffect(this.value)"><option value="none">Sin efectos</option><option value="hearts">❤️ Corazones</option><option value="notes">🎵 Notas musicales</option><option value="both">❤️🎵 Ambos</option><option value="kitty">🎀🐱 Gatita con lazo</option><option value="kuromi">🖤😈 Kuromi (emojis)</option><option value="spider">🕷️🕸️ Arañas</option><option value="stars">✨🌟 Estrellas</option><option value="butterflies">🦋🌸 Mariposas y flores</option><option value="cute">💖🌈 Emojis tiernos</option><option value="all">🎉 Todos mezclados</option></select>
             <label for="cioeVinylSpeed">Velocidad del disco</label>
             <select id="cioeVinylSpeed" onchange="cioeVinylSetSpeed(this.value)"><option value="slow">Lenta</option><option value="normal">Normal</option><option value="fast">Rápida</option></select>
             <p>Los efectos son visuales; el disco seguirá el estado del reproductor cuando Spotify lo informe.</p>
@@ -10580,15 +10580,16 @@ window.addEventListener('load',function(){
  function save(){try{localStorage.setItem(STORE,JSON.stringify(cfg));}catch(e){}}
  function render(){
    if(!colors.test(cfg.color))cfg.color='#1ed760';
-   if(!['none','hearts','notes','both'].includes(cfg.effect))cfg.effect='none';
+   if(!['none','hearts','notes','both','kitty','kuromi','spider','stars','butterflies','cute','all'].includes(cfg.effect))cfg.effect='none';
    if(!speeds[cfg.speed])cfg.speed='normal';
    widget.style.setProperty('--cioe-vinyl-accent',cfg.color);
    widget.style.setProperty('--cioe-vinyl-speed',speeds[cfg.speed]);
    colorInput.value=cfg.color;effectInput.value=cfg.effect;speedInput.value=cfg.speed;
    layer.replaceChildren();
-   const glyphs=cfg.effect==='hearts'?['❤️']:cfg.effect==='notes'?['♫','♪','🎵']:cfg.effect==='both'?['❤️','♫','🎵']:[];
+   const effectGlyphs={hearts:['❤️','💗','💕'],notes:['♫','♪','🎵','🎶'],both:['❤️','♫','🎵','💕'],kitty:['🐱','🎀','🤍','💗'],kuromi:['🖤','😈','💜','🎀'],spider:['🕷️','🕸️','🕷️','✨'],stars:['✨','⭐','🌟','💫'],butterflies:['🦋','🌸','🌷','✨'],cute:['💖','🌈','🍓','🧸','🎀'],all:['🐱','🎀','🖤','😈','🕷️','🕸️','🎵','❤️','✨','🦋']};
+   const glyphs=effectGlyphs[cfg.effect]||[];
    if(!glyphs.length)return;
-   for(let i=0;i<9;i++){
+   for(let i=0;i<12;i++){
      const el=document.createElement('span');el.className='cioe-vinyl-particle';
      el.textContent=glyphs[i%glyphs.length];
      el.style.setProperty('--particle-left',(9+(i*11)%82)+'%');
