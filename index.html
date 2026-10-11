@@ -245,6 +245,7 @@
 #cioeSpotifyMini .spotify-panel-top .cioe-vinyl-top-actions>button{position:relative!important;display:inline-flex!important;flex:0 0 auto!important;align-items:center;justify-content:center;white-space:nowrap!important;width:auto!important;min-width:max-content!important;margin:0!important;padding:7px 12px!important;line-height:1.2!important;z-index:1}
 #cioeSpotifyMini .spotify-panel-top #cioeSpotifyCollapseBtn{z-index:2}
 @media(max-width:600px){#cioeSpotifyMini .spotify-panel-top .cioe-vinyl-top-actions{gap:6px!important}#cioeSpotifyMini .spotify-panel-top .cioe-vinyl-top-actions>button{padding:6px 9px!important}#cioeSpotifyMini .spotify-panel-top #cioeVinylSettingsBtn{font-size:0!important}#cioeSpotifyMini .spotify-panel-top #cioeVinylSettingsBtn i{font-size:13px!important}}
+.cioe-turno-destacado{outline:3px solid #34d399!important;outline-offset:-3px;background:rgba(16,185,129,.23)!important;transition:background .3s ease;}
 </style>
 <style id="cioeThemeStyles">
 :root{--cioe-bg:#030712;--cioe-panel:#0a0f1d;--cioe-accent:#06b6d4;--cioe-border:#1e293b}
@@ -2268,7 +2269,7 @@ body.cioe-background-active #ocurrenciasMenu {backdrop-filter:blur(12px);-webkit
       <div class="bg-[#0a0f1d] border border-slate-800 rounded-2xl overflow-hidden">
         <div class="p-4 border-b border-slate-800 flex flex-col md:flex-row md:items-center gap-3 justify-between">
           <div class="flex items-center gap-3"><h3 class="font-black text-white">REGISTROS DEL TURNO</h3><span id="turnoCount" class="text-xs font-bold text-fuchsia-400">0 cámaras</span></div>
-          <div class="flex items-center gap-2 w-full md:w-auto"><div class="relative flex-1 md:w-80"><i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-cyan-400"></i><input id="turnoBuscarCamara" type="search" oninput="renderRegistrosTurno()" placeholder="Buscar cámara N°, estación, ubicación..." aria-label="Buscar cámaras en el turno seleccionado" class="w-full bg-[#030712] border border-cyan-800/70 rounded-xl py-2.5 pl-9 pr-3 text-xs text-white focus:outline-none focus:border-cyan-400" /></div><button type="button" onclick="document.getElementById('turnoBuscarCamara').value='';renderRegistrosTurno()" class="bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-xs font-bold hover:bg-slate-700" title="Limpiar búsqueda"><i class="fa-solid fa-xmark"></i></button></div>
+          <div class="flex items-center gap-2 w-full md:w-auto"><div class="relative flex-1 md:w-80"><i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-cyan-400"></i><input id="turnoBuscarCamara" type="search" oninput="renderRegistrosTurno()" placeholder="Buscar cámara N°, estación, ubicación..." aria-label="Buscar cámaras en el turno seleccionado" class="w-full bg-[#030712] border border-cyan-800/70 rounded-xl py-2.5 pl-9 pr-3 text-xs text-white focus:outline-none focus:border-cyan-400" /></div><div class="relative flex items-center gap-1.5 w-full md:w-auto" title="Ir directamente a una cámara de este turno"><i class="fa-solid fa-location-crosshairs text-emerald-400 text-xs"></i><input id="turnoIrCamara" type="search" autocomplete="off" placeholder="Ir a Cámara N°..." aria-label="Ir directamente a cámara por número" oninput="cioeIrCamaraTurno(true)" class="w-full md:w-36 bg-[#030712] border border-emerald-800/70 rounded-xl py-2.5 px-3 text-xs text-white focus:outline-none focus:border-emerald-400"/></div><button type="button" onclick="document.getElementById('turnoBuscarCamara').value='';renderRegistrosTurno()" class="bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-xs font-bold hover:bg-slate-700" title="Limpiar búsqueda"><i class="fa-solid fa-xmark"></i></button></div>
         </div>
         <div class="overflow-x-auto"><table class="w-full text-[11px] min-w-[1500px]"><thead class="bg-black text-white uppercase"><tr><th class="p-3">N°</th><th class="p-3">Sistema</th><th class="p-3">Cámara</th><th class="p-3">Estado</th><th class="p-3">Ubicación</th><th class="p-3">Zona / Sector</th><th class="p-3">Detalle</th><th class="p-3">N° Perifoneo</th><th class="p-3">Estado Perifoneo</th><th class="p-3">Operador</th><th class="p-3 text-center">Acciones</th></tr></thead><tbody id="turnoRegistrosBody"></tbody></table></div>
       </div>
@@ -7527,7 +7528,7 @@ body.cioe-background-active #ocurrenciasMenu {backdrop-filter:blur(12px);-webkit
       const permisoTurno = {'MAÑANA':'turno_manana','TARDE':'turno_tarde','NOCHE':'turno_noche'}[turno];
       if (permisoTurno && !hasPermission(permisoTurno)) { permissionDenied('acceder al TURNO '+turno); return; }
       if(turno==='MAÑANA') migrarEstacionesParesAManana();
-      turnoCreadorActual=turno; const busquedaTurno=document.getElementById('turnoBuscarCamara'); if(busquedaTurno)busquedaTurno.value=''; document.getElementById('turnoActualLabel').textContent='TURNO '+turno; document.getElementById('turnoSelectorPanel').classList.add('hidden'); document.getElementById('turnoTrabajoPanel').classList.remove('hidden'); limpiarFormularioTurno(); renderRegistrosTurno();
+      turnoCreadorActual=turno; const busquedaTurno=document.getElementById('turnoBuscarCamara'); if(busquedaTurno)busquedaTurno.value=''; const saltoTurno=document.getElementById('turnoIrCamara');if(saltoTurno)saltoTurno.value=''; document.getElementById('turnoActualLabel').textContent='TURNO '+turno; document.getElementById('turnoSelectorPanel').classList.add('hidden'); document.getElementById('turnoTrabajoPanel').classList.remove('hidden'); limpiarFormularioTurno(); renderRegistrosTurno();
     }
     function cambiarTurnoCreador(){ turnoCreadorActual=''; document.getElementById('turnoSelectorPanel').classList.remove('hidden'); document.getElementById('turnoTrabajoPanel').classList.add('hidden'); }
     function limpiarFormularioTurno(){ document.getElementById('turnoEditId').value=''; document.getElementById('turnoTipo').value='ESTACIÓN'; document.getElementById('turnoNombre').value=''; document.getElementById('turnoResponsable').value=''; }
@@ -7573,6 +7574,23 @@ body.cioe-background-active #ocurrenciasMenu {backdrop-filter:blur(12px);-webkit
     }
     migrarEstacionesParesAManana();
     document.addEventListener('DOMContentLoaded',()=>{ try { migrarEstacionesParesAManana(); } catch(e) { console.warn('Migración EP:',e); } });
+    function cioeIrCamaraTurno(silencioso=false){
+      const input=document.getElementById('turnoIrCamara');
+      const raw=(input?.value||'').trim();if(!raw){input?.focus();return;}
+      const normalize=v=>{const t=String(v||'').toUpperCase().trim().replace(/C[ÁA]MARA\s*(?:N[°º.]*)?\s*[-:#]?\s*/g,'').replace(/^0+(?=\d)/,'');return t;};
+      const target=normalize(raw);
+      const grupos=getRegistrosTurno().filter(g=>g.turno===turnoCreadorActual);
+      let match=null;
+      for(const g of grupos){for(const c of (g.camaras||[])){
+        const values=[c.camara,c.numeroOrden];
+        if(values.some(v=>v!==undefined&&v!==null&&String(v).trim()!==''&&normalize(v)===target)){match={g,c};break;}
+      }if(match)break;}
+      if(!match){if(!silencioso)alert('No se encontró la cámara '+raw+' en el turno '+turnoCreadorActual+'.');return;}
+      const filtro=document.getElementById('turnoBuscarCamara');if(filtro)filtro.value='';
+      renderRegistrosTurno();
+      const row=document.querySelector('[data-turno-camara-id="'+match.c.id+'"][data-turno-grupo-id="'+match.g.id+'"]');
+      if(row){row.scrollIntoView({behavior:'smooth',block:'center'});row.classList.add('cioe-turno-destacado');setTimeout(()=>row.classList.remove('cioe-turno-destacado'),3500);}
+    }
     function renderRegistrosTurno(){
       const body=document.getElementById('turnoRegistrosBody'); if(!body)return;
       const grupos=getRegistrosTurno().filter(x=>x.turno===turnoCreadorActual);
@@ -7589,7 +7607,7 @@ body.cioe-background-active #ocurrenciasMenu {backdrop-filter:blur(12px);-webkit
         cams.forEach((c,i)=>{
           const estadoClass=c.estado==='OPERATIVA'?'text-emerald-400':c.estado==='MANTENIMIENTO'?'text-blue-400':'text-rose-400';
           const perClass=c.estadoPerifoneo==='OPERATIVO'?'text-emerald-400':c.estadoPerifoneo==='MANTENIMIENTO'?'text-blue-400':'text-rose-400';
-          html += `<tr class="border-b border-slate-800 hover:bg-slate-900/60"><td class="p-3">${i+1}</td><td class="p-3 font-bold">${escapeHtml(c.sistema||'—')}</td><td class="p-3 font-black">${escapeHtml(c.camara||'—')}</td><td class="p-3 font-black ${estadoClass}">${escapeHtml(c.estado||'—')}</td><td class="p-3">${escapeHtml(c.ubicacion||'—')}</td><td class="p-3">${escapeHtml(c.zona||'—')}</td><td class="p-3"><button onclick="verDetalleCamaraTurno(${g.id},${c.id})" class="bg-slate-800 border border-slate-700 px-3 py-2 rounded-lg text-amber-300 font-black"><i class="fa-solid fa-eye mr-1"></i>VER DETALLE</button></td><td class="p-3 font-black text-amber-300">${escapeHtml(c.perifoneo||'—')}</td><td class="p-3 font-black ${perClass}">${escapeHtml(c.estadoPerifoneo||'—')}</td><td class="p-3 font-bold">${escapeHtml(c.operador||g.responsable||'—')}</td><td class="p-3 text-center whitespace-nowrap"><button onclick="editarCamaraTurno(${g.id},${c.id})" class="text-sky-400 p-2"><i class="fa-solid fa-pen-to-square"></i></button><button onclick="eliminarCamaraTurno(${g.id},${c.id})" class="text-rose-400 p-2"><i class="fa-solid fa-trash"></i></button></td></tr>`;
+          html += `<tr data-turno-camara-id="${c.id}" data-turno-grupo-id="${g.id}" class="border-b border-slate-800 hover:bg-slate-900/60"><td class="p-3">${i+1}</td><td class="p-3 font-bold">${escapeHtml(c.sistema||'—')}</td><td class="p-3 font-black">${escapeHtml(c.camara||'—')}</td><td class="p-3 font-black ${estadoClass}">${escapeHtml(c.estado||'—')}</td><td class="p-3">${escapeHtml(c.ubicacion||'—')}</td><td class="p-3">${escapeHtml(c.zona||'—')}</td><td class="p-3"><button onclick="verDetalleCamaraTurno(${g.id},${c.id})" class="bg-slate-800 border border-slate-700 px-3 py-2 rounded-lg text-amber-300 font-black"><i class="fa-solid fa-eye mr-1"></i>VER DETALLE</button></td><td class="p-3 font-black text-amber-300">${escapeHtml(c.perifoneo||'—')}</td><td class="p-3 font-black ${perClass}">${escapeHtml(c.estadoPerifoneo||'—')}</td><td class="p-3 font-bold">${escapeHtml(c.operador||g.responsable||'—')}</td><td class="p-3 text-center whitespace-nowrap"><button onclick="editarCamaraTurno(${g.id},${c.id})" class="text-sky-400 p-2"><i class="fa-solid fa-pen-to-square"></i></button><button onclick="eliminarCamaraTurno(${g.id},${c.id})" class="text-rose-400 p-2"><i class="fa-solid fa-trash"></i></button></td></tr>`;
         });
       });
       body.innerHTML=html || '<tr><td colspan="11" class="p-8 text-center text-slate-500">Todavía no hay Estaciones/Pares en este turno.</td></tr>';
@@ -10594,7 +10612,7 @@ window.addEventListener('load',function(){
    widget.style.setProperty('--cioe-vinyl-speed',speeds[cfg.speed]);
    colorInput.value=cfg.color;effectInput.value=cfg.effect;speedInput.value=cfg.speed;
    layer.replaceChildren();
-   const effectGlyphs={hearts:['❤️','💗','💕'],notes:['♫','♪','🎵','🎶'],both:['❤️','♫','🎵','💕'],kitty:['🐱','🎀','🤍','💗'],kuromi:['🖤','♥️','🖤','♥️'],spider:['🕷️','🕸️','🕷️','✨'],stars:['✨','⭐','🌟','💫'],butterflies:['🦋','🌸','🌷','✨'],cute:['💖','🌈','🍓','🧸','🎀'],all:['🐱','🎀','🖤','😈','🕷️','🕸️','🎵','❤️','✨','🦋']};
+   const effectGlyphs={hearts:['❤️','💗','💕'],notes:['♫','♪','🎵','🎶'],both:['❤️','♫','🎵','💕'],kitty:['🐱','🎀','🤍','💗'],kuromi:['🖤','🖤','🖤','🖤'],spider:['🕷️','🕸️','🕷️','✨'],stars:['✨','⭐','🌟','💫'],butterflies:['🦋','🌸','🌷','✨'],cute:['💖','🌈','🍓','🧸','🎀'],all:['🐱','🎀','🖤','😈','🕷️','🕸️','🎵','❤️','✨','🦋']};
    const glyphs=effectGlyphs[cfg.effect]||[];
    if(!glyphs.length)return;
    for(let i=0;i<12;i++){
