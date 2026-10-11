@@ -8044,6 +8044,7 @@ body.cioe-background-active #ocurrenciasMenu {backdrop-filter:blur(12px);-webkit
  function refresh(){
    const wrap=document.getElementById('headerPixelArtWrap'),btn=document.getElementById('headerAnimationBtn'),txt=document.getElementById('headerAnimationText'),on=enabled();
    if(wrap)wrap.style.display=on?'':'none';
+   if(!on){const ball=document.getElementById('headerPetBall');if(ball){ball.getAnimations().forEach(a=>a.cancel());ball.style.display='none';}}
    if(txt)txt.textContent=on?'ON':'OFF';
    if(btn){btn.classList.toggle('bg-emerald-600',on);btn.classList.toggle('bg-rose-600',!on)}
  }
@@ -8290,6 +8291,7 @@ document.addEventListener('DOMContentLoaded', function(){
     ball=document.createElement('div'); ball.id='headerPetBall'; wrap.appendChild(ball); return ball;
   }
   window.throwPetBall=function(){
+    if(localStorage.getItem('cioe_throw_ball_button_enabled_v1')==='0') return;
     if(localStorage.getItem('cioe_header_animation_enabled_v1')==='0') return;
     const active=Object.values(PETS).filter(p=>petEnabled(p) && p.el);
     if(!active.length) return;
@@ -9066,7 +9068,16 @@ document.addEventListener('DOMContentLoaded', function(){
   window.applyThrowBallButtonSetting=function(){
     const on=isOn();
     const headerBtn=document.getElementById('headerThrowBallBtn');
-    if(headerBtn) headerBtn.style.display=on?'':'none';
+    if(headerBtn){
+      // La regla del botón usa display:inline-flex!important; respetar la prioridad.
+      headerBtn.style.setProperty('display',on?'inline-flex':'none','important');
+      headerBtn.setAttribute('aria-hidden',String(!on));
+      headerBtn.tabIndex=on?0:-1;
+    }
+    if(!on){
+      const flyingBall=document.getElementById('headerPetBall');
+      if(flyingBall){flyingBall.getAnimations().forEach(a=>a.cancel());flyingBall.style.display='none';}
+    }
     const btn=document.getElementById('throwBallToggleBtn');
     const label=document.getElementById('throwBallToggleText');
     if(btn){
