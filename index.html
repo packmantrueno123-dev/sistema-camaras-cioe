@@ -2372,7 +2372,6 @@ function cioeTogglePasswordVisibility(){
     <header class="bg-[#0a0f1d] border border-fuchsia-500/30 rounded-2xl p-4 shadow-xl flex flex-col lg:flex-row justify-between items-center gap-4 w-full">
       <div class="flex items-center gap-3"><div class="p-3 bg-fuchsia-600 rounded-xl text-white"><i class="fa-solid fa-calendar-day text-xl"></i></div><div><h1 class="text-xl font-black text-white uppercase">CREACIÓN DE ESTACIONES / PARES POR TURNO</h1><p class="text-xs text-slate-400">Selecciona tu turno y crea Estaciones/Pares con sus cámaras y operador.</p></div></div>
       <button type="button" onclick="cioeToggleNavigation(event)" class="bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2"><i class="fa-solid fa-compass text-amber-400"></i> Ir a otras opciones <i class="fa-solid fa-chevron-down text-[10px]"></i></button>
-      </div>
     </header>
     <section id="turnoSelectorPanel" class="bg-[#0a0f1d] border border-slate-800 rounded-2xl p-6 shadow-xl">
       <div class="text-center mb-6"><h2 class="text-lg font-black text-white">¿QUÉ TURNO ERES?</h2><p class="text-xs text-slate-400 mt-1">Escoge el turno para continuar.</p></div>
@@ -2383,10 +2382,7 @@ function cioeTogglePasswordVisibility(){
       </div>
     </section>
     <section id="turnoTrabajoPanel" class="hidden space-y-4">
-      <div class="flex flex-wrap justify-end items-center gap-2 px-1">
-        <button type="button" id="cioeTurnoIndicadoresBtn" onclick="cioeToggleTurnoIndicadores()" class="bg-indigo-700 hover:bg-indigo-600 text-white border border-indigo-500/60 px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2"><i class="fa-solid fa-camera"></i> Indicadores de cámaras <i class="fa-solid fa-chevron-down text-[10px]"></i></button>
-        <button type="button" onclick="cioeTogglePanelOperadoresTurno()" class="bg-fuchsia-700 hover:bg-fuchsia-600 text-white border border-fuchsia-500/60 px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2"><i class="fa-solid fa-user-group"></i> Operadores y apoyo <i class="fa-solid fa-chevron-down text-[10px]"></i></button>
-</div>
+
     <section id="cioeTurnoIndicadoresPanel" class="hidden bg-[#0a0f1d] border border-indigo-500/40 rounded-2xl p-4 shadow-xl space-y-3">
       <div class="flex justify-between items-center gap-3"><div><h2 class="font-black text-white">Indicadores visuales por cámara</h2><p class="text-xs text-slate-400">Selecciona las cámaras que presentan cada incidencia. Se sincronizan para todos los usuarios.</p></div><button type="button" onclick="cioeToggleTurnoIndicadores(false)" class="text-slate-300 p-2" aria-label="Cerrar"><i class="fa-solid fa-xmark"></i></button></div>
       <div id="cioeTurnoIndicadoresGrid" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3"></div>
@@ -2407,7 +2403,10 @@ function cioeTogglePasswordVisibility(){
       <p class="text-[11px] text-slate-500">Las asignaciones se guardan en este navegador. Para compartirlas entre computadoras es necesaria sincronización con el servidor.</p>
     </section>
 
-      <div class="bg-[#0a0f1d] border border-fuchsia-500/30 rounded-2xl p-4 flex flex-col md:flex-row justify-between items-center gap-3"><div><span class="text-[10px] text-slate-500 font-bold uppercase">Turno seleccionado</span><div id="turnoActualLabel" class="text-lg font-black text-fuchsia-400">—</div></div><button onclick="cambiarTurnoCreador()" class="bg-slate-800 hover:bg-slate-700 border border-slate-700 px-4 py-2 rounded-xl text-xs font-bold"><i class="fa-solid fa-right-left mr-2 text-fuchsia-400"></i>Cambiar turno</button></div>
+      <div class="bg-[#0a0f1d] border border-fuchsia-500/30 rounded-2xl p-4 flex flex-col md:flex-row justify-between items-center gap-3"><div><span class="text-[10px] text-slate-500 font-bold uppercase">Turno seleccionado</span><div id="turnoActualLabel" class="text-lg font-black text-fuchsia-400">—</div></div><div class="flex flex-wrap items-center justify-end gap-2">      
+        <button type="button" id="cioeTurnoIndicadoresBtn" onclick="cioeToggleTurnoIndicadores()" class="bg-indigo-700 hover:bg-indigo-600 text-white border border-indigo-500/60 px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2"><i class="fa-solid fa-camera"></i> Indicadores de cámaras <i class="fa-solid fa-chevron-down text-[10px]"></i></button>
+        <button type="button" onclick="cioeTogglePanelOperadoresTurno()" class="bg-fuchsia-700 hover:bg-fuchsia-600 text-white border border-fuchsia-500/60 px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2"><i class="fa-solid fa-user-group"></i> Operadores y apoyo <i class="fa-solid fa-chevron-down text-[10px]"></i></button>
+<button onclick="cambiarTurnoCreador()" class="bg-slate-800 hover:bg-slate-700 border border-slate-700 px-4 py-2 rounded-xl text-xs font-bold"><i class="fa-solid fa-right-left mr-2 text-fuchsia-400"></i>Cambiar turno</button></div></div>
       <div class="bg-[#0a0f1d] border border-slate-800 rounded-2xl p-4">
         <form onsubmit="guardarCreacionTurno(event)" class="grid grid-cols-1 md:grid-cols-4 gap-3 items-end">
           <input type="hidden" id="turnoEditId"><label class="text-xs text-slate-400">Tipo<select id="turnoTipo" class="mt-1 w-full bg-[#030712] border border-slate-700 rounded-xl p-3 text-white font-bold"><option value="ESTACIÓN">ESTACIÓN</option><option value="PAR">PAR</option></select></label>
@@ -11318,11 +11317,29 @@ window.addEventListener('load',function(){
 (function(){
 'use strict';
 const SETTINGS='cioe_background_settings_v1';
+const TRANSPARENCY_PREFIX='cioe_user_panel_transparency_v1_';
+function activeUserId(){
+ const u=typeof currentSystemUser!=='undefined'?currentSystemUser:null;
+ const raw=String(u?.username||u?.usuario||u?.name||document.getElementById('currentUserName')?.textContent||'').trim().toLowerCase();
+ return raw&&raw!=='—'?raw:'';
+}
+let transparencyOwner='';
+function syncTransparencyOwner(){
+ const id=activeUserId();if(id===transparencyOwner)return;
+ transparencyOwner=id;
+ if(!id)return;
+ try{const saved=localStorage.getItem(TRANSPARENCY_PREFIX+id);settings.transparency=saved===null?0:Math.min(85,Math.max(0,Number(saved)||0));}
+ catch(e){settings.transparency=0;}
+ apply();
+}
+window.cioeRefreshUserTransparency=syncTransparencyOwner;
+
 const PRESET='fondo-spiderman-cioe.jpg';
 let customUrl=null;
 let settings={enabled:false,mode:'preset',shade:45,transparency:0};
 try{settings={...settings,...JSON.parse(localStorage.getItem(SETTINGS)||'{}')}}catch(e){}
-function save(){try{localStorage.setItem(SETTINGS,JSON.stringify(settings))}catch(e){}}
+settings.transparency=0;
+function save(){try{const shared={...settings};delete shared.transparency;localStorage.setItem(SETTINGS,JSON.stringify(shared));const id=activeUserId();if(id)localStorage.setItem(TRANSPARENCY_PREFIX+id,String(settings.transparency||0));}catch(e){}}
 function status(message){const el=document.getElementById('cioeBgStatus');if(el)el.textContent=message;}
 function dbOpen(){
  return new Promise((resolve,reject)=>{
@@ -11404,6 +11421,9 @@ document.addEventListener('DOMContentLoaded',async function(){
   try{const blob=await dbGet();if(blob)customUrl=URL.createObjectURL(blob);}catch(e){}
  }
  apply();
+ syncTransparencyOwner();
+ const userLabel=document.getElementById('currentUserName');
+ if(userLabel)new MutationObserver(syncTransparencyOwner).observe(userLabel,{childList:true,characterData:true,subtree:true});
 });
 })();
 </script>
