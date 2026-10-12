@@ -7656,7 +7656,7 @@ body.cioe-background-active #ocurrenciasMenu {backdrop-filter:blur(12px);-webkit
     function seleccionarTurnoCreador(turno){
       const permisoTurno = {'MAÑANA':'turno_manana','TARDE':'turno_tarde','NOCHE':'turno_noche'}[turno];
       if (permisoTurno && !hasPermission(permisoTurno)) { permissionDenied('acceder al TURNO '+turno); return; }
-      if(turno==='MAÑANA') migrarEstacionesParesAManana();
+      if(turno==='MAÑANA') { migrarEstacionesParesAManana(); cioeCompletarMananaDesdeCentro(); }
       turnoCreadorActual=turno; document.getElementById('cioePanelOperadoresTurno')?.classList.add('hidden'); const busquedaTurno=document.getElementById('turnoBuscarCamara'); if(busquedaTurno)busquedaTurno.value=''; const saltoTurno=document.getElementById('turnoIrCamara');if(saltoTurno)saltoTurno.value=''; document.getElementById('turnoActualLabel').textContent='TURNO '+turno; document.getElementById('turnoSelectorPanel').classList.add('hidden'); document.getElementById('turnoTrabajoPanel').classList.remove('hidden'); limpiarFormularioTurno(); renderRegistrosTurno();
     }
     function cambiarTurnoCreador(){ document.getElementById('cioePanelOperadoresTurno')?.classList.add('hidden'); turnoCreadorActual=''; document.getElementById('turnoSelectorPanel').classList.remove('hidden'); document.getElementById('turnoTrabajoPanel').classList.add('hidden'); }
@@ -7701,7 +7701,48 @@ body.cioe-background-active #ocurrenciasMenu {backdrop-filter:blur(12px);-webkit
       setRegistrosTurno(regs);
       localStorage.setItem(key,'ok');
     }
+    // Completar TURNO MAÑANA con las cámaras del Centro de Control.
+    // Conserva ediciones, operadores, cámaras existentes y otros turnos.
+    function cioeCompletarMananaDesdeCentro(){
+      if(!Array.isArray(cameras) || !cameras.length) return;
+      const regs=getRegistrosTurno();
+      const normal=v=>String(v??'').trim().toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/\s+/g,' ');
+      const numCam=v=>{const m=normal(v).match(/^(?:CAMARA\s*[-:#]?\s*)?(\d+)$/);return m?String(Number(m[1])):null;};
+      const nombreGrupo=v=>{
+        const texto=normal(v);
+        const m=texto.match(/^(ESTACION|PAR)\s*[-:#]?\s*(.+)$/);
+        return m?{tipo:m[1]==='PAR'?'PAR':'ESTACIÓN',nombre:m[2].trim()}:null;
+      };
+      const clave=(tipo,nombre)=>normal(tipo)+'|'+normal(nombre);
+      const porGrupo=new Map(regs.filter(g=>g.turno==='MAÑANA').map(g=>[clave(g.tipo,g.nombre),g]));
+      // Evitar crear la misma cámara dos veces en el turno.
+      const presentes=new Set();
+      regs.filter(g=>g.turno==='MAÑANA').forEach(g=>(g.camaras||[]).forEach(c=>{const n=numCam(c.camara);if(n!==null)presentes.add(n);}));
+      let nextId=Math.max(Date.now(),...regs.map(g=>Number(g.id)||0))+1;
+      let cambios=0;
+      cameras.forEach(cam=>{
+        const n=numCam(cam.camara);
+        const destino=nombreGrupo(cam.estacion);
+        if(n===null||!destino||presentes.has(n))return;
+        const k=clave(destino.tipo,destino.nombre);
+        let g=porGrupo.get(k);
+        if(!g){g={id:nextId++,turno:'MAÑANA',tipo:destino.tipo,nombre:destino.nombre,responsable:'',camaras:[]};regs.push(g);porGrupo.set(k,g);}
+        if(!Array.isArray(g.camaras))g.camaras=[];
+        g.camaras.push({id:nextId++,sistema:cam.sistema||'',camara:n,estado:cam.status||cam.estado||'OPERATIVA',ubicacion:cam.ubicacion||'',zona:cam.zona||'',detalle:cam.details||cam.detalle||'',perifoneo:cam.perifoneo||'',estadoPerifoneo:cam.estadoPerifoneo||'INOPERATIVO',operador:g.responsable||'',numeroOrden:''});
+        presentes.add(n);cambios++;
+      });
+      if(cambios)setRegistrosTurno(regs);
+    }
+    function cioeOrdenarGruposManana(grupos){
+      return grupos.sort((a,b)=>{
+        const tipoA=normalizarGrupoOrden(a.tipo),tipoB=normalizarGrupoOrden(b.tipo);
+        if(tipoA!==tipoB)return tipoA==='ESTACION'?-1:1;
+        return String(a.nombre||'').localeCompare(String(b.nombre||''),'es',{numeric:true,sensitivity:'base'});
+      });
+    }
+    function normalizarGrupoOrden(v){return String(v||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toUpperCase();}
     migrarEstacionesParesAManana();
+    cioeCompletarMananaDesdeCentro();
     document.addEventListener('DOMContentLoaded',()=>{ try { migrarEstacionesParesAManana(); } catch(e) { console.warn('Migración EP:',e); } });
     function cioeIrCamaraTurno(silencioso=false){
       const input=document.getElementById('turnoIrCamara');
@@ -7743,7 +7784,7 @@ body.cioe-background-active #ocurrenciasMenu {backdrop-filter:blur(12px);-webkit
     }
     function renderRegistrosTurno(){
       const body=document.getElementById('turnoRegistrosBody'); if(!body)return;
-      const grupos=getRegistrosTurno().filter(x=>x.turno===turnoCreadorActual);
+      const grupos=cioeOrdenarGruposManana(getRegistrosTurno().filter(x=>x.turno===turnoCreadorActual));
       const filtro=(document.getElementById('turnoBuscarCamara')?.value||'').trim().toLocaleLowerCase('es');
       const salto=(document.getElementById('turnoIrCamara')?.value||'').trim();
       let total=0, html='';
