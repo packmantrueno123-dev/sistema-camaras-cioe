@@ -1362,9 +1362,10 @@ app.put('/api/admin-view',auth,adminOnly,async(req,res)=>{
   if(!v||typeof v!=='object'||Array.isArray(v))return res.status(400).json({ok:false,error:'Configuración inválida'});
   const columns=Array.isArray(v.columns)?[...new Set(v.columns.filter(n=>Number.isInteger(n)&&n>=0&&n<12))]:[];
   const rows=Array.isArray(v.rows)?[...new Set(v.rows.filter(n=>Number.isInteger(n)&&n>0&&n<=999999))].slice(0,3000):[];
+  const stations=Array.isArray(v.stations)?[...new Set(v.stations.filter(x=>typeof x==='string').map(x=>x.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toUpperCase().trim().replace(/\s+/g,' ').replace(/^(ESTACION)\s*0+(\d+)$/,'$1 $2')).filter(x=>x.length>0&&x.length<=100))].slice(0,100):[];
   const density=['normal','compact','comfortable'].includes(v.density)?v.density:'normal';
   const font=['normal','small','large'].includes(v.font)?v.font:'normal';
-  const settings={columns,rows,density,font};
+  const settings={columns,rows,stations,density,font};
   await pool.query("UPDATE app_state SET data=jsonb_set(data,'{adminViewSettings}',$1::jsonb,true),updated_at=NOW() WHERE id=1",[JSON.stringify(settings)]);
   res.json({ok:true,settings});
  }catch(err){console.error(err);res.status(500).json({ok:false,error:'No se pudo guardar la visualización'})}
