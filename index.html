@@ -11552,5 +11552,55 @@ document.addEventListener('DOMContentLoaded',async function(){
  setInterval(()=>{refreshTurno();const b=document.getElementById('cioeTurnoIndicadoresBtn');if(b)b.classList.toggle('hidden',!allowed())},5000);
 })();
 </script>
+<script id="cioeUserIndicatorPickerFix">
+/* Selectores de cámaras para usuarios autorizados, sin modificar el panel del administrador. */
+(function(){
+ const fields=[['blur','blurCameras','Cámara borrosa'],['clean','cleanCameras','Limpieza / mantenimiento'],['intermittent','intermittentCameras','Cámara intermitente'],['rain','rainCameras','Problema por lluvia'],['power','powerCameras','Sin energía'],['fiber','fiberCameras','Corte de fibra óptica']];
+ let selected={};
+ const permitted=()=>typeof hasPermission==='function'&&hasPermission('configurar_vista_iconos')&&hasPermission('vista_indicadores')&&hasPermission('gestionar_indicadores');
+ const cameraNumber=value=>{const m=String(value||'').match(/(?:CAMARA|CÁMARA)\s*[-–#:]?\s*0*(\d+)/i)||String(value||'').match(/^0*(\d+)$/);return m?Number(m[1]):null};
+ function cameras(){const set=new Set();document.querySelectorAll('#tableBody [data-cioe-camera-indicators]').forEach(el=>{const n=cameraNumber(el.dataset.cioeCameraIndicators);if(n)set.add(n)});document.querySelectorAll('#tableBody tr').forEach(tr=>{const n=cameraNumber(tr.cells?.[0]?.textContent);if(n)set.add(n)});try{if(typeof getRegistrosTurno==='function')getRegistrosTurno().forEach(g=>(g.camaras||[]).forEach(c=>{const n=cameraNumber(c.camara);if(n)set.add(n)}))}catch(_){}return [...set].sort((a,b)=>a-b)}
+ function render(){
+  const root=document.getElementById('cioeUserIndicatorCards');if(!root)return;
+  if(!permitted())return; // El renderizador original conserva el modo de solo lectura.
+  const cfg=typeof window.cioeGlobalViewSettings==='function'?window.cioeGlobalViewSettings():{};
+  const nums=cameras();selected={};root.replaceChildren();
+  fields.forEach(([type,key,label])=>{
+   selected[key]=new Set((Array.isArray(cfg[key])?cfg[key]:[]).map(Number).filter(Number.isInteger));
+   const card=document.createElement('div');card.className='flex items-center gap-3 rounded-xl border border-slate-700 bg-slate-900/50 p-3 min-w-0';
+   const img=document.createElement('img');img.className='w-14 h-14 shrink-0 rounded-full object-cover';img.alt=label;img.src=document.querySelector('[data-cioe-icon="'+type+'"]')?.src||'';
+   const content=document.createElement('div');content.className='flex-1 min-w-0';
+   const title=document.createElement('strong');title.className='block text-xs mb-1';title.textContent=label;
+   const details=document.createElement('details');details.className='relative';
+   const summary=document.createElement('summary');summary.className='cursor-pointer bg-slate-900 border border-slate-600 rounded-lg p-2 text-xs';
+   const search=document.createElement('input');search.type='search';search.placeholder='Buscar cámara...';search.className='w-full mt-2 mb-1 p-2 bg-slate-900 border border-slate-600 rounded-lg text-xs text-white';
+   const options=document.createElement('div');options.className='max-h-44 overflow-y-auto space-y-1';
+   const update=()=>{const count=selected[key].size;summary.textContent=count?count+' cámara(s): '+[...selected[key]].slice(0,3).map(n=>'CAMARA-'+String(n).padStart(2,'0')).join(', ')+(count>3?'…':''):'Seleccionar cámaras...'};
+   const draw=()=>{options.replaceChildren();const q=search.value.trim().toLowerCase();[...new Set([...nums,...selected[key]])].sort((a,b)=>a-b).filter(n=>String(n).includes(q)||('camara-'+String(n).padStart(2,'0')).includes(q)).forEach(n=>{const row=document.createElement('label');row.className='flex items-center gap-2 cursor-pointer rounded p-1 hover:bg-slate-800 text-xs';const cb=document.createElement('input');cb.type='checkbox';cb.className='accent-violet-500';cb.checked=selected[key].has(n);cb.addEventListener('change',()=>{if(cb.checked)selected[key].add(n);else selected[key].delete(n);update()});row.append(cb,document.createTextNode('CÁMARA-'+String(n).padStart(2,'0')));options.append(row)})};
+   search.addEventListener('input',draw);details.append(summary,search,options);content.append(title,details);card.append(img,content);root.append(card);update();draw();
+  });
+  const oldBtn=document.getElementById('cioeUserIndicatorsOpenBtn');if(oldBtn)oldBtn.classList.add('hidden');
+  const hint=document.getElementById('cioeUserIndicatorPermission');if(hint)hint.textContent='Selecciona las cámaras y pulsa «Guardar configuración». Los indicadores se comparten con los demás usuarios.';
+ }
+ async function save(){
+  if(!permitted())return;
+  const msg=document.getElementById('cioeUserConfigMsg');
+  const data=Object.fromEntries(fields.map(([,key])=>[key,[...(selected[key]||[])].sort((a,b)=>a-b)]));
+  if(msg)msg.textContent='Guardando indicadores de cámaras...';
+  const r=await apiRequest('/api/admin-view',{method:'PUT',body:JSON.stringify({indicators:data})});
+  if(!r?.ok)throw new Error(r?.error||'No se pudieron guardar los indicadores');
+  if(msg)msg.textContent='Indicadores guardados correctamente para todos los usuarios.';
+  if(typeof window.cioeRefreshIndicadoresTurno==='function')window.cioeRefreshIndicadoresTurno();
+ }
+ const originalOpen=window.cioeOpenUserQuickConfig;
+ window.cioeOpenUserQuickConfig=function(...args){const result=originalOpen?.apply(this,args);if(permitted())render();return result};
+ const originalSave=window.cioeUserSaveRows;
+ window.cioeUserSaveRows=async function(...args){
+  const btn=document.querySelector('#cioeUserQuickConfigModal button[onclick="cioeUserSaveRows()"]');
+  if(btn)btn.disabled=true;
+  try{if(permitted())await save();return originalSave?.apply(this,args)}catch(err){const msg=document.getElementById('cioeUserConfigMsg');if(msg)msg.textContent='Error: '+(err.message||err);return}finally{if(btn)btn.disabled=false}
+ };
+})();
+</script>
 </body>
 </html>
