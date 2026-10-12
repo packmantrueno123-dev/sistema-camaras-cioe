@@ -11449,6 +11449,22 @@ document.addEventListener('DOMContentLoaded',async function(){
  window.saveCioeAdminViewSettings=async function(){if(!admin())return;const cols=[...document.querySelectorAll('#cioeAdminColumns [data-cioe-col]')].filter(x=>!x.checked).map(x=>Number(x.dataset.cioeCol));const value=document.getElementById('cioeAdminHiddenRows').value.trim();const parts=value?value.split(/[,;\s]+/).filter(Boolean):[];const msg=document.getElementById('cioeAdminViewMessage');if(parts.some(x=>!/^\d+$/.test(x)||Number(x)<1||Number(x)>999999)){msg.textContent='Introduce solo números de cámara positivos separados por comas.';return;}const stations=[...new Set(document.getElementById('cioeAdminHiddenStations').value.split(/[\n;,]+/).map(normalizeStation).filter(Boolean))];if(stations.length>100){msg.textContent='Máximo 100 estaciones o pares.';return;}const parseIcons=id=>{const s=document.getElementById(id).value.trim();const a=s?s.split(/[,;\s]+/).filter(Boolean):[];if(a.some(x=>!/^\d+$/.test(x)||Number(x)<1||Number(x)>999999))throw Error('Escribe solo números de cámara válidos en los indicadores.');return [...new Set(a.map(Number))];};let blurCameras,cleanCameras,intermittentCameras,rainCameras,powerCameras,fiberCameras;try{blurCameras=parseIcons('cioeAdminBlurCameras');cleanCameras=parseIcons('cioeAdminCleanCameras');intermittentCameras=parseIcons('cioeAdminIntermittentCameras');rainCameras=parseIcons('cioeAdminRainCameras');powerCameras=parseIcons('cioeAdminPowerCameras');fiberCameras=parseIcons('cioeAdminFiberCameras');}catch(e){msg.textContent=e.message;return;}const cfg={columns:cols,rows:[...new Set(parts.map(Number))],stations,blurCameras,cleanCameras,intermittentCameras,rainCameras,powerCameras,fiberCameras,density:document.getElementById('cioeAdminDensity').value,font:document.getElementById('cioeAdminFont').value};msg.textContent='Guardando configuración para todos los usuarios...';try{const response=await apiRequest('/api/admin-view',{method:'PUT',body:JSON.stringify({settings:cfg})});globalSettings=response.settings||cfg;apply();refreshCounters();window.closeCioeAdminViewSettings();}catch(e){msg.textContent='No se pudo guardar en el servidor: '+(e.message||'Error');}};
  window.resetCioeAdminViewSettings=async function(){if(!admin())return;try{const response=await apiRequest('/api/admin-view',{method:'PUT',body:JSON.stringify({settings:defaults()})});globalSettings=response.settings||defaults();apply();refreshCounters();window.openCioeAdminViewSettings();}catch(e){document.getElementById('cioeAdminViewMessage').textContent='No se pudo restablecer en el servidor.';}};
  window.cioeGlobalViewSettings=()=>load();
+ // Aplica inmediatamente la configuración que el servidor acaba de confirmar.
+ window.cioeApplyConfirmedIndicators=function(settings){
+   if(!settings || typeof settings!=='object')return;
+   globalSettings={...load(),...settings};
+   apply();
+   document.querySelectorAll('[data-cioe-camera-indicators]').forEach(el=>{
+     if(typeof window.cioeCameraIndicators==='function'){
+       el.innerHTML=window.cioeCameraIndicators(el.dataset.cioeCameraIndicators);
+     }
+   });
+   document.querySelectorAll('[data-cioe-turno-icons]').forEach(el=>{
+     if(typeof window.cioeCameraIndicators==='function'){
+       el.innerHTML=window.cioeCameraIndicators(el.dataset.cioeTurnoIcons);
+     }
+   });
+ };
  window.cioeVisibleCamera=visibleCamera;
  async function refreshGlobalSettings(){if(!getApiToken()){globalSettings=null;apply();return;}try{const r=await apiRequest('/api/admin-view');globalSettings=r.settings||defaults();apply();}catch(e){console.warn('No se pudo sincronizar la vista global',e);}}
  setInterval(refreshGlobalSettings,20000);
@@ -11589,16 +11605,32 @@ document.addEventListener('DOMContentLoaded',async function(){
   if(msg)msg.textContent='Guardando indicadores de cámaras...';
   const r=await apiRequest('/api/admin-view',{method:'PUT',body:JSON.stringify({indicators:data})});
   if(!r?.ok)throw new Error(r?.error||'No se pudieron guardar los indicadores');
-  if(msg)msg.textContent='Indicadores guardados correctamente para todos los usuarios.';
-  if(typeof window.cioeRefreshIndicadoresTurno==='function')window.cioeRefreshIndicadoresTurno();
+  // Evita esperar el siguiente ciclo de sincronización o una segunda petición GET.
+  if(typeof window.cioeApplyConfirmedIndicators==='function'){
+    window.cioeApplyConfirmedIndicators(r.settings||data);
+  }
+  if(msg)msg.textContent='✓ Indicadores guardados y actualizados.';
+
  }
  const originalOpen=window.cioeOpenUserQuickConfig;
  window.cioeOpenUserQuickConfig=function(...args){const result=originalOpen?.apply(this,args);if(permitted())render();return result};
  const originalSave=window.cioeUserSaveRows;
  window.cioeUserSaveRows=async function(...args){
   const btn=document.querySelector('#cioeUserQuickConfigModal button[onclick="cioeUserSaveRows()"]');
-  if(btn)btn.disabled=true;
-  try{if(permitted())await save();return originalSave?.apply(this,args)}catch(err){const msg=document.getElementById('cioeUserConfigMsg');if(msg)msg.textContent='Error: '+(err.message||err);return}finally{if(btn)btn.disabled=false}
+  if(btn){btn.disabled=true;btn.dataset.originalHtml=btn.innerHTML;btn.innerHTML='<i class="fa-solid fa-spinner fa-spin mr-1"></i> Guardando...';}
+  try{
+    // La vista personal se aplica de inmediato; los indicadores compartidos
+    // se muestran como guardados únicamente tras confirmación de PostgreSQL.
+    const result=originalSave?.apply(this,args);
+    if(permitted())await save();
+    return result;
+  }catch(err){
+    const msg=document.getElementById('cioeUserConfigMsg');
+    if(msg)msg.textContent='Error al guardar indicadores: '+(err.message||err);
+    return;
+  }finally{
+    if(btn){btn.disabled=false;btn.innerHTML=btn.dataset.originalHtml||'<i class="fa-solid fa-floppy-disk mr-1"></i> Guardar configuración';delete btn.dataset.originalHtml;}
+  }
  };
 })();
 </script>
