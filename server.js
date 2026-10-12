@@ -772,7 +772,7 @@ app.put("/api/state", auth, async (req, res) => {
 
     const q = await pool.query(
       `UPDATE app_state
-       SET data=$1::jsonb,
+       SET data=jsonb_set($1::jsonb,'{adminViewSettings}',COALESCE(data->'adminViewSettings','{}'::jsonb),true),
            updated_at=NOW()
        WHERE id=1
        RETURNING updated_at`,
@@ -1349,6 +1349,25 @@ app.get('/api/spotify/now-playing',auth,async(req,res)=>{
   const d=await r.json();const item=d.item;
   res.json({ok:true,connected:true,track:item?{name:item.name,artist:(item.artists||[]).map(a=>a.name).join(', '),image:item.album?.images?.[0]?.url||null,isPlaying:!!d.is_playing}:null});
  }catch(e){console.error('Spotify:',e.message);res.status(503).json({ok:false,error:'Spotify temporalmente no disponible'})}
+});
+
+// Preferencias globales de visualización. Solo el administrador puede modificarlas.
+app.get('/api/admin-view',auth,async(req,res)=>{
+ try{const q=await pool.query("SELECT data FROM app_state WHERE id=1");res.json({ok:true,settings:q.rows[0]?.data?.adminViewSettings||{}})}
+ catch(err){console.error(err);res.status(500).json({ok:false,error:'No se pudo consultar la visualización'})}
+});
+app.put('/api/admin-view',auth,adminOnly,async(req,res)=>{
+ try{
+  const v=req.body?.settings;
+  if(!v||typeof v!=='object'||Array.isArray(v))return res.status(400).json({ok:false,error:'Configuración inválida'});
+  const columns=Array.isArray(v.columns)?[...new Set(v.columns.filter(n=>Number.isInteger(n)&&n>=0&&n<12))]:[];
+  const rows=Array.isArray(v.rows)?[...new Set(v.rows.filter(n=>Number.isInteger(n)&&n>0&&n<=999999))].slice(0,3000):[];
+  const density=['normal','compact','comfortable'].includes(v.density)?v.density:'normal';
+  const font=['normal','small','large'].includes(v.font)?v.font:'normal';
+  const settings={columns,rows,density,font};
+  await pool.query("UPDATE app_state SET data=jsonb_set(data,'{adminViewSettings}',$1::jsonb,true),updated_at=NOW() WHERE id=1",[JSON.stringify(settings)]);
+  res.json({ok:true,settings});
+ }catch(err){console.error(err);res.status(500).json({ok:false,error:'No se pudo guardar la visualización'})}
 });
 
 // ======================================================
