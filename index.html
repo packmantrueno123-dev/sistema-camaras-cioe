@@ -6557,6 +6557,7 @@ function cioeTogglePasswordVisibility(){
 
     const PERMISSION_DEFS = [
       // CENTRO DE CONTROL
+      ["configurar_vista_iconos", "Configurar vista e iconos", "Personalizar columnas, filas y cámaras visibles en su propia vista", "fa-sliders", "Centro de Control"],
       ["ver_centro_control", "Ver Centro de Control", "Acceso al panel principal y listado general", "fa-gauge-high", "Centro de Control"],
       ["cambiar_estado", "Cambiar estado", "OPERATIVA / INOPERATIVA / MANTENIMIENTO", "fa-arrows-rotate", "Centro de Control"],
       ["agregar_camara", "Añadir / crear cámaras", "Crear cámaras y nuevos registros generales", "fa-circle-plus", "Centro de Control"],
@@ -6621,6 +6622,7 @@ function cioeTogglePasswordVisibility(){
     function hasPermission(key) {
       if (!currentSystemUser) return false;
       if (isAdminUser()) return true;
+      if (key === "configurar_vista_iconos") return currentSystemUser.permissions?.[key] === true;
       return currentSystemUser.permissions?.[key] !== false;
     }
 
@@ -7903,6 +7905,20 @@ function cioeTogglePasswordVisibility(){
     // ===== CREACIÓN DE ESTACIONES / PARES POR TURNO =====
     const TURNO_CREACION_KEY = 'cioe_creacion_estaciones_pares_turno_v2';
     let turnoCreadorActual = '';
+    // Registro persistente de estaciones eliminadas por turno: evita que la sincronización las regenere.
+    const CIOE_TURNO_DELETED_KEY='cioe_turno_estaciones_eliminadas_v1';
+    function cioeTurnoDeletedKey(turno,tipo,nombre){
+      const n=v=>String(v||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').trim().toUpperCase().replace(/\s+/g,' ');
+      return [n(turno),n(tipo),n(nombre)].join('|');
+    }
+    function cioeTurnoDeletedSet(){try{return new Set(JSON.parse(localStorage.getItem(CIOE_TURNO_DELETED_KEY)||'[]'));}catch(_){return new Set();}}
+    function cioeTurnoIsDeleted(turno,tipo,nombre){return cioeTurnoDeletedSet().has(cioeTurnoDeletedKey(turno,tipo,nombre));}
+    function cioeTurnoMarkDeleted(turno,tipo,nombre,deleted){
+      const set=cioeTurnoDeletedSet(),key=cioeTurnoDeletedKey(turno,tipo,nombre);
+      if(deleted)set.add(key);else set.delete(key);
+      localStorage.setItem(CIOE_TURNO_DELETED_KEY,JSON.stringify([...set]));
+    }
+
     function getRegistrosTurno(){
       try { return JSON.parse(localStorage.getItem(TURNO_CREACION_KEY) || '[]'); } catch(e){ return []; }
     }
@@ -7929,7 +7945,7 @@ function cioeTogglePasswordVisibility(){
       const tipo=document.getElementById('turnoTipo').value;
       const responsable=document.getElementById('turnoResponsable').value.trim().toUpperCase();
       if(editId){ const x=regs.find(r=>r.id===editId); if(x){x.tipo=tipo;x.nombre=nombre;x.responsable=responsable;} }
-      else regs.push({id:Date.now(),turno:turnoCreadorActual,tipo,nombre,responsable,camaras:[]});
+      else { cioeTurnoMarkDeleted(turnoCreadorActual,tipo,nombre,false); regs.push({id:Date.now(),turno:turnoCreadorActual,tipo,nombre,responsable,camaras:[]}); }
       setRegistrosTurno(regs); limpiarFormularioTurno(); renderRegistrosTurno();
     }
     // Migración no destructiva de Estaciones/Pares al turno MAÑANA.
@@ -7952,6 +7968,7 @@ function cioeTogglePasswordVisibility(){
       grupos.forEach((filas,nombre)=>{
         const tipo=/^PAR\b/i.test(nombre)?'PAR':'ESTACIÓN';
         const nombreLimpio=nombre.replace(/^(ESTACI[ÓO]N|ESTACION|PAR)\s*/i,'').trim();
+        if(cioeTurnoIsDeleted('MAÑANA',tipo,nombreLimpio))return;
         let grupo=regs.find(x=>x.turno==='MAÑANA' && x.tipo===tipo && String(x.nombre).trim().toUpperCase()===nombreLimpio.toUpperCase());
         if(!grupo){grupo={id:nextId++,turno:'MAÑANA',tipo,nombre:nombreLimpio,responsable:'',camaras:[]};regs.push(grupo);}
         if(!Array.isArray(grupo.camaras))grupo.camaras=[];
@@ -7986,7 +8003,7 @@ function cioeTogglePasswordVisibility(){
       cameras.forEach(cam=>{
         const n=numCam(cam.camara);
         const destino=nombreGrupo(cam.estacion);
-        if(n===null||!destino||presentes.has(n))return;
+        if(n===null||!destino||presentes.has(n)||cioeTurnoIsDeleted('MAÑANA',destino.tipo,destino.nombre))return;
         const k=clave(destino.tipo,destino.nombre);
         let g=porGrupo.get(k);
         if(!g){g={id:nextId++,turno:'MAÑANA',tipo:destino.tipo,nombre:destino.nombre,responsable:'',camaras:[]};regs.push(g);porGrupo.set(k,g);}
@@ -8024,7 +8041,7 @@ function cioeTogglePasswordVisibility(){
         Object.entries(CIOE_CORRECCION_285).forEach(([n,fix])=>{
           const centro=centroPorNumero.get(n);
           const destino=parseGroup(fix.estacion);
-          if(destino)managed.set(n,{destino,centro,fix});
+          if(destino && !cioeTurnoIsDeleted('MAÑANA',destino.tipo,destino.nombre))managed.set(n,{destino,centro,fix});
         });
         if(!managed.size)return;
         // Crear un respaldo una sola vez antes de cualquier cambio.
@@ -8118,7 +8135,7 @@ function cioeTogglePasswordVisibility(){
         const cams=(!filtro||grupoCoincide?todas:todas.filter(c=>[c.camara,formatearCamaraTurno(c.camara),c.sistema,c.estado,c.ubicacion,c.zona,c.detalle,c.perifoneo,c.estadoPerifoneo,c.operador,c.numeroOrden].some(v=>String(v||'').toLocaleLowerCase('es').includes(filtro)))).filter(c=>cioeCoincideCamaraTurno(c,salto));
         if((filtro||salto)&&!cams.length)return;
         total+=cams.length;
-        html += `<tr class="bg-violet-950/70 border-y border-violet-700/50"><td colspan="11" class="p-3"><div class="flex items-center justify-between gap-3"><div class="flex items-center gap-3"><span class="font-black text-violet-300"><i class="fa-solid fa-tower-broadcast mr-2"></i>${escapeHtml(g.tipo)} ${escapeHtml(g.nombre)}</span><span class="text-slate-400">OPERADOR: <b class="text-white">${escapeHtml(g.responsable||'—')}</b></span></div><div class="flex gap-2"><button type="button" data-turno-add="${g.id}" onclick="abrirTurnoCamaraModal(${g.id}); return false;" class="bg-amber-500 hover:bg-amber-400 text-black px-3 py-2 rounded-xl font-black cursor-pointer"><i class="fa-solid fa-plus mr-1"></i>AÑADIR</button><button type="button" onclick="cioeEditarOperadorEstacion(${g.id}); return false;" class="text-sky-400 p-2" title="Editar operador de esta estación"><i class="fa-solid fa-pen-to-square"></i></button><button onclick="cioeQuitarOperadorEstacion(${g.id})" class="text-rose-400 p-2" title="Quitar operador sin borrar estación ni cámaras"><i class="fa-solid fa-trash"></i></button></div></div></td></tr>`;
+        html += `<tr class="bg-violet-950/70 border-y border-violet-700/50"><td colspan="11" class="p-3"><div class="flex items-center justify-between gap-3"><div class="flex items-center gap-3"><span class="font-black text-violet-300"><i class="fa-solid fa-tower-broadcast mr-2"></i>${escapeHtml(g.tipo)} ${escapeHtml(g.nombre)}</span><span class="text-slate-400">OPERADOR: <b class="text-white">${escapeHtml(g.responsable||'—')}</b></span></div><div class="flex gap-2"><button type="button" data-turno-add="${g.id}" onclick="abrirTurnoCamaraModal(${g.id}); return false;" class="bg-amber-500 hover:bg-amber-400 text-black px-3 py-2 rounded-xl font-black cursor-pointer"><i class="fa-solid fa-plus mr-1"></i>AÑADIR</button><button type="button" onclick="cioeEditarOperadorEstacion(${g.id}); return false;" class="text-sky-400 p-2" title="Editar operador de esta estación"><i class="fa-solid fa-pen-to-square"></i></button><button onclick="eliminarRegistroTurno(${g.id}); return false;" class="text-rose-400 p-2" title="Eliminar estación/par de este turno"><i class="fa-solid fa-trash"></i></button></div></div></td></tr>`;
         if(!cams.length){ if(!filtro&&!salto) html += `<tr><td colspan="11" class="p-5 text-center text-slate-500">Sin cámaras. Usa + AÑADIR.</td></tr>`; }
         cams.forEach((c,i)=>{
           const estadoClass=c.estado==='OPERATIVA'?'text-emerald-400':c.estado==='MANTENIMIENTO'?'text-blue-400':'text-rose-400';
@@ -8213,6 +8230,7 @@ function cioeTogglePasswordVisibility(){
       const regs=getRegistrosTurno(), grupo=regs.find(x=>String(x.id)===String(id));
       if(!grupo){alert('No se encontró esta estación o par.');return;}
       if(!confirm('¿Eliminar '+grupo.tipo+' '+grupo.nombre+' del turno '+grupo.turno+'? Se quitarán sus asignaciones de este turno, pero no se borrarán las cámaras del Centro de Control.'))return;
+      cioeTurnoMarkDeleted(grupo.turno,grupo.tipo,grupo.nombre,true);
       const nuevos=regs.filter(x=>String(x.id)!==String(id));
       setRegistrosTurno(nuevos);
       try{const a=cioeGetAsignacionesTurno();const norm=x=>String(x||'').trim().toUpperCase();localStorage.setItem(CIOE_ASIGNACIONES_KEY,JSON.stringify(a.filter(x=>!(x.turno===grupo.turno&&norm(x.estacionBase)===norm(grupo.nombre)))));}catch(e){console.warn('Asignaciones:',e);}
@@ -11439,12 +11457,12 @@ document.addEventListener('DOMContentLoaded',async function(){
   document.querySelectorAll('#tableBody tr').forEach(tr=>{const cells=[...tr.children];const n=cameraNum(cells[0]?.textContent||'');const station=norm(cells[1]?.textContent||'');tr.classList.toggle('cioe-user-hidden-row',(n!==null&&hidden.has(n))||(station&&stations.has(station)));cells.forEach((td,i)=>td.classList.toggle('cioe-user-hidden-column',cfg.columns.includes(i)));});
  }
  function renderIndicators(){const root=document.getElementById('cioeUserIndicatorCards');if(!root)return;root.replaceChildren();for(const [key,label] of indicators){const card=document.createElement('div');card.className='flex items-center gap-3 rounded-xl border border-slate-700 bg-slate-900/50 p-3';const img=document.createElement('img');img.className='w-14 h-14 rounded-full object-cover';img.alt=label;const original=document.querySelector('[data-cioe-icon="'+key+'"]');if(original?.src)img.src=original.src;const span=document.createElement('strong');span.className='text-xs';span.textContent=label;card.append(img,span);root.append(card);}const allowed=canManage();document.getElementById('cioeUserIndicatorsOpenBtn').classList.toggle('hidden',!allowed);document.getElementById('cioeUserIndicatorPermission').textContent=allowed?'Tienes permiso para gestionar los indicadores.':'Solo visualización: solicita al administrador el permiso Gestionar indicadores visuales.';}
- window.cioeOpenUserQuickConfig=()=>{if(isAdmin())return;const cfg=get();document.getElementById('cioeUserHiddenRows').value=cfg.rows.join(', ');document.getElementById('cioeUserHiddenStations').value=cfg.stations.join('\n');document.getElementById('cioeUserDensity').value=cfg.density;document.getElementById('cioeUserFont').value=cfg.font;document.getElementById('cioeUserColumns').innerHTML=COLS.map((name,i)=>'<label class="flex items-center gap-2 border border-slate-700 rounded-lg p-2 text-xs"><input type="checkbox" data-user-col="'+i+'" class="accent-violet-500" '+(cfg.columns.includes(i)?'':'checked')+'>'+name+'</label>').join('');document.getElementById('cioeUserConfigMsg').textContent='';renderIndicators();const m=document.getElementById('cioeUserQuickConfigModal');m.classList.remove('hidden');m.classList.add('flex');};
+ window.cioeOpenUserQuickConfig=()=>{if(isAdmin())return;if(typeof hasPermission==='function'&&!hasPermission('configurar_vista_iconos')){alert('El administrador no te ha autorizado a configurar vista e iconos.');return;}const cfg=get();document.getElementById('cioeUserHiddenRows').value=cfg.rows.join(', ');document.getElementById('cioeUserHiddenStations').value=cfg.stations.join('\n');document.getElementById('cioeUserDensity').value=cfg.density;document.getElementById('cioeUserFont').value=cfg.font;document.getElementById('cioeUserColumns').innerHTML=COLS.map((name,i)=>'<label class="flex items-center gap-2 border border-slate-700 rounded-lg p-2 text-xs"><input type="checkbox" data-user-col="'+i+'" class="accent-violet-500" '+(cfg.columns.includes(i)?'':'checked')+'>'+name+'</label>').join('');document.getElementById('cioeUserConfigMsg').textContent='';renderIndicators();const m=document.getElementById('cioeUserQuickConfigModal');m.classList.remove('hidden');m.classList.add('flex');};
  window.cioeCloseUserQuickConfig=()=>{const m=document.getElementById('cioeUserQuickConfigModal');m.classList.add('hidden');m.classList.remove('flex');};
- window.cioeUserSaveRows=()=>{const raw=document.getElementById('cioeUserHiddenRows').value.trim();const parts=raw?raw.split(/[,;\s]+/).filter(Boolean):[];const msg=document.getElementById('cioeUserConfigMsg');if(parts.some(x=>!/^\d+$/.test(x)||Number(x)<1)){msg.textContent='Escribe números de cámara válidos.';return;}const stations=[...new Set(document.getElementById('cioeUserHiddenStations').value.split(/[\n;,]+/).map(norm).filter(Boolean))];const columns=[...document.querySelectorAll('#cioeUserColumns [data-user-col]')].filter(x=>!x.checked).map(x=>Number(x.dataset.userCol));const cfg={rows:[...new Set(parts.map(Number))],stations,columns,density:document.getElementById('cioeUserDensity').value,font:document.getElementById('cioeUserFont').value};localStorage.setItem(userKey(),JSON.stringify(cfg));apply();msg.textContent='Vista personal guardada correctamente.';};
- window.cioeUserResetRows=()=>{localStorage.removeItem(userKey());localStorage.removeItem(OLD);window.cioeOpenUserQuickConfig();apply();};
+ window.cioeUserSaveRows=()=>{if(typeof hasPermission==='function'&&!hasPermission('configurar_vista_iconos')){alert('Sin permiso para guardar la vista.');return;}const raw=document.getElementById('cioeUserHiddenRows').value.trim();const parts=raw?raw.split(/[,;\s]+/).filter(Boolean):[];const msg=document.getElementById('cioeUserConfigMsg');if(parts.some(x=>!/^\d+$/.test(x)||Number(x)<1)){msg.textContent='Escribe números de cámara válidos.';return;}const stations=[...new Set(document.getElementById('cioeUserHiddenStations').value.split(/[\n;,]+/).map(norm).filter(Boolean))];const columns=[...document.querySelectorAll('#cioeUserColumns [data-user-col]')].filter(x=>!x.checked).map(x=>Number(x.dataset.userCol));const cfg={rows:[...new Set(parts.map(Number))],stations,columns,density:document.getElementById('cioeUserDensity').value,font:document.getElementById('cioeUserFont').value};localStorage.setItem(userKey(),JSON.stringify(cfg));apply();msg.textContent='Vista personal guardada correctamente.';};
+ window.cioeUserResetRows=()=>{if(typeof hasPermission==='function'&&!hasPermission('configurar_vista_iconos'))return;localStorage.removeItem(userKey());localStorage.removeItem(OLD);window.cioeOpenUserQuickConfig();apply();};
  window.cioeOpenUserIndicators=()=>{if(!canManage()){document.getElementById('cioeUserConfigMsg').textContent='No tienes permiso para gestionar indicadores.';return;}window.cioeCloseUserQuickConfig();const nav=document.getElementById('cioeTurnoIndicadoresBtn');if(!nav){alert('Abre Creación de Estaciones / Pares por Turno para gestionar los indicadores.');return;}nav.click();document.getElementById('cioeTurnoIndicadoresPanel')?.scrollIntoView({behavior:'smooth',block:'center'});};
- function updateButton(){const btn=document.getElementById('cioeUserQuickConfigBtn');if(btn)btn.classList.toggle('hidden',!currentSystemUser||isAdmin());}
+ function updateButton(){const btn=document.getElementById('cioeUserQuickConfigBtn');if(btn)btn.classList.toggle('hidden',!currentSystemUser||isAdmin()||!hasPermission('configurar_vista_iconos'));}
  const start=()=>{const b=document.getElementById('tableBody');if(b){let pending=false;new MutationObserver(records=>{if(!records.some(r=>r.type==='childList'))return;if(pending)return;pending=true;queueMicrotask(()=>{pending=false;apply();});}).observe(b,{childList:true});}apply();updateButton();setInterval(updateButton,1500);};
  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start);else start();
 })();
