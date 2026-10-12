@@ -1694,56 +1694,110 @@ body.cioe-background-active #ocurrenciasMenu {backdrop-filter:blur(12px);-webkit
 #loginError:not(.hidden){border:1px solid rgba(244,63,94,.35);background:rgba(244,63,94,.08);padding:9px;border-radius:10px;line-height:1.5}
 @media(prefers-reduced-motion:reduce){#loginLoadingBar.cioe-login-progress-active{animation:none}}
 </style>
+
+<style id="cioeLoginModern2026">
+#loginView{font-family:inherit}
+.cioe-login-shell{max-width:615px;background:#070d19;border-radius:16px;padding:10px;box-shadow:0 24px 70px rgba(0,0,0,.5)}
+.cioe-login-topbar{background:#0d1a2d;border:1px solid #30445f;border-radius:11px;min-height:63px;padding:11px 12px;display:flex;align-items:center;justify-content:space-between;gap:12px}
+.cioe-login-brand{display:flex;align-items:center;gap:10px;min-width:0}
+.cioe-login-brand-icon{width:33px;height:33px;flex-shrink:0;display:grid;place-items:center;border-radius:8px;background:#064e4b;color:#6ee7b7}
+.cioe-login-brand h1{font-size:13px;font-weight:900;color:#fff;line-height:1.3}
+.cioe-login-brand p{font-size:9px;color:#94a3b8;margin-top:4px}
+.cioe-login-status{display:inline-flex;align-items:center;gap:5px;white-space:nowrap;color:#34d399;font-size:10px;font-weight:700;background:#07392e;padding:4px 8px;border-radius:20px}
+.cioe-login-status-dot{height:6px;width:6px;background:#34d399;border-radius:50%}
+.cioe-login-panel{border:1px solid #30445f;border-radius:11px;background:#0d1a2d;margin-top:10px;padding:18px 13px 16px}
+.cioe-login-welcome{text-align:center;margin-bottom:16px}
+.cioe-login-welcome>i{font-size:22px;color:#34d399;margin-bottom:8px}
+.cioe-login-welcome h2{font-size:17px;font-weight:800;color:#fff;line-height:1.35}
+.cioe-login-welcome p{font-size:11px;color:#a6b3c8;margin-top:5px}
+.cioe-login-form{display:flex;flex-direction:column;gap:13px}
+.cioe-login-form label{display:block;color:#e2e8f0;font-size:11px;font-weight:700;margin-bottom:5px}
+.cioe-login-field{display:flex;align-items:center;gap:9px;background:#16253c;border:1px solid #3a506c;border-radius:9px;padding:0 12px;min-height:42px}
+.cioe-login-field:focus-within{border-color:#10b981;box-shadow:0 0 0 2px rgba(16,185,129,.12)}
+.cioe-login-field>i{color:#a8b7cc;font-size:12px}
+.cioe-login-field input{background:transparent;color:#fff;border:0;outline:0;flex:1;min-width:0;font-size:12px;height:41px}
+.cioe-login-field input::placeholder{color:#8292a9}
+.cioe-login-eye{background:transparent;border:0;color:#b4c3d6;padding:8px;cursor:pointer}
+.cioe-login-eye:hover{color:#fff}
+.cioe-login-submit{display:flex;align-items:center;justify-content:center;gap:9px;width:100%;min-height:41px;border-radius:8px;background:#059669;color:white;font-size:13px;font-weight:900;transition:background .2s}
+.cioe-login-submit:hover{background:#10b981}
+.cioe-login-submit:disabled{opacity:.75;cursor:wait}
+.cioe-login-footnote{margin-top:14px;text-align:center;color:#9cacc2;font-size:9px}
+.cioe-login-footnote i{color:#22d3ee;margin-right:5px}
+.cioe-login-credit{text-align:center;color:#76869e;font-size:9px;padding:12px 0 0}
+#loginLoadingBox{border-color:rgba(16,185,129,.25)!important;background:rgba(16,185,129,.05)!important}
+#loginLoadingBar{background:linear-gradient(90deg,#059669,#34d399,#059669)!important;background-size:200% 100%!important}
+@media(max-width:420px){.cioe-login-shell{padding:7px}.cioe-login-panel{padding:16px 10px}.cioe-login-brand h1{font-size:11px}.cioe-login-brand p{font-size:8px}.cioe-login-status{font-size:9px}}
+</style>
+<script>
+function cioeTogglePasswordVisibility(){
+ const input=document.getElementById('loginPass');
+ const btn=document.getElementById('cioeToggleLoginPassword');
+ if(!input||!btn)return;
+ const visible=input.type==='password';
+ input.type=visible?'text':'password';
+ btn.setAttribute('aria-label',visible?'Ocultar contraseña':'Mostrar contraseña');
+ btn.setAttribute('aria-pressed',String(visible));
+ const ico=btn.querySelector('i');if(ico)ico.className=visible?'fa-regular fa-eye-slash':'fa-regular fa-eye';
+}
+</script>
 </head>
 <body class="min-h-screen flex flex-col p-3 md:p-5 space-y-4 w-full">
 
   <!-- ==================== VISTA 0: PANTALLA DE LOGIN ==================== -->
-  <div id="loginView" class="fixed inset-0 bg-[#030712] z-50 flex items-center justify-center p-4">
-    <div class="bg-[#0a0f1d] border border-slate-800 rounded-2xl p-8 max-w-sm w-full shadow-2xl space-y-6 text-center">
-      <div class="space-y-2">
-        <div class="inline-flex p-3.5 bg-emerald-500 rounded-2xl text-white font-black shadow-lg shadow-emerald-500/20">
-          <i class="fa-solid fa-lock text-2xl"></i>
+  <div id="loginView" class="fixed inset-0 bg-[#000000] z-50 flex items-center justify-center p-4 overflow-y-auto">
+    <div class="cioe-login-shell w-full">
+      <div class="cioe-login-topbar">
+        <div class="cioe-login-brand">
+          <div class="cioe-login-brand-icon"><i class="fa-solid fa-video"></i></div>
+          <div>
+            <h1>CIOE | CENTRO DE CONTROL</h1>
+            <p>Sistema de monitoreo y gestión de cámaras</p>
+          </div>
         </div>
-        <h2 class="text-base font-black text-white uppercase tracking-wide">Acceso al Sistema</h2>
-        <p class="text-xs text-slate-400">Por favor, complete sus credenciales para iniciar sesión.</p>
+        <span class="cioe-login-status"><span class="cioe-login-status-dot"></span> En línea</span>
       </div>
-
-      <form onsubmit="handleLogin(event)" class="space-y-4 text-left">
-        <div>
-          <label class="text-xs font-bold text-slate-300 block mb-1.5">Usuario</label>
-          <div class="relative">
-            <i class="fa-solid fa-user absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500 text-xs"></i>
-            <input type="text" id="loginUser" required placeholder="Ingrese su usuario" class="w-full bg-[#030712] border border-slate-800 rounded-xl pl-9 pr-3 py-2.5 text-xs text-white focus:outline-none focus:border-amber-500 transition">
-          </div>
+      <div class="cioe-login-panel">
+        <div class="cioe-login-welcome">
+          <i class="fa-solid fa-shield-halved"></i>
+          <h2>Bienvenido al sistema</h2>
+          <p>Ingresa tus credenciales para continuar</p>
         </div>
-
-        <div>
-          <label class="text-xs font-bold text-slate-300 block mb-1.5">Contraseña</label>
-          <div class="relative">
-            <i class="fa-solid fa-key absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500 text-xs"></i>
-            <input type="password" id="loginPass" required placeholder="••••••••" class="w-full bg-[#030712] border border-slate-800 rounded-xl pl-9 pr-3 py-2.5 text-xs text-white focus:outline-none focus:border-amber-500 transition">
+        <form onsubmit="handleLogin(event)" class="cioe-login-form">
+          <div>
+            <label for="loginUser">Usuario</label>
+            <div class="cioe-login-field">
+              <i class="fa-regular fa-user"></i>
+              <input type="text" id="loginUser" required autocomplete="username" placeholder="Ingrese su usuario">
+            </div>
           </div>
-        </div>
-
-        <p id="loginError" class="text-[11px] text-rose-500 font-bold text-center hidden">
-          <i class="fa-solid fa-triangle-exclamation"></i> Usuario o contraseña incorrectos
-        </p>
-
-        <button id="loginSubmitBtn" type="submit" class="w-full bg-amber-500 hover:bg-amber-400 text-black py-2.5 rounded-xl text-xs font-black transition shadow-lg shadow-amber-500/10 flex items-center justify-center gap-2">
-          <span id="loginSubmitText">Ingresar</span>
-          <i id="loginSubmitSpinner" class="fa-solid fa-circle-notch fa-spin hidden"></i>
-        </button>
-
-        <div id="loginLoadingBox" class="hidden space-y-2 pt-1">
-          <div class="flex items-center justify-center gap-2 text-[11px] font-bold text-amber-400">
-            <i class="fa-solid fa-circle-notch fa-spin"></i>
-            <span id="loginLoadingText">Verificando acceso...</span>
+          <div>
+            <label for="loginPass">Contraseña</label>
+            <div class="cioe-login-field">
+              <i class="fa-solid fa-lock"></i>
+              <input type="password" id="loginPass" required autocomplete="current-password" placeholder="Ingrese su contraseña">
+              <button type="button" id="cioeToggleLoginPassword" class="cioe-login-eye" aria-label="Mostrar contraseña" aria-pressed="false" onclick="cioeTogglePasswordVisibility()"><i class="fa-regular fa-eye"></i></button>
+            </div>
           </div>
-          <div class="w-full h-1.5 bg-slate-800 rounded-full overflow-hidden">
-            <div id="loginLoadingBar" class="h-full bg-amber-500 rounded-full transition-all duration-500" style="width: 12%"></div>
+          <p id="loginError" class="text-[11px] text-rose-400 font-bold text-center hidden"><i class="fa-solid fa-triangle-exclamation"></i> Usuario o contraseña incorrectos</p>
+          <button id="loginSubmitBtn" type="submit" class="cioe-login-submit">
+            <i class="fa-solid fa-right-to-bracket"></i>
+            <span id="loginSubmitText">INICIAR SESIÓN</span>
+            <i id="loginSubmitSpinner" class="fa-solid fa-circle-notch fa-spin hidden"></i>
+          </button>
+          <div id="loginLoadingBox" class="hidden space-y-2 pt-1" aria-live="polite">
+            <div class="flex items-center justify-center gap-2 text-[11px] font-bold text-emerald-400">
+              <i class="fa-solid fa-circle-notch fa-spin"></i>
+              <span id="loginLoadingText">Verificando acceso...</span>
+            </div>
+            <div class="w-full h-1.5 bg-slate-800 rounded-full overflow-hidden">
+              <div id="loginLoadingBar" class="h-full rounded-full transition-all duration-500" style="width:12%"></div>
+            </div>
           </div>
-        </div>
-      </form>
+        </form>
+        <div class="cioe-login-footnote"><i class="fa-solid fa-shield-halved"></i> Acceso autorizado · Sistema CIOE</div>
+      </div>
+      <div class="cioe-login-credit">CREADOR: JJAE · Centro de Control</div>
     </div>
   </div>
 
