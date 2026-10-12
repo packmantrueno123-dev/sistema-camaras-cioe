@@ -1683,6 +1683,17 @@ body.cioe-background-active :is(#searchReportView,#camarasFijasView,#creacionTur
 /* Menú desplegable de Ocurrencias con la misma transparencia. */
 body.cioe-background-active #ocurrenciasMenu {backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
 </style>
+
+<style id="cioeLoginExperience2026">
+/* Inicio de sesión: indicador elegante, sin interferir con el resto de módulos */
+#loginLoadingBox{padding:12px;border:1px solid rgba(245,158,11,.20);border-radius:12px;background:rgba(245,158,11,.045)}
+#loginLoadingBar{background:linear-gradient(90deg,#f59e0b,#facc15,#f59e0b);background-size:200% 100%;transition:width .35s ease}
+#loginLoadingBar.cioe-login-progress-active{animation:cioeLoginShimmer 1.5s linear infinite}
+@keyframes cioeLoginShimmer{to{background-position:-200% 0}}
+#loginSubmitBtn:disabled{cursor:wait;filter:saturate(.85)}
+#loginError:not(.hidden){border:1px solid rgba(244,63,94,.35);background:rgba(244,63,94,.08);padding:9px;border-radius:10px;line-height:1.5}
+@media(prefers-reduced-motion:reduce){#loginLoadingBar.cioe-login-progress-active{animation:none}}
+</style>
 </head>
 <body class="min-h-screen flex flex-col p-3 md:p-5 space-y-4 w-full">
 
@@ -6325,7 +6336,23 @@ body.cioe-background-active #ocurrenciasMenu {backdrop-filter:blur(12px);-webkit
       const token = getApiToken();
       if (token) headers["Authorization"] = `Bearer ${token}`;
 
-      const response = await fetch(CIOE_API + path, { ...options, headers });
+      // Evita que el botón de acceso permanezca bloqueado si Render no responde.
+      const controller = new AbortController();
+      const timeoutMs = path === "/api/login" ? 45000 : (path === "/api/state" ? 45000 : 30000);
+      const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+      let response;
+      try {
+        response = await fetch(CIOE_API + path, { ...options, headers, signal: controller.signal });
+      } catch (err) {
+        if (err?.name === "AbortError") {
+          const e = new Error("El servidor tardó demasiado en responder. Espera unos segundos e inténtalo nuevamente.");
+          e.code = "TIMEOUT";
+          throw e;
+        }
+        throw new Error("No se pudo conectar con el servidor CIOE. Verifica tu conexión e inténtalo de nuevo.");
+      } finally {
+        clearTimeout(timeoutId);
+      }
       let data = {};
       try { data = await response.json(); } catch (_) {}
 
@@ -6843,11 +6870,13 @@ body.cioe-background-active #ocurrenciasMenu {backdrop-filter:blur(12px);-webkit
       error.classList.add("hidden");
       submitBtn.disabled = true;
       submitBtn.classList.add("opacity-70", "cursor-not-allowed");
-      submitText.textContent = "Cargando...";
+      submitText.textContent = "Conectando...";
       submitSpinner.classList.remove("hidden");
       loadingBox.classList.remove("hidden");
-      loadingText.textContent = "Verificando acceso...";
+      loadingText.textContent = "Verificando credenciales con el servidor...";
       loadingBar.style.width = "20%";
+      // Progreso indeterminado: no promete porcentajes falsos de carga.
+      loadingBar.classList.add("cioe-login-progress-active");
 
       try {
         const result = await apiRequest("/api/login", {
@@ -6856,7 +6885,7 @@ body.cioe-background-active #ocurrenciasMenu {backdrop-filter:blur(12px);-webkit
         });
 
         loadingBar.style.width = "55%";
-        loadingText.textContent = "Acceso correcto. Cargando datos...";
+        loadingText.textContent = "Acceso autorizado. Preparando panel...";
 
         sessionStorage.setItem(CIOE_TOKEN_KEY, result.token);
         sessionStorage.setItem(CIOE_USER_KEY, JSON.stringify(result.user));
@@ -6864,14 +6893,14 @@ body.cioe-background-active #ocurrenciasMenu {backdrop-filter:blur(12px);-webkit
         error.classList.add("hidden");
 
         loadingBar.style.width = "78%";
-        loadingText.textContent = "Sincronizando sistema...";
+        loadingText.textContent = "Sincronizando cámaras y turnos...";
         const changed = await initialServerSync();
         // No recargar aquí: algunos ajustes visuales de mascotas modifican
         // localStorage al iniciar y podían provocar un bucle de recarga.
         // El estado del servidor ya fue aplicado y podemos continuar el login.
 
         loadingBar.style.width = "100%";
-        loadingText.textContent = "Listo";
+        loadingText.textContent = "¡Sistema listo!";
         await new Promise(resolve => setTimeout(resolve, 180));
 
         document.getElementById("loginView").classList.add("hidden");
@@ -6882,11 +6911,11 @@ body.cioe-background-active #ocurrenciasMenu {backdrop-filter:blur(12px);-webkit
         // Sin polling automático: otros dispositivos actualizan al presionar F5.
       } catch (e) {
         console.error(e);
-        error.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i> ${e.message || "No se pudo iniciar sesión"}`;
+        error.textContent = e.message || "No se pudo iniciar sesión";
         error.classList.remove("hidden");
         document.getElementById("loginPass").value = "";
         document.getElementById("loginPass").focus();
-        loadingText.textContent = e.status === 409 ? "Límite de sesiones alcanzado" : "No se pudo iniciar sesión";
+        loadingText.textContent = e.status === 409 ? "Límite de sesiones alcanzado" : "No se pudo completar el acceso";
         loadingBar.style.width = "0%";
       } finally {
         submitBtn.disabled = false;
@@ -6895,6 +6924,7 @@ body.cioe-background-active #ocurrenciasMenu {backdrop-filter:blur(12px);-webkit
         submitSpinner.classList.add("hidden");
         loadingBox.classList.add("hidden");
         loadingBar.style.width = "12%";
+        loadingBar.classList.remove("cioe-login-progress-active");
       }
     }
 
