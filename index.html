@@ -7696,6 +7696,8 @@ body.cioe-background-active #ocurrenciasMenu {backdrop-filter:blur(12px);-webkit
     // Se ejecuta una sola vez por navegador, sin borrar el respaldo original.
     function migrarEstacionesParesAManana(){
       const key='cioe_ep_migrado_manana_v2';
+      // No volver a importar registros antiguos después de la sincronización.
+      if(localStorage.getItem(key)==='ok')return;
       // Reconciliar registros incluso si una migración anterior marcó éxito sin datos.
       const fuente = Array.isArray(estacionesPares) && estacionesPares.length ? estacionesPares : ESTACIONES_PARES_DEFAULT;
       if(!Array.isArray(fuente) || !fuente.length) return;
@@ -7766,15 +7768,15 @@ body.cioe-background-active #ocurrenciasMenu {backdrop-filter:blur(12px);-webkit
     // única de estación, sistema y operatividad para Centro y Turno Mañana.
     // Conserva operadores, reportes, perifoneo, detalles y los otros turnos.
     function cioeCorregirEstacionesManana285(){
-      const KEY='cioe_sincronizacion_integral_285_20261012_v2';
+      const KEY='cioe_sincronizacion_integral_285_20261012_v3';
       if(localStorage.getItem(KEY)==='1')return;
       try {
         const regs=getRegistrosTurno();
         const old=localStorage.getItem(TURNO_CREACION_KEY);
-        if(old!==null)localStorage.setItem('cioe_respaldo_turno_manana_pre_sincronizacion_v2',old);
+        if(old!==null)localStorage.setItem('cioe_respaldo_turno_manana_pre_sincronizacion_v3',old);
         const norm=v=>String(v??'').trim().toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/\s+/g,' ');
         const num=v=>{const m=norm(v).match(/^(?:CAMARA\s*[-:#]?\s*)?(\d+)$/);return m?String(Number(m[1])):null;};
-        const groupKey=(tipo,nombre)=>norm(tipo).replace('ESTACION','ESTACION')+'|'+( /^\d+$/.test(norm(nombre))?String(Number(nombre)):norm(nombre));
+        const groupKey=(tipo,nombre)=>norm(tipo)+'|'+( /^\d+$/.test(norm(nombre))?String(Number(nombre)):norm(nombre));
         const parseGroup=valor=>{const m=norm(valor).match(/^(ESTACION|PAR)\s+(.+)$/);return m?{tipo:m[1]==='PAR'?'PAR':'ESTACIÓN',nombre:/^\d+$/.test(m[2])?String(Number(m[2])):m[2]}:null;};
         const morning=regs.filter(g=>g.turno==='MAÑANA');
         const byGroup=new Map();
@@ -7803,6 +7805,7 @@ body.cioe-background-active #ocurrenciasMenu {backdrop-filter:blur(12px);-webkit
         }
         // Mantener los grupos que el operador creó, aun cuando estén vacíos.
         setRegistrosTurno(regs);
+        localStorage.setItem('cioe_ep_migrado_manana_v2','ok');
         localStorage.setItem(KEY,'1');
       }catch(e){console.warn('Error al sincronizar las 285 cámaras del Turno Mañana:',e);}
     }
@@ -7850,6 +7853,7 @@ body.cioe-background-active #ocurrenciasMenu {backdrop-filter:blur(12px);-webkit
     }
     function renderRegistrosTurno(){
       const body=document.getElementById('turnoRegistrosBody'); if(!body)return;
+      if(turnoCreadorActual==='MAÑANA')cioeCorregirEstacionesManana285();
       const grupos=cioeOrdenarGruposManana(getRegistrosTurno().filter(x=>x.turno===turnoCreadorActual));
       const filtro=(document.getElementById('turnoBuscarCamara')?.value||'').trim().toLocaleLowerCase('es');
       const salto=(document.getElementById('turnoIrCamara')?.value||'').trim();
