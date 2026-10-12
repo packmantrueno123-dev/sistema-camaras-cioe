@@ -7764,50 +7764,67 @@ body.cioe-background-active #ocurrenciasMenu {backdrop-filter:blur(12px);-webkit
       });
     }
     function normalizarGrupoOrden(v){return String(v||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toUpperCase();}
-    // Sincronización integral v2: los 285 registros del listado son la fuente
-    // única de estación, sistema y operatividad para Centro y Turno Mañana.
-    // Conserva operadores, reportes, perifoneo, detalles y los otros turnos.
+    // Sincronización integral continua: Centro de Control -> Turno MAÑANA.
+    // No depende de una marca de ejecución anterior. Respeta otros turnos,
+    // grupos creados manualmente, operadores y campos complementarios.
     function cioeCorregirEstacionesManana285(){
-      const KEY='cioe_sincronizacion_integral_285_20261012_v3';
-      if(localStorage.getItem(KEY)==='1')return;
       try {
         const regs=getRegistrosTurno();
-        const old=localStorage.getItem(TURNO_CREACION_KEY);
-        if(old!==null)localStorage.setItem('cioe_respaldo_turno_manana_pre_sincronizacion_v3',old);
+        if(!Array.isArray(regs))return;
         const norm=v=>String(v??'').trim().toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/\s+/g,' ');
         const num=v=>{const m=norm(v).match(/^(?:CAMARA\s*[-:#]?\s*)?(\d+)$/);return m?String(Number(m[1])):null;};
-        const groupKey=(tipo,nombre)=>norm(tipo)+'|'+( /^\d+$/.test(norm(nombre))?String(Number(nombre)):norm(nombre));
-        const parseGroup=valor=>{const m=norm(valor).match(/^(ESTACION|PAR)\s+(.+)$/);return m?{tipo:m[1]==='PAR'?'PAR':'ESTACIÓN',nombre:/^\d+$/.test(m[2])?String(Number(m[2])):m[2]}:null;};
+        const groupKey=(tipo,nombre)=>norm(tipo)+'|'+(/^\d+$/.test(norm(nombre))?String(Number(nombre)):norm(nombre));
+        const parseGroup=valor=>{const m=norm(valor).match(/^(ESTACION|PAR)\s*[-:#]?\s*(.+)$/);return m?{tipo:m[1]==='PAR'?'PAR':'ESTACIÓN',nombre:/^\d+$/.test(m[2])?String(Number(m[2])):m[2]}:null;};
         const morning=regs.filter(g=>g.turno==='MAÑANA');
         const byGroup=new Map();
         morning.forEach(g=>{const k=groupKey(g.tipo,g.nombre);if(!byGroup.has(k))byGroup.set(k,g);});
-        const oldCams=new Map();
-        // Recuperar la información adicional de cada cámara existente, sin duplicados.
-        morning.forEach(g=>(g.camaras||[]).forEach(c=>{const n=num(c.camara);if(n&&CIOE_CORRECCION_285[n]&&!oldCams.has(n))oldCams.set(n,c);}));
-        // Quitar de los grupos antiguos SOLO las 285 cámaras administradas por el listado.
-        morning.forEach(g=>{g.camaras=(g.camaras||[]).filter(c=>{const n=num(c.camara);return !n||!CIOE_CORRECCION_285[n];});});
-        let nextId=Math.max(Date.now(),...regs.map(g=>Number(g.id)||0),...morning.flatMap(g=>(g.camaras||[]).map(c=>Number(c.id)||0)))+1;
-        const centroPorNumero=new Map(cameras.map(c=>[num(c.camara),c]));
-        for(const [n,fix] of Object.entries(CIOE_CORRECCION_285)){
-          const dest=parseGroup(fix.estacion);if(!dest)continue;
-          const k=groupKey(dest.tipo,dest.nombre);
-          let g=byGroup.get(k);
-          if(!g){g={id:nextId++,turno:'MAÑANA',tipo:dest.tipo,nombre:dest.nombre,responsable:'',camaras:[]};regs.push(g);byGroup.set(k,g);}
-          const base=centroPorNumero.get(n)||{};
-          const previo=oldCams.get(n)||{};
-          const c={...previo,id:previo.id??nextId++,camara:n,sistema:fix.sistema,estado:fix.status,
-            ubicacion:base.ubicacion||previo.ubicacion||'',zona:base.zona||previo.zona||'',
-            detalle:previo.detalle||base.details||base.detalle||'',
-            perifoneo:previo.perifoneo||base.perifoneo||'',
-            estadoPerifoneo:previo.estadoPerifoneo||base.estadoPerifoneo||'',
-            operador: g.responsable||previo.operador||''};
-          g.camaras.push(c);
+        const centroPorNumero=new Map();
+        (Array.isArray(cameras)?cameras:[]).forEach(c=>{const n=num(c.camara);if(n && !centroPorNumero.has(n))centroPorNumero.set(n,c);});
+        const managed=new Map();
+        Object.entries(CIOE_CORRECCION_285).forEach(([n,fix])=>{
+          const centro=centroPorNumero.get(n);
+          const destino=parseGroup(centro?.estacion)||parseGroup(fix.estacion);
+          if(destino)managed.set(n,{destino,centro,fix});
+        });
+        if(!managed.size)return;
+        // Crear un respaldo una sola vez antes de cualquier cambio.
+        const backupKey='cioe_respaldo_turno_manana_pre_sincronizacion_v4';
+        if(localStorage.getItem(backupKey)===null){
+          const anterior=localStorage.getItem(TURNO_CREACION_KEY);
+          if(anterior!==null)localStorage.setItem(backupKey,anterior);
         }
-        // Mantener los grupos que el operador creó, aun cuando estén vacíos.
-        setRegistrosTurno(regs);
+        const antes=JSON.stringify(regs);
+        const previos=new Map();
+        morning.forEach(g=>(g.camaras||[]).forEach(c=>{
+          const n=num(c.camara);
+          if(managed.has(n) && !previos.has(n))previos.set(n,c);
+        }));
+        // Quitar únicamente los registros gestionados, para reubicarlos sin duplicados.
+        morning.forEach(g=>{
+          if(Array.isArray(g.camaras))g.camaras=g.camaras.filter(c=>!managed.has(num(c.camara)));
+        });
+        let nextId=Math.max(Date.now(),...regs.map(g=>Number(g.id)||0),...morning.flatMap(g=>(g.camaras||[]).map(c=>Number(c.id)||0)))+1;
+        for(const [n,{destino,centro,fix}] of managed){
+          const k=groupKey(destino.tipo,destino.nombre);
+          let grupo=byGroup.get(k);
+          if(!grupo){grupo={id:nextId++,turno:'MAÑANA',tipo:destino.tipo,nombre:destino.nombre,responsable:'',camaras:[]};regs.push(grupo);byGroup.set(k,grupo);}
+          if(!Array.isArray(grupo.camaras))grupo.camaras=[];
+          const previo=previos.get(n)||{};
+          const camara={...previo,id:previo.id??nextId++,camara:n,
+            sistema:centro?.sistema||fix.sistema,
+            estado:centro?.status||centro?.estado||fix.status,
+            ubicacion:centro?.ubicacion||previo.ubicacion||'',
+            zona:centro?.zona||previo.zona||'',
+            detalle:previo.detalle||centro?.details||centro?.detalle||'',
+            perifoneo:previo.perifoneo||centro?.perifoneo||'',
+            estadoPerifoneo:previo.estadoPerifoneo||centro?.estadoPerifoneo||'',
+            operador:grupo.responsable||previo.operador||''};
+          grupo.camaras.push(camara);
+        }
+        // No reescribir el almacenamiento si el contenido no cambió.
+        if(JSON.stringify(regs)!==antes)setRegistrosTurno(regs);
         localStorage.setItem('cioe_ep_migrado_manana_v2','ok');
-        localStorage.setItem(KEY,'1');
-      }catch(e){console.warn('Error al sincronizar las 285 cámaras del Turno Mañana:',e);}
+      }catch(e){console.warn('Error al sincronizar las cámaras del Turno Mañana:',e);}
     }
     migrarEstacionesParesAManana();
     cioeCompletarMananaDesdeCentro();
