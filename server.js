@@ -51,6 +51,7 @@ const DEFAULT_PERMISSIONS = {
   ep_agregar_camara: true,
   ep_editar: true,
   ep_eliminar: true,
+  gestionar_indicadores: false,
   turnos: true,
   turno_manana: true,
   turno_tarde: true,
@@ -1356,7 +1357,20 @@ app.get('/api/admin-view',auth,async(req,res)=>{
  try{const q=await pool.query("SELECT data FROM app_state WHERE id=1");res.json({ok:true,settings:q.rows[0]?.data?.adminViewSettings||{}})}
  catch(err){console.error(err);res.status(500).json({ok:false,error:'No se pudo consultar la visualización'})}
 });
-app.put('/api/admin-view',auth,adminOnly,async(req,res)=>{
+app.put('/api/admin-view',auth,async(req,res,next)=>{
+ if(req.user?.role==='admin')return next();
+ try{
+  const u=await getCurrentUser(req.user.id);
+  if(!u||!u.active||normalizePermissions(u.permissions).gestionar_indicadores!==true)return res.status(403).json({ok:false,error:'Sin permiso para gestionar indicadores'});
+  const changes=req.body?.indicators;
+  const keys=['blurCameras','cleanCameras','intermittentCameras','rainCameras','powerCameras','fiberCameras'];
+  if(!changes||typeof changes!=='object'||Array.isArray(changes)||Object.keys(changes).some(k=>!keys.includes(k)))return res.status(400).json({ok:false,error:'Indicadores inválidos'});
+  const clean={};
+  for(const key of keys){if(!Array.isArray(changes[key]))return res.status(400).json({ok:false,error:'Falta '+key});clean[key]=[...new Set(changes[key].filter(n=>Number.isInteger(n)&&n>0&&n<=999999))].slice(0,3000);}
+  const q=await pool.query(`UPDATE app_state SET data=jsonb_set(data,'{adminViewSettings}',COALESCE(data->'adminViewSettings','{}'::jsonb)||$1::jsonb,true),updated_at=NOW() WHERE id=1 RETURNING data->'adminViewSettings' AS settings`,[JSON.stringify(clean)]);
+  res.json({ok:true,settings:q.rows[0].settings});
+ }catch(err){console.error(err);res.status(500).json({ok:false,error:'No se pudieron guardar los indicadores'});}
+},adminOnly,async(req,res)=>{
  try{
   const v=req.body?.settings;
   if(!v||typeof v!=='object'||Array.isArray(v))return res.status(400).json({ok:false,error:'Configuración inválida'});
