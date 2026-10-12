@@ -1367,7 +1367,10 @@ app.put('/api/admin-view',auth,adminOnly,async(req,res)=>{
   const font=['normal','small','large'].includes(v.font)?v.font:'normal';
   const blurCameras=Array.isArray(v.blurCameras)?[...new Set(v.blurCameras.filter(n=>Number.isInteger(n)&&n>0&&n<=999999))].slice(0,3000):[];
   const cleanCameras=Array.isArray(v.cleanCameras)?[...new Set(v.cleanCameras.filter(n=>Number.isInteger(n)&&n>0&&n<=999999))].slice(0,3000):[];
-  const settings={columns,rows,stations,density,font,blurCameras,cleanCameras};
+  const intermittentCameras=Array.isArray(v.intermittentCameras)?[...new Set(v.intermittentCameras.filter(n=>Number.isInteger(n)&&n>0&&n<=999999))].slice(0,3000):[];
+  const rainCameras=Array.isArray(v.rainCameras)?[...new Set(v.rainCameras.filter(n=>Number.isInteger(n)&&n>0&&n<=999999))].slice(0,3000):[];
+  const powerCameras=Array.isArray(v.powerCameras)?[...new Set(v.powerCameras.filter(n=>Number.isInteger(n)&&n>0&&n<=999999))].slice(0,3000):[];
+  const settings={columns,rows,stations,density,font,blurCameras,cleanCameras,intermittentCameras,rainCameras,powerCameras};
   await pool.query("UPDATE app_state SET data=jsonb_set(data,'{adminViewSettings}',$1::jsonb,true),updated_at=NOW() WHERE id=1",[JSON.stringify(settings)]);
   res.json({ok:true,settings});
  }catch(err){console.error(err);res.status(500).json({ok:false,error:'No se pudo guardar la visualización'})}
