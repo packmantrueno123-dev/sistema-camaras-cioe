@@ -1370,7 +1370,8 @@ app.put('/api/admin-view',auth,adminOnly,async(req,res)=>{
   const intermittentCameras=Array.isArray(v.intermittentCameras)?[...new Set(v.intermittentCameras.filter(n=>Number.isInteger(n)&&n>0&&n<=999999))].slice(0,3000):[];
   const rainCameras=Array.isArray(v.rainCameras)?[...new Set(v.rainCameras.filter(n=>Number.isInteger(n)&&n>0&&n<=999999))].slice(0,3000):[];
   const powerCameras=Array.isArray(v.powerCameras)?[...new Set(v.powerCameras.filter(n=>Number.isInteger(n)&&n>0&&n<=999999))].slice(0,3000):[];
-  const settings={columns,rows,stations,density,font,blurCameras,cleanCameras,intermittentCameras,rainCameras,powerCameras};
+  const fiberCameras=Array.isArray(v.fiberCameras)?[...new Set(v.fiberCameras.filter(n=>Number.isInteger(n)&&n>0&&n<=999999))].slice(0,3000):[];
+  const settings={columns,rows,stations,density,font,blurCameras,cleanCameras,intermittentCameras,rainCameras,powerCameras,fiberCameras};
   await pool.query("UPDATE app_state SET data=jsonb_set(data,'{adminViewSettings}',$1::jsonb,true),updated_at=NOW() WHERE id=1",[JSON.stringify(settings)]);
   res.json({ok:true,settings});
  }catch(err){console.error(err);res.status(500).json({ok:false,error:'No se pudo guardar la visualización'})}
