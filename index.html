@@ -1774,6 +1774,17 @@ function cioeTogglePasswordVisibility(){
 @media(max-width:600px){.cioe-cinematic-header{left:10px;right:10px;top:9px;padding:9px}.cioe-cinematic-header strong{font-size:11px}.cioe-cinematic-header small{font-size:9px}#loginView.cioe-cinematic-login{padding:10px!important}#loginView .cioe-login-shell{padding:9px;margin-top:55px}#loginView .cioe-login-panel{padding:20px 12px}#loginView .cioe-login-brand h1{font-size:12px}#loginView .cioe-login-brand p{font-size:9px}#loginView .cioe-login-welcome h2{font-size:20px}}
 @media(prefers-reduced-motion:reduce){#loginView .cioe-login-submit{transition:none}}
 </style>
+<style>
+/* CIOE: secciones plegables independientes */
+.cioe-section-toolbar,.cioe-section-bar{display:flex;align-items:center;justify-content:space-between;gap:10px;border:1px solid rgba(52,211,153,.26);background:rgba(7,18,31,.86);border-radius:12px;padding:8px 12px;color:#dbeafe;font-size:11px;font-weight:800}
+.cioe-section-toolbar{border-color:rgba(34,211,238,.35);color:#67e8f9}
+.cioe-section-bar{margin-top:2px}
+.cioe-section-bar span i,.cioe-section-toolbar span i{color:#2dd4bf;margin-right:7px}
+.cioe-section-toggle,.cioe-section-toolbar button{border:1px solid rgba(103,232,249,.3);border-radius:9px;padding:6px 11px;color:#e2e8f0;background:rgba(15,35,55,.9);cursor:pointer;white-space:nowrap}
+.cioe-section-toggle:hover,.cioe-section-toolbar button:hover{background:rgba(13,148,136,.3)}
+.cioe-section-toggle i,.cioe-section-toolbar button i{margin-right:5px}
+[data-cioe-section][hidden]{display:none!important}
+</style>
 </head>
 <body class="min-h-screen flex flex-col p-3 md:p-5 space-y-4 w-full">
 
@@ -1976,8 +1987,10 @@ function cioeTogglePasswordVisibility(){
       </div>
     </header>
 
+    <div class="cioe-section-toolbar"><span><i class="fa-solid fa-sliders"></i> VISUALIZACIÓN DEL CENTRO DE CONTROL</span><button type="button" onclick="cioeShowAllSections()"><i class="fa-solid fa-eye"></i> Mostrar todas</button></div>
     <!-- Spotify: búsqueda y álbum compartido, sin vincular cuentas a CIOE -->
-    <section id="cioeSpotifyMini" aria-label="Spotify: buscador y playlist">
+    <div class="cioe-section-bar" data-cioe-bar="spotify"><span><i class="fa-solid fa-music"></i> Spotify · Música</span><button type="button" class="cioe-section-toggle" data-cioe-toggle="spotify" onclick="cioeToggleSection('spotify')" aria-expanded="true"><i class="fa-solid fa-eye-slash"></i> Ocultar</button></div>
+    <section id="cioeSpotifyMini" data-cioe-section="spotify" aria-label="Spotify: buscador y playlist">
       <div class="spotify-panel-top">
         <span class="font-black text-xs text-white"><i class="fa-brands fa-spotify" style="color:#1ed760;font-size:17px;margin-right:6px"></i> SPOTIFY · MÚSICA</span>
         <div class="cioe-vinyl-top-actions"><button type="button" class="cioe-vinyl-settings-btn" id="cioeVinylSettingsBtn" onclick="cioeVinylToggleSettings()" title="Personalizar disco" aria-expanded="false"><i class="fa-solid fa-palette"></i> Personalizar disco</button><button type="button" id="cioeSpotifyCollapseBtn" aria-expanded="true" aria-controls="cioeSpotifyMini" onclick="cioeSpotifyTogglePanel()"><i class="fa-solid fa-chevron-up"></i> Ocultar</button></div>
@@ -2039,7 +2052,8 @@ function cioeTogglePasswordVisibility(){
       </div>
     </section>
 
-    <section class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 w-full">
+    <div class="cioe-section-bar" data-cioe-bar="stats"><span><i class="fa-solid fa-chart-column"></i> Estadísticas de cámaras</span><button type="button" class="cioe-section-toggle" data-cioe-toggle="stats" onclick="cioeToggleSection('stats')" aria-expanded="true"><i class="fa-solid fa-eye-slash"></i> Ocultar</button></div>
+    <section data-cioe-section="stats" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 w-full">
       <div class="bg-[#0a0f1d] p-3.5 rounded-2xl border border-slate-800 shadow-xl flex justify-between items-center">
         <div>
           <span class="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">TOTAL CÁMARAS</span>
@@ -2101,7 +2115,8 @@ function cioeTogglePasswordVisibility(){
       </div>
     </section>
 
-    <div class="bg-[#0a0f1d] p-3 rounded-2xl border border-slate-800/80 shadow-lg flex flex-col md:flex-row gap-4 justify-between items-center w-full">
+    <div class="cioe-section-bar" data-cioe-bar="filters"><span><i class="fa-solid fa-magnifying-glass"></i> Buscadores y filtros</span><button type="button" class="cioe-section-toggle" data-cioe-toggle="filters" onclick="cioeToggleSection('filters')" aria-expanded="true"><i class="fa-solid fa-eye-slash"></i> Ocultar</button></div>
+    <div data-cioe-section="filters" class="bg-[#0a0f1d] p-3 rounded-2xl border border-slate-800/80 shadow-lg flex flex-col md:flex-row gap-4 justify-between items-center w-full">
       <div class="relative w-full md:w-96">
         <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500 text-sm"></i>
         <input type="text" id="searchInput" oninput="renderTable()" placeholder="Buscar cámara, calle, zona o suministro..." class="w-full bg-[#030712] border border-slate-800 text-slate-200 text-xs rounded-xl pl-10 pr-4 py-2.5 focus:outline-none focus:border-amber-500 transition">
@@ -2158,7 +2173,8 @@ function cioeTogglePasswordVisibility(){
       <span id="recordCount" class="font-bold text-slate-200">0 Registros</span>
     </div>
 
-    <main class="flex-1 bg-[#0a0f1d] rounded-2xl border border-slate-800/80 shadow-2xl overflow-hidden flex flex-col w-full">
+    <div class="cioe-section-bar" data-cioe-bar="table"><span><i class="fa-solid fa-table"></i> Listado de cámaras</span><button type="button" class="cioe-section-toggle" data-cioe-toggle="table" onclick="cioeToggleSection('table')" aria-expanded="true"><i class="fa-solid fa-eye-slash"></i> Ocultar</button></div>
+    <main data-cioe-section="table" class="flex-1 bg-[#0a0f1d] rounded-2xl border border-slate-800/80 shadow-2xl overflow-hidden flex flex-col w-full">
       <div class="overflow-x-auto w-full">
         <table class="w-full text-left text-xs border-collapse min-w-[1450px]">
           <thead>
@@ -6254,7 +6270,28 @@ function cioeTogglePasswordVisibility(){
         '<html xmlns:o="urn:schemas-microsoft-com:office:office" ' +
         'xmlns:x="urn:schemas-microsoft-com:office:excel" ' +
         'xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="UTF-8"></head><body>' +
-        tableHtml + '</body></html>'; 
+        tableHtml + '<script>
+/* CIOE: preferencia visual local; no modifica datos ni renderizado */
+(function(){
+  const keys=['spotify','stats','filters','table'];
+  const storageKey='cioe_visible_sections_v1';
+  function read(){try{const v=JSON.parse(localStorage.getItem(storageKey)||'{}');return v&&typeof v==='object'?v:{}}catch(e){return {}}}
+  function apply(){
+    const prefs=read();
+    keys.forEach(function(k){
+      const el=document.querySelector('[data-cioe-section="'+k+'"]');
+      const btn=document.querySelector('[data-cioe-toggle="'+k+'"]');
+      const visible=prefs[k]!==false;
+      if(el)el.hidden=!visible;
+      if(btn){btn.setAttribute('aria-expanded',String(visible));btn.innerHTML=visible?'<i class="fa-solid fa-eye-slash"></i> Ocultar':'<i class="fa-solid fa-eye"></i> Mostrar';}
+    });
+  }
+  window.cioeToggleSection=function(k){if(!keys.includes(k))return;const prefs=read();prefs[k]=prefs[k]===false;try{localStorage.setItem(storageKey,JSON.stringify(prefs))}catch(e){}apply()};
+  window.cioeShowAllSections=function(){try{localStorage.removeItem(storageKey)}catch(e){}apply()};
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',apply);else apply();
+})();
+</script>
+</body></html>'; 
 
       const blob = new Blob(['\ufeff', excelHtml], {type:'application/vnd.ms-excel;charset=utf-8;'});
       const url = URL.createObjectURL(blob);
