@@ -6270,28 +6270,7 @@ function cioeTogglePasswordVisibility(){
         '<html xmlns:o="urn:schemas-microsoft-com:office:office" ' +
         'xmlns:x="urn:schemas-microsoft-com:office:excel" ' +
         'xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="UTF-8"></head><body>' +
-        tableHtml + '<script>
-/* CIOE: preferencia visual local; no modifica datos ni renderizado */
-(function(){
-  const keys=['spotify','stats','filters','table'];
-  const storageKey='cioe_visible_sections_v1';
-  function read(){try{const v=JSON.parse(localStorage.getItem(storageKey)||'{}');return v&&typeof v==='object'?v:{}}catch(e){return {}}}
-  function apply(){
-    const prefs=read();
-    keys.forEach(function(k){
-      const el=document.querySelector('[data-cioe-section="'+k+'"]');
-      const btn=document.querySelector('[data-cioe-toggle="'+k+'"]');
-      const visible=prefs[k]!==false;
-      if(el)el.hidden=!visible;
-      if(btn){btn.setAttribute('aria-expanded',String(visible));btn.innerHTML=visible?'<i class="fa-solid fa-eye-slash"></i> Ocultar':'<i class="fa-solid fa-eye"></i> Mostrar';}
-    });
-  }
-  window.cioeToggleSection=function(k){if(!keys.includes(k))return;const prefs=read();prefs[k]=prefs[k]===false;try{localStorage.setItem(storageKey,JSON.stringify(prefs))}catch(e){}apply()};
-  window.cioeShowAllSections=function(){try{localStorage.removeItem(storageKey)}catch(e){}apply()};
-  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',apply);else apply();
-})();
-</script>
-</body></html>'; 
+        tableHtml + '</body></html>'; 
 
       const blob = new Blob(['\ufeff', excelHtml], {type:'application/vnd.ms-excel;charset=utf-8;'});
       const url = URL.createObjectURL(blob);
@@ -11266,6 +11245,27 @@ document.addEventListener('DOMContentLoaded',async function(){
  }
  apply();
 });
+})();
+</script>
+<script>
+/* CIOE: preferencia visual local; no modifica datos ni renderizado */
+(function(){
+  const keys=['spotify','stats','filters','table'];
+  const storageKey='cioe_visible_sections_v1';
+  function read(){try{const v=JSON.parse(localStorage.getItem(storageKey)||'{}');return v&&typeof v==='object'?v:{}}catch(e){return {}}}
+  function apply(){
+    const prefs=read();
+    keys.forEach(function(k){
+      const el=document.querySelector('[data-cioe-section="'+k+'"]');
+      const btn=document.querySelector('[data-cioe-toggle="'+k+'"]');
+      const visible=prefs[k]!==false;
+      if(el)el.hidden=!visible;
+      if(btn){btn.setAttribute('aria-expanded',String(visible));btn.innerHTML=visible?'<i class="fa-solid fa-eye-slash"></i> Ocultar':'<i class="fa-solid fa-eye"></i> Mostrar';}
+    });
+  }
+  window.cioeToggleSection=function(k){if(!keys.includes(k))return;const prefs=read();prefs[k]=prefs[k]===false;try{localStorage.setItem(storageKey,JSON.stringify(prefs))}catch(e){}apply()};
+  window.cioeShowAllSections=function(){try{localStorage.removeItem(storageKey)}catch(e){}apply()};
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',apply);else apply();
 })();
 </script>
 </body>
