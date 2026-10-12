@@ -1774,6 +1774,28 @@ function cioeTogglePasswordVisibility(){
 @media(max-width:600px){.cioe-cinematic-header{left:10px;right:10px;top:9px;padding:9px}.cioe-cinematic-header strong{font-size:11px}.cioe-cinematic-header small{font-size:9px}#loginView.cioe-cinematic-login{padding:10px!important}#loginView .cioe-login-shell{padding:9px;margin-top:55px}#loginView .cioe-login-panel{padding:20px 12px}#loginView .cioe-login-brand h1{font-size:12px}#loginView .cioe-login-brand p{font-size:9px}#loginView .cioe-login-welcome h2{font-size:20px}}
 @media(prefers-reduced-motion:reduce){#loginView .cioe-login-submit{transition:none}}
 </style>
+
+  <!-- CIOE: desplegables oscuros y legibles (sin modificar su funcionamiento) -->
+  <style id="cioe-dark-native-selects">
+    :root { color-scheme: dark; }
+    select, select:focus, select:active {
+      color-scheme: dark !important;
+    }
+    select option, select optgroup {
+      background-color: #101c30 !important;
+      color: #f8fafc !important;
+      font-weight: 600;
+    }
+    select option:checked {
+      background-color: #244d81 !important;
+      color: #ffffff !important;
+    }
+    select option:disabled { color: #94a3b8 !important; }
+    select:focus-visible {
+      outline: 2px solid #2dd4bf;
+      outline-offset: 1px;
+    }
+  </style>
 </head>
 <body class="min-h-screen flex flex-col p-3 md:p-5 space-y-4 w-full">
 
