@@ -6551,6 +6551,41 @@ function cioeTogglePasswordVisibility(){
       return data;
     }
 
+    // CIOE: permisos sincronizados automáticamente entre equipos/pestañas.
+    // Consulta liviana: solo /api/me, sin recargar cámaras ni cerrar sesión.
+    let cioePermissionsTimer = null;
+    let cioePermissionsChecking = false;
+    async function cioeCheckPermissionsLive() {
+      if (cioePermissionsChecking || !getApiToken() || !currentSystemUser || isAdminUser()) return;
+      cioePermissionsChecking = true;
+      try {
+        const result = await apiRequest('/api/me');
+        if (!result?.user || !currentSystemUser || result.user.id !== currentSystemUser.id) return;
+        const previous = JSON.stringify(currentSystemUser.permissions || {});
+        const next = JSON.stringify(result.user.permissions || {});
+        if (previous !== next || currentSystemUser.active !== result.user.active) {
+          currentSystemUser = result.user;
+          sessionStorage.setItem(CIOE_USER_KEY, JSON.stringify(result.user));
+          applyUserPermissions();
+          if (typeof window.cioeUpdateUserQuickConfigButton === 'function') window.cioeUpdateUserQuickConfigButton();
+          if (!hasPermission('configurar_vista_iconos') && typeof window.cioeCloseUserQuickConfig === 'function') window.cioeCloseUserQuickConfig();
+          if (!hasPermission('gestionar_indicadores')) document.getElementById('cioeTurnoIndicadoresPanel')?.classList.add('hidden');
+          document.dispatchEvent(new CustomEvent('cioe:permissions-updated', {detail:{permissions:result.user.permissions}}));
+        }
+      } catch (e) {
+        // Fallos temporales de red no alteran la sesión ni bloquean el panel.
+        if (e.status !== 401) console.warn('CIOE: consulta de permisos pendiente:', e.message);
+      } finally { cioePermissionsChecking = false; }
+    }
+    function startCioePermissionsLive() {
+      if (cioePermissionsTimer) clearInterval(cioePermissionsTimer);
+      cioePermissionsTimer = setInterval(cioeCheckPermissionsLive, 2000);
+    }
+    function stopCioePermissionsLive() {
+      if (cioePermissionsTimer) clearInterval(cioePermissionsTimer);
+      cioePermissionsTimer = null;
+    }
+
     function isAdminUser() {
       return currentSystemUser && currentSystemUser.role === "admin";
     }
@@ -6645,6 +6680,7 @@ function cioeTogglePasswordVisibility(){
       document.body.dataset.userRole = currentSystemUser ? currentSystemUser.role : "";
       if (!currentSystemUser) return;
 
+      setPermissionElements('#cioeUserQuickConfigBtn', !isAdminUser() && hasPermission('configurar_vista_iconos'));
       // Oculta accesos completos a módulos cuando el administrador los desactiva.
       setPermissionElements('[onclick*="showVecinalesView"]', hasPermission("barrio_seguro"));
       setPermissionElements('[onclick*="showCamarasFijasView"]', hasPermission("camaras_fijas"));
@@ -7098,7 +7134,8 @@ function cioeTogglePasswordVisibility(){
         applyUserPermissions();
         renderTable();
         startSessionHeartbeat();
-        // Sin polling automático: otros dispositivos actualizan al presionar F5.
+        startCioePermissionsLive();
+        // Los permisos se consultan automáticamente sin F5; las cámaras conservan su sincronización original.
       } catch (e) {
         console.error(e);
         error.textContent = e.message || "No se pudo iniciar sesión";
@@ -7139,8 +7176,10 @@ function cioeTogglePasswordVisibility(){
         applyUserPermissions();
         renderTable();
         startSessionHeartbeat();
-        // Sin polling automático: otros dispositivos actualizan al presionar F5.
+        startCioePermissionsLive();
+        // Los permisos se consultan automáticamente sin F5; las cámaras conservan su sincronización original.
       } catch (e) {
+        stopCioePermissionsLive();
         sessionStorage.removeItem(CIOE_TOKEN_KEY);
         sessionStorage.removeItem(CIOE_USER_KEY);
         currentSystemUser = null;
@@ -7171,6 +7210,7 @@ function cioeTogglePasswordVisibility(){
         } catch (e) {
           if (e.status === 401) {
             stopSessionHeartbeat();
+            stopCioePermissionsLive();
 
             // La sesión ya fue eliminada por el administrador en el servidor.
             // Limpiamos únicamente esta pestaña y regresamos directamente al LOGIN.
@@ -7638,6 +7678,7 @@ function cioeTogglePasswordVisibility(){
     // La administración de usuarios continúa siendo exclusiva del rol admin.
 
     async function cerrarSesion() {
+      stopCioePermissionsLive();
       stopSessionHeartbeat();
 
       // Libera inmediatamente el cupo de esta pestaña en el servidor.
@@ -11463,6 +11504,7 @@ document.addEventListener('DOMContentLoaded',async function(){
  window.cioeUserResetRows=()=>{if(typeof hasPermission==='function'&&!hasPermission('configurar_vista_iconos'))return;localStorage.removeItem(userKey());localStorage.removeItem(OLD);window.cioeOpenUserQuickConfig();apply();};
  window.cioeOpenUserIndicators=()=>{if(!canManage()){document.getElementById('cioeUserConfigMsg').textContent='No tienes permiso para gestionar indicadores.';return;}window.cioeCloseUserQuickConfig();const nav=document.getElementById('cioeTurnoIndicadoresBtn');if(!nav){alert('Abre Creación de Estaciones / Pares por Turno para gestionar los indicadores.');return;}nav.click();document.getElementById('cioeTurnoIndicadoresPanel')?.scrollIntoView({behavior:'smooth',block:'center'});};
  function updateButton(){const btn=document.getElementById('cioeUserQuickConfigBtn');if(btn)btn.classList.toggle('hidden',!currentSystemUser||isAdmin()||!hasPermission('configurar_vista_iconos'));}
+ window.cioeUpdateUserQuickConfigButton=updateButton;
  const start=()=>{const b=document.getElementById('tableBody');if(b){let pending=false;new MutationObserver(records=>{if(!records.some(r=>r.type==='childList'))return;if(pending)return;pending=true;queueMicrotask(()=>{pending=false;apply();});}).observe(b,{childList:true});}apply();updateButton();setInterval(updateButton,1500);};
  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start);else start();
 })();
