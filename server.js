@@ -19,6 +19,7 @@ const JWT_SECRET = process.env.JWT_SECRET;
 // ======================================================
 
 const DEFAULT_PERMISSIONS = {
+  configurar_vista_iconos: false,
   ver_centro_control: true,
   cambiar_estado: true,
   agregar_camara: true,
