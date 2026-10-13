@@ -506,16 +506,6 @@ function makeDeviceKey(ua){
   return createHash("sha256").update(String(ua||"desconocido")).digest("hex");
 }
 
-// Guardar eventos sin afectar el acceso si el registro falla.
-async function logConnectionEvent(user, type) {
-  try {
-    await pool.query(
-      `INSERT INTO connection_events(user_id,username,event_type) VALUES($1,$2,$3)`,
-      [user.id, user.username, type]
-    );
-  } catch (err) { console.error("Registro de conexión:", err); }
-}
-
 // Solo el administrador puede leer el historial.
 app.get("/api/admin/connection-events", auth, adminOnly, async (req,res) => {
   try {
@@ -590,6 +580,7 @@ app.post("/api/login", async (req, res) => {
         : normalizePermissions(u.permissions);
 
     let sessionId = null;
+    let firstActiveSession = false;
 
     // ADMIN: acceso ilimitado.
     // USUARIOS NORMALES: máximo 2 sesiones/pestañas activas.
@@ -618,6 +609,7 @@ app.post("/api/login", async (req, res) => {
       );
 
       const total = activeSessions.rows[0]?.total || 0;
+      firstActiveSession = total === 0;
 
       if (u.session_limit !== null && total >= u.session_limit) {
         await client.query("ROLLBACK");
@@ -648,6 +640,14 @@ app.post("/api/login", async (req, res) => {
         [sessionId,u.id,getClientIp(req),loginUA,deviceId]
       );
 
+      // Solo registrar conexión cuando pasa de 0 a 1 sesiones.
+      // Se guarda en la misma transacción y bajo el bloqueo por usuario.
+      if (firstActiveSession) {
+        await client.query(
+          `INSERT INTO connection_events(user_id,username,event_type) VALUES($1,$2,'login')`,
+          [u.id,u.username]
+        );
+      }
       await client.query("COMMIT");
     }
 
@@ -663,9 +663,6 @@ app.post("/api/login", async (req, res) => {
         expiresIn: "8h"
       }
     );
-
-    // El inicio de sesión ya fue validado y la sesión registrada.
-    await logConnectionEvent(u, "login");
 
     res.json({
       ok: true,
@@ -703,23 +700,38 @@ app.post("/api/session/heartbeat", auth, async (req, res) => {
 
 // Cierra únicamente la sesión/pestaña actual.
 app.post("/api/logout", auth, async (req, res) => {
+  const client = await pool.connect();
   try {
     if (req.user?.role !== "admin" && req.user?.sid) {
-      await pool.query(
-        `DELETE FROM user_sessions
-         WHERE session_id=$1 AND user_id=$2`,
+      await client.query("BEGIN");
+      // Serializar con inicios de sesión y cierres simultáneos del mismo usuario.
+      await client.query("SELECT pg_advisory_xact_lock($1)",[req.user.id]);
+      const removed = await client.query(
+        `DELETE FROM user_sessions WHERE session_id=$1 AND user_id=$2 RETURNING session_id`,
         [req.user.sid, req.user.id]
       );
+      if (removed.rowCount) {
+        const remaining = await client.query(
+          `SELECT EXISTS(SELECT 1 FROM user_sessions WHERE user_id=$1 AND last_seen > NOW() - INTERVAL '5 minutes') AS connected`,
+          [req.user.id]
+        );
+        // Registrar desconexión solamente al cerrar la última sesión.
+        if (!remaining.rows[0].connected) {
+          await client.query(
+            `INSERT INTO connection_events(user_id,username,event_type) VALUES($1,$2,'logout')`,
+            [req.user.id,req.user.username]
+          );
+        }
+      }
+      await client.query("COMMIT");
     }
-
-    await logConnectionEvent(req.user, "logout");
-    res.json({ ok: true });
+    res.json({ok:true});
   } catch (err) {
+    try { await client.query("ROLLBACK"); } catch (_) {}
     console.error(err);
-    res.status(500).json({
-      ok: false,
-      error: "No se pudo cerrar la sesión"
-    });
+    res.status(500).json({ok:false,error:"No se pudo cerrar la sesión"});
+  } finally {
+    client.release();
   }
 });
 
