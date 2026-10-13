@@ -1800,10 +1800,21 @@ function cioeTogglePasswordVisibility(){
 <style id="cioeStatsRoundedCornersFix2026">
 /* Solo las seis tarjetas principales: esquinas consistentes con el resto del panel. */
 #cioeMainStatsCards > div {
+  /* Recorta tanto el fondo transparente como sus capas al mismo contorno. */
   border-radius: 20px !important;
-  overflow: hidden;
+  overflow: hidden !important;
   box-sizing: border-box;
-  background-clip: padding-box;
+  background-clip: padding-box !important;
+  isolation: isolate;
+  -webkit-clip-path: inset(0 round 20px);
+  clip-path: inset(0 round 20px);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+/* El contenedor no debe pintar un rectángulo detrás de las tarjetas. */
+#cioeMainStatsCards {
+  background: transparent !important;
+  border: 0 !important;
 }
 #cioeMainStatsCards > div > div:last-child {
   border-radius: 14px !important;
