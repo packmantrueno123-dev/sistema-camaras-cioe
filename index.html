@@ -1988,6 +1988,17 @@ function cioeTogglePasswordVisibility(){
           <i class="fa-solid fa-palette"></i> Personalizar
         </button>
 
+        <div id="cioeAdminBellWrap" class="hidden relative">
+          <button id="cioeAdminBellBtn" type="button" onclick="cioeToggleConnectionPanel()" class="relative bg-slate-800 hover:bg-slate-700 border border-cyan-700 text-cyan-300 px-3.5 py-2 rounded-xl text-xs font-bold" title="Conexiones de usuarios" aria-label="Notificaciones de conexiones">
+            <i class="fa-solid fa-bell"></i> Conexiones
+            <span id="cioeConnectionCount" class="hidden absolute -top-2 -right-2 bg-rose-600 text-white text-[10px] rounded-full min-w-5 px-1 py-0.5">0</span>
+          </button>
+          <div id="cioeConnectionPanel" class="hidden absolute right-0 top-full mt-2 z-[150] w-[min(350px,90vw)] bg-[#0a0f1d] border border-slate-600 rounded-xl shadow-2xl overflow-hidden">
+            <div class="flex justify-between items-center p-3 border-b border-slate-700"><b class="text-sm text-cyan-300"><i class="fa-solid fa-clock-rotate-left mr-1"></i> Historial de conexiones</b><button onclick="cioeToggleConnectionPanel(false)" class="text-slate-400 hover:text-white" aria-label="Cerrar">✕</button></div>
+            <div id="cioeConnectionItems" class="max-h-72 overflow-y-auto p-2 text-xs text-slate-300">Cargando conexiones...</div>
+          </div>
+        </div>
+
         <button id="manageUsersBtn" onclick="openUserManager()" class="hidden bg-violet-600 hover:bg-violet-500 text-white px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2">
           <i class="fa-solid fa-users-gear"></i> Administrar usuarios
         </button>
@@ -6678,11 +6689,102 @@ function cioeTogglePasswordVisibility(){
       });
     }
 
+    // Campana de conexiones: consulta ligera cada 5 segundos, solo para admin.
+    let cioeConnectionTimer = null;
+    let cioeLastConnectionId = 0;
+    let cioeConnectionInitialized = false;
+    let cioeUnreadConnections = 0;
+    let cioeConnectionHistory = [];
+    let cioeConnectionBusy = false;
+    function cioeUpdateBell() {
+      const badge = document.getElementById('cioeConnectionCount');
+      if (!badge) return;
+      badge.textContent = cioeUnreadConnections > 99 ? '99+' : String(cioeUnreadConnections);
+      badge.classList.toggle('hidden', !cioeUnreadConnections);
+    }
+    function cioeRenderConnectionHistory() {
+      const root = document.getElementById('cioeConnectionItems');
+      if (!root) return;
+      root.replaceChildren();
+      if (!cioeConnectionHistory.length) { root.textContent = 'Todavía no hay conexiones registradas.'; return; }
+      for (const e of [...cioeConnectionHistory].reverse()) {
+        const row = document.createElement('div');
+        row.className = 'flex items-start gap-2 p-2 border-b border-slate-800';
+        const icon = document.createElement('i');
+        icon.className = 'fa-solid ' + (e.event_type === 'login' ? 'fa-user-check text-emerald-400' : 'fa-right-from-bracket text-amber-400') + ' mt-1';
+        const details = document.createElement('div');
+        const title = document.createElement('div');
+        title.className = 'font-bold text-slate-100';
+        title.textContent = e.username + (e.event_type === 'login' ? ' se ha conectado' : ' ha cerrado sesión');
+        const date = document.createElement('div');
+        date.className = 'text-slate-400 mt-1';
+        date.textContent = new Date(e.created_at).toLocaleString('es-PE');
+        details.append(title,date);row.append(icon,details);root.append(row);
+      }
+    }
+    function cioeConnectionToast(e) {
+      const toast = document.createElement('div');
+      toast.className = 'fixed top-5 right-5 z-[9999] max-w-[360px] w-[calc(100vw-40px)] bg-[#0a1425] border border-cyan-600 rounded-xl shadow-2xl p-4 text-white flex gap-3 items-center';
+      const icon = document.createElement('i');
+      icon.className = 'fa-solid ' + (e.event_type === 'login' ? 'fa-user-check text-emerald-400' : 'fa-right-from-bracket text-amber-400') + ' text-xl';
+      const content = document.createElement('div');
+      const title = document.createElement('b'); title.textContent = 'CIOE · Notificación';
+      const detail = document.createElement('p'); detail.className = 'text-xs text-slate-300 mt-1';
+      detail.textContent = e.username + (e.event_type === 'login' ? ' se ha conectado' : ' ha cerrado sesión');
+      content.append(title,detail);toast.append(icon,content);document.body.append(toast);
+      setTimeout(() => toast.remove(), 5500);
+    }
+    async function cioePollConnectionEvents() {
+      if (!isAdminUser() || !getApiToken() || cioeConnectionBusy || document.hidden) return;
+      cioeConnectionBusy = true;
+      try {
+        const result = await apiRequest('/api/admin/connection-events?after=' + cioeLastConnectionId);
+        const events = result.events || [];
+        for (const e of events) {
+          const id = Number(e.id);
+          if (id > cioeLastConnectionId) cioeLastConnectionId = id;
+          cioeConnectionHistory.push(e);
+          if (cioeConnectionInitialized && e.username !== currentSystemUser?.username) {
+            cioeUnreadConnections++;
+            cioeConnectionToast(e);
+          }
+        }
+        cioeConnectionHistory = cioeConnectionHistory.slice(-100);
+        cioeConnectionInitialized = true;
+        cioeUpdateBell();cioeRenderConnectionHistory();
+      } catch (err) { console.warn('Notificaciones CIOE temporalmente no disponibles:',err.message); }
+      finally { cioeConnectionBusy = false; }
+    }
+    function cioeStartConnectionEvents() {
+      cioeStopConnectionEvents();
+      if (!isAdminUser()) return;
+      cioeLastConnectionId = 0;cioeConnectionInitialized = false;
+      cioeConnectionHistory = [];cioeUnreadConnections = 0;cioeUpdateBell();
+      cioePollConnectionEvents();
+      cioeConnectionTimer = setInterval(cioePollConnectionEvents,5000);
+    }
+    function cioeStopConnectionEvents() {
+      if (cioeConnectionTimer) clearInterval(cioeConnectionTimer);
+      cioeConnectionTimer = null;
+      document.getElementById('cioeConnectionPanel')?.classList.add('hidden');
+    }
+    function cioeToggleConnectionPanel(force) {
+      const panel = document.getElementById('cioeConnectionPanel');
+      if (!panel || !isAdminUser()) return;
+      const show = typeof force === 'boolean' ? force : panel.classList.contains('hidden');
+      panel.classList.toggle('hidden', !show);
+      if (show) {cioeUnreadConnections = 0;cioeUpdateBell();cioeRenderConnectionHistory();cioePollConnectionEvents();}
+    }
+    document.addEventListener('click', (e) => {
+      if (!e.target.closest('#cioeAdminBellWrap')) document.getElementById('cioeConnectionPanel')?.classList.add('hidden');
+    });
+
     function applyUserPermissions() {
       const name = document.getElementById("currentUserName");
       const manage = document.getElementById("manageUsersBtn");
       if (name) name.textContent = currentSystemUser ? currentSystemUser.username : "—";
       if (manage) manage.classList.toggle("hidden", !isAdminUser());
+      document.getElementById("cioeAdminBellWrap")?.classList.toggle("hidden", !isAdminUser());
       document.body.dataset.userRole = currentSystemUser ? currentSystemUser.role : "";
       if (!currentSystemUser) return;
 
@@ -7141,6 +7243,7 @@ function cioeTogglePasswordVisibility(){
         renderTable();
         startSessionHeartbeat();
         startCioePermissionsLive();
+        cioeStartConnectionEvents();
         // Los permisos se consultan automáticamente sin F5; las cámaras conservan su sincronización original.
       } catch (e) {
         console.error(e);
@@ -7183,6 +7286,7 @@ function cioeTogglePasswordVisibility(){
         renderTable();
         startSessionHeartbeat();
         startCioePermissionsLive();
+        cioeStartConnectionEvents();
         // Los permisos se consultan automáticamente sin F5; las cámaras conservan su sincronización original.
       } catch (e) {
         stopCioePermissionsLive();
@@ -7727,6 +7831,7 @@ function cioeTogglePasswordVisibility(){
     // La administración de usuarios continúa siendo exclusiva del rol admin.
 
     async function cerrarSesion() {
+      cioeStopConnectionEvents();
       stopCioePermissionsLive();
       stopSessionHeartbeat();
 
