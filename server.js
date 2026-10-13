@@ -309,6 +309,18 @@ async function initDb() {
       ADD COLUMN IF NOT EXISTS device_id UUID REFERENCES user_devices(device_id) ON DELETE SET NULL;
   `);
 
+  // Eventos de conexión para la campana exclusiva del administrador.
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS connection_events (
+      id BIGSERIAL PRIMARY KEY,
+      user_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
+      username VARCHAR(30) NOT NULL,
+      event_type VARCHAR(12) NOT NULL CHECK (event_type IN ('login','logout')),
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    );
+    CREATE INDEX IF NOT EXISTS idx_connection_events_recent ON connection_events(id DESC);
+  `);
+
   // Mensajería interna: los mensajes se eliminan automáticamente después de 24 horas.
   await pool.query(`
     CREATE TABLE IF NOT EXISTS internal_messages (
@@ -494,6 +506,33 @@ function makeDeviceKey(ua){
   return createHash("sha256").update(String(ua||"desconocido")).digest("hex");
 }
 
+// Guardar eventos sin afectar el acceso si el registro falla.
+async function logConnectionEvent(user, type) {
+  try {
+    await pool.query(
+      `INSERT INTO connection_events(user_id,username,event_type) VALUES($1,$2,$3)`,
+      [user.id, user.username, type]
+    );
+  } catch (err) { console.error("Registro de conexión:", err); }
+}
+
+// Solo el administrador puede leer el historial.
+app.get("/api/admin/connection-events", auth, adminOnly, async (req,res) => {
+  try {
+    const after = Number(req.query.after || 0);
+    const validAfter = Number.isSafeInteger(after) && after >= 0 ? after : 0;
+    const q = await pool.query(
+      `SELECT id::text,username,event_type,created_at
+       FROM connection_events WHERE id > $1 ORDER BY id DESC LIMIT 100`,
+      [validAfter]
+    );
+    res.json({ok:true,events:q.rows.reverse()});
+  } catch(err) {
+    console.error(err);
+    res.status(500).json({ok:false,error:"No se pudo consultar el historial"});
+  }
+});
+
 // ======================================================
 // LOGIN
 // ======================================================
@@ -625,6 +664,9 @@ app.post("/api/login", async (req, res) => {
       }
     );
 
+    // El inicio de sesión ya fue validado y la sesión registrada.
+    await logConnectionEvent(u, "login");
+
     res.json({
       ok: true,
       token,
@@ -670,6 +712,7 @@ app.post("/api/logout", auth, async (req, res) => {
       );
     }
 
+    await logConnectionEvent(req.user, "logout");
     res.json({ ok: true });
   } catch (err) {
     console.error(err);
