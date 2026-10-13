@@ -272,6 +272,10 @@ async function initDb() {
     ON user_sessions(last_seen);
   `);
 
+  // Límite individual de sesiones: NULL significa acceso ilimitado.
+  await pool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS session_limit INTEGER DEFAULT 2`);
+  await pool.query(`UPDATE users SET session_limit=NULL WHERE role='admin'`);
+
   // Agrega la columna sin borrar usuarios existentes
   await pool.query(`
     ALTER TABLE users
@@ -513,7 +517,8 @@ app.post("/api/login", async (req, res) => {
         password_hash,
         role,
         active,
-        permissions
+        permissions,
+        session_limit
        FROM users
        WHERE username=$1`,
       [username]
@@ -575,13 +580,13 @@ app.post("/api/login", async (req, res) => {
 
       const total = activeSessions.rows[0]?.total || 0;
 
-      if (total >= 2) {
+      if (u.session_limit !== null && total >= u.session_limit) {
         await client.query("ROLLBACK");
 
         return res.status(409).json({
           ok: false,
           code: "SESSION_LIMIT",
-          error: "Este usuario ya tiene 2 sesiones activas. Cierra una sesión para poder ingresar."
+          error: `Este usuario ya tiene ${u.session_limit} sesiones activas. Cierra una sesión para poder ingresar.`
         });
       }
 
@@ -629,7 +634,7 @@ app.post("/api/login", async (req, res) => {
         role: u.role,
         permissions
       },
-      sessionLimit: u.role === "admin" ? null : 2
+      sessionLimit: u.role === "admin" ? null : u.session_limit
     });
   } catch (err) {
     try { await client.query("ROLLBACK"); } catch (_) {}
@@ -813,7 +818,7 @@ app.get(
     try {
       await pool.query(`DELETE FROM user_sessions WHERE last_seen <= NOW() - INTERVAL '5 minutes'`);
       const q=await pool.query(
-        `SELECT u.id,u.username,u.role,u.active,u.permissions,u.created_at,
+        `SELECT u.id,u.username,u.role,u.active,u.permissions,u.created_at,u.session_limit,
           CASE WHEN u.role='admin' THEN NULL ELSE COUNT(s.session_id)::int END AS active_sessions
          FROM users u LEFT JOIN user_sessions s
          ON s.user_id=u.id AND s.last_seen > NOW() - INTERVAL '5 minutes'
@@ -850,7 +855,7 @@ app.get("/api/users/:id/sessions",auth,adminOnly,async(req,res)=>{
  try{
   const userId=Number(req.params.id);
   if(!Number.isInteger(userId))return res.status(400).json({ok:false,error:"Usuario inválido"});
-  const target=await pool.query(`SELECT id,username,role FROM users WHERE id=$1`,[userId]);
+  const target=await pool.query(`SELECT id,username,role,session_limit FROM users WHERE id=$1`,[userId]);
   if(!target.rowCount)return res.status(404).json({ok:false,error:"Usuario no encontrado"});
   await pool.query(`DELETE FROM user_sessions WHERE user_id=$1 AND last_seen <= NOW() - INTERVAL '5 minutes'`,[userId]);
   const q=await pool.query(`SELECT session_id,device_id,created_at,last_seen,COALESCE(ip_address,'No disponible') ip_address,COALESCE(user_agent,'') user_agent FROM user_sessions WHERE user_id=$1 AND last_seen > NOW() - INTERVAL '5 minutes' ORDER BY created_at DESC`,[userId]);
@@ -858,7 +863,7 @@ app.get("/api/users/:id/sessions",auth,adminOnly,async(req,res)=>{
     ...s,
     provider:await getNetworkProvider(s.ip_address)
   })));
-  res.json({ok:true,username:target.rows[0].username,limit:target.rows[0].role==="admin"?null:2,sessions});
+  res.json({ok:true,username:target.rows[0].username,limit:target.rows[0].role==="admin"?null:target.rows[0].session_limit,sessions});
  }catch(err){console.error(err);res.status(500).json({ok:false,error:"No se pudieron consultar las sesiones"});}
 });
 app.get("/api/users/:id/devices",auth,adminOnly,async(req,res)=>{
@@ -898,6 +903,35 @@ app.delete("/api/users/:id/sessions",auth,adminOnly,async(req,res)=>{
   const q=await pool.query(`DELETE FROM user_sessions WHERE user_id=$1 RETURNING session_id`,[userId]);
   res.json({ok:true,closed:q.rowCount});
  }catch(err){console.error(err);res.status(500).json({ok:false,error:"No se pudieron cerrar todas las sesiones"});}
+});
+
+// Configurar el límite de sesiones por usuario (NULL = libre).
+app.patch("/api/users/:id/session-limit",auth,adminOnly,async(req,res)=>{
+ const userId=Number(req.params.id);
+ const limit=req.body?.limit;
+ if(!Number.isInteger(userId)||userId<=0)return res.status(400).json({ok:false,error:"Usuario inválido"});
+ if(limit!==null && ![1,2,3,5,10].includes(limit))return res.status(400).json({ok:false,error:"Selecciona 1, 2, 3, 5, 10 o libre"});
+ const client=await pool.connect();
+ try{
+  await client.query("BEGIN");
+  await client.query("SELECT pg_advisory_xact_lock($1)",[userId]);
+  const target=await client.query("SELECT id,role FROM users WHERE id=$1 FOR UPDATE",[userId]);
+  if(!target.rowCount){await client.query("ROLLBACK");return res.status(404).json({ok:false,error:"Usuario no encontrado"});}
+  if(target.rows[0].role==="admin"){await client.query("ROLLBACK");return res.status(403).json({ok:false,error:"El administrador conserva acceso ilimitado"});}
+  await client.query("UPDATE users SET session_limit=$1 WHERE id=$2",[limit,userId]);
+  // Si se reduce el cupo, conservar las sesiones más recientes y cerrar las sobrantes.
+  let closed=0;
+  if(limit!==null){
+   const removed=await client.query(`DELETE FROM user_sessions WHERE session_id IN (
+    SELECT session_id FROM user_sessions WHERE user_id=$1
+    ORDER BY last_seen DESC,created_at DESC OFFSET $2
+   ) RETURNING session_id`,[userId,limit]);
+   closed=removed.rowCount;
+  }
+  await client.query("COMMIT");
+  res.json({ok:true,limit,closed});
+ }catch(e){try{await client.query("ROLLBACK")}catch(_){}console.error(e);res.status(500).json({ok:false,error:"No se pudo actualizar el límite"});}
+ finally{client.release();}
 });
 
 // ======================================================
