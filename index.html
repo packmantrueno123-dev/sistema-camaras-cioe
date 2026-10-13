@@ -7283,22 +7283,23 @@ function cioeTogglePasswordVisibility(){
       try {
         const result = await apiRequest("/api/users");
         if (!result?.ok || !Array.isArray(result.users)) return;
-        const counts = new Map(result.users.map(u => [String(u.id), Number(u.active_sessions || 0)]));
+        const counts = new Map(result.users.map(u => [String(u.id), {count:Number(u.active_sessions || 0),limit:u.session_limit}]));
         for (const user of cachedSystemUsers) {
           const count = counts.get(String(user.id));
-          if (count !== undefined) user.active_sessions = count;
+          if (count !== undefined) { user.active_sessions = count.count; user.session_limit = count.limit; }
         }
         document.querySelectorAll('#usersTableBody [data-cioe-session-user]').forEach(button => {
           const count = counts.get(button.dataset.cioeSessionUser);
           if (count === undefined) return;
           const value = button.querySelector('[data-cioe-session-count]');
-          if (value) value.textContent = `${count} / 2`;
-          button.classList.toggle('text-emerald-300', count > 0);
-          button.classList.toggle('border-emerald-500/40', count > 0);
-          button.classList.toggle('bg-emerald-500/15', count > 0);
-          button.classList.toggle('text-slate-400', count === 0);
-          button.classList.toggle('border-slate-700', count === 0);
-          button.classList.toggle('bg-slate-800', count === 0);
+          if (value) value.textContent = `${count.count} / ${count.limit === null ? "∞" : count.limit}`;
+          const activeCount=count.count;
+          button.classList.toggle('text-emerald-300', activeCount > 0);
+          button.classList.toggle('border-emerald-500/40', activeCount > 0);
+          button.classList.toggle('bg-emerald-500/15', activeCount > 0);
+          button.classList.toggle('text-slate-400', activeCount === 0);
+          button.classList.toggle('border-slate-700', activeCount === 0);
+          button.classList.toggle('bg-slate-800', activeCount === 0);
         });
       } catch (e) {
         // Si falla una consulta, conserva el último contador y reintenta.
@@ -7338,11 +7339,11 @@ function cioeTogglePasswordVisibility(){
             <td class="p-3 text-center ${u.role === "admin" ? "text-violet-400" : "text-cyan-400"} font-bold">${u.role === "admin" ? "ADMINISTRADOR" : "USUARIO"}</td>
             <td class="p-3 text-center font-bold ${u.active !== false ? "text-emerald-400" : "text-rose-400"}">${u.active !== false ? "ACTIVO" : "INACTIVO"}</td>
             <td class="p-3 text-center">
-              ${u.role === "admin" ? '<span class="text-slate-500 font-bold">SIN LÍMITE</span>' : `<button type="button" data-cioe-session-user="${u.id}" onclick="openActiveSessionsModal(${i})" class="${Number(u.active_sessions||0)>0?'bg-emerald-500/15 border-emerald-500/40 text-emerald-300':'bg-slate-800 border-slate-700 text-slate-400'} border px-3 py-1.5 rounded-lg font-black hover:border-cyan-400"><i class="fa-solid fa-desktop mr-1"></i><span data-cioe-session-count>${Number(u.active_sessions||0)} / 2</span></button>`}
+              ${u.role === "admin" ? '<span class="text-slate-500 font-bold">SIN LÍMITE</span>' : `<button type="button" data-cioe-session-user="${u.id}" onclick="openActiveSessionsModal(${i})" class="${Number(u.active_sessions||0)>0?'bg-emerald-500/15 border-emerald-500/40 text-emerald-300':'bg-slate-800 border-slate-700 text-slate-400'} border px-3 py-1.5 rounded-lg font-black hover:border-cyan-400"><i class="fa-solid fa-desktop mr-1"></i><span data-cioe-session-count>${Number(u.active_sessions||0)} / ${u.session_limit === null ? "∞" : (u.session_limit ?? 2)}</span></button>`}
             </td>
             <td class="p-3 text-center">
               ${u.role === "admin" ? '<div class="flex flex-wrap items-center justify-center gap-2"><span class="text-emerald-400 font-bold"><i class="fa-solid fa-shield-halved mr-1"></i>Todos</span><button type="button" onclick="openCioeAdminViewSettings()" class="bg-violet-600/20 border border-violet-500/40 text-violet-300 hover:bg-violet-600 hover:text-white px-3 py-1.5 rounded-lg font-bold"><i class="fa-solid fa-sliders mr-1"></i>Configurar</button></div>' :
-                `<button type="button" onclick="openPermissionsModal(${i})" class="bg-violet-600/20 border border-violet-500/40 text-violet-300 hover:bg-violet-600 hover:text-white px-3 py-1.5 rounded-lg font-bold"><i class="fa-solid fa-sliders mr-1"></i>Configurar</button>`}
+                `<div class="flex flex-wrap justify-center gap-2"><button type="button" onclick="openPermissionsModal(${i})" class="bg-violet-600/20 border border-violet-500/40 text-violet-300 hover:bg-violet-600 hover:text-white px-3 py-1.5 rounded-lg font-bold"><i class="fa-solid fa-sliders mr-1"></i>Configurar</button><button type="button" onclick="openSessionLimitConfig(${i})" class="bg-cyan-600/20 border border-cyan-500/40 text-cyan-300 hover:bg-cyan-600 hover:text-white px-3 py-1.5 rounded-lg font-bold"><i class="fa-solid fa-users mr-1"></i>Sesiones</button></div>`}
             </td>
             <td class="p-3 text-center whitespace-nowrap">
               <button type="button" onclick="changeSystemUserPassword(${i})" class="text-cyan-400 hover:text-cyan-300 mr-3"><i class="fa-solid fa-key mr-1"></i>Cambiar contraseña</button>
@@ -11696,6 +11697,44 @@ document.addEventListener('DOMContentLoaded',async function(){
   }
  };
 })();
+</script>
+
+<!-- CIOE: límite de sesiones por cuenta -->
+<div id="cioeSessionLimitModal" class="hidden fixed inset-0 z-[99999] bg-black/80 items-center justify-center p-4">
+ <div class="w-full max-w-md bg-[#0a0f1d] border border-violet-500/50 rounded-2xl p-6 shadow-2xl text-white">
+  <div class="flex justify-between items-center mb-4"><h3 class="text-lg font-black"><i class="fa-solid fa-users-gear text-violet-400 mr-2"></i>Configurar sesiones</h3><button type="button" onclick="closeSessionLimitConfig()" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button></div>
+  <p id="cioeSessionLimitUsername" class="text-cyan-300 font-bold mb-2"></p>
+  <p class="text-slate-400 text-xs mb-4">Máximo de sesiones simultáneas para este usuario. El administrador siempre tiene acceso ilimitado.</p>
+  <label class="text-xs font-bold block mb-2" for="cioeSessionLimitSelect">Sesiones permitidas</label>
+  <select id="cioeSessionLimitSelect" class="w-full bg-slate-900 border border-slate-600 rounded-xl px-3 py-3 text-white mb-3">
+   <option value="1">1 sesión</option><option value="2">2 sesiones</option><option value="3">3 sesiones</option><option value="5">5 sesiones</option><option value="10">10 sesiones</option><option value="free">Libre (sin límite)</option>
+  </select>
+  <p class="text-amber-300 text-xs mb-5">Si reduces el límite por debajo de las sesiones conectadas, se conservarán las más recientes y se cerrarán las restantes.</p>
+  <div class="flex justify-end gap-2"><button type="button" onclick="closeSessionLimitConfig()" class="bg-slate-800 px-4 py-2 rounded-xl text-xs font-bold">Cancelar</button><button id="cioeSessionLimitSave" type="button" onclick="saveSessionLimitConfig()" class="bg-violet-600 hover:bg-violet-500 px-4 py-2 rounded-xl text-xs font-black"><i class="fa-solid fa-floppy-disk mr-1"></i>Guardar límite</button></div>
+ </div>
+</div>
+<script>
+let cioeSessionLimitTargetId=null;
+function openSessionLimitConfig(index){
+ const user=cachedSystemUsers[index];if(!isAdminUser()||!user||user.role==='admin')return;
+ cioeSessionLimitTargetId=user.id;
+ document.getElementById('cioeSessionLimitUsername').textContent='Usuario: '+user.username;
+ document.getElementById('cioeSessionLimitSelect').value=user.session_limit===null?'free':String(user.session_limit??2);
+ const m=document.getElementById('cioeSessionLimitModal');m.classList.remove('hidden');m.classList.add('flex');
+}
+function closeSessionLimitConfig(){cioeSessionLimitTargetId=null;const m=document.getElementById('cioeSessionLimitModal');m.classList.add('hidden');m.classList.remove('flex');}
+async function saveSessionLimitConfig(){
+ if(!isAdminUser()||!cioeSessionLimitTargetId)return;
+ const value=document.getElementById('cioeSessionLimitSelect').value;
+ const limit=value==='free'?null:Number(value);
+ const btn=document.getElementById('cioeSessionLimitSave');btn.disabled=true;
+ try{
+  const result=await apiRequest('/api/users/'+cioeSessionLimitTargetId+'/session-limit',{method:'PATCH',body:JSON.stringify({limit})});
+  closeSessionLimitConfig();await renderSystemUsers();
+  if(result.closed>0)alert('Límite guardado. Se cerraron '+result.closed+' sesiones excedentes.');
+ }catch(e){alert(e.message||'No se pudo guardar el límite de sesiones.');}
+ finally{btn.disabled=false;}
+}
 </script>
 </body>
 </html>
