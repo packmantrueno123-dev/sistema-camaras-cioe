@@ -1994,7 +1994,7 @@ function cioeTogglePasswordVisibility(){
             <span id="cioeConnectionCount" class="hidden absolute -top-2 -right-2 bg-rose-600 text-white text-[10px] rounded-full min-w-5 px-1 py-0.5">0</span>
           </button>
           <div id="cioeConnectionPanel" class="hidden absolute right-0 top-full mt-2 z-[150] w-[min(350px,90vw)] bg-[#0a0f1d] border border-slate-600 rounded-xl shadow-2xl overflow-hidden">
-            <div class="flex justify-between items-center p-3 border-b border-slate-700"><b class="text-sm text-cyan-300"><i class="fa-solid fa-clock-rotate-left mr-1"></i> Historial de conexiones</b><button onclick="cioeToggleConnectionPanel(false)" class="text-slate-400 hover:text-white" aria-label="Cerrar">✕</button></div>
+            <div class="flex justify-between items-center gap-2 p-3 border-b border-slate-700"><b class="text-sm text-cyan-300"><i class="fa-solid fa-clock-rotate-left mr-1"></i> Historial de conexiones</b><div class="flex items-center gap-2"><button id="cioeClearConnectionBtn" type="button" onclick="cioeClearConnectionHistory()" class="text-[11px] text-rose-300 hover:text-white border border-rose-800 hover:bg-rose-900/40 px-2 py-1 rounded-lg" title="Borrar historial para todos los administradores"><i class="fa-solid fa-trash-can mr-1"></i> Borrar historial</button><button onclick="cioeToggleConnectionPanel(false)" class="text-slate-400 hover:text-white" aria-label="Cerrar">✕</button></div></div>
             <div id="cioeConnectionItems" class="max-h-72 overflow-y-auto p-2 text-xs text-slate-300">Cargando conexiones...</div>
           </div>
         </div>
@@ -6707,7 +6707,7 @@ function cioeTogglePasswordVisibility(){
       if (!root) return;
       root.replaceChildren();
       if (!cioeConnectionHistory.length) { root.textContent = 'Todavía no hay conexiones registradas.'; return; }
-      for (const e of [...cioeConnectionHistory].reverse()) {
+      for (const e of [...cioeConnectionHistory].sort((a,b) => Number(b.id)-Number(a.id))) {
         const row = document.createElement('div');
         row.className = 'flex items-start gap-2 p-2 border-b border-slate-800';
         const icon = document.createElement('i');
@@ -6720,6 +6720,28 @@ function cioeTogglePasswordVisibility(){
         date.className = 'text-slate-400 mt-1';
         date.textContent = new Date(e.created_at).toLocaleString('es-PE');
         details.append(title,date);row.append(icon,details);root.append(row);
+      }
+    }
+    async function cioeClearConnectionHistory() {
+      if (!isAdminUser() || !getApiToken()) return;
+      if (!window.confirm('¿Borrar definitivamente el historial de conexiones? Esta acción no cierra las sesiones activas.')) return;
+      const button = document.getElementById('cioeClearConnectionBtn');
+      if (button) { button.disabled = true; button.classList.add('opacity-50'); }
+      // Evita que una consulta simultánea restaure eventos recién eliminados.
+      while (cioeConnectionBusy) await new Promise(resolve => setTimeout(resolve, 60));
+      cioeConnectionBusy = true;
+      try {
+        await apiRequest('/api/admin/connection-events', { method: 'DELETE' });
+        cioeConnectionHistory = [];
+        cioeUnreadConnections = 0;
+        cioeConnectionInitialized = true;
+        cioeUpdateBell();
+        cioeRenderConnectionHistory();
+      } catch (err) {
+        alert('No se pudo borrar el historial: ' + (err.message || 'Error de servidor'));
+      } finally {
+        cioeConnectionBusy = false;
+        if (button) { button.disabled = false; button.classList.remove('opacity-50'); }
       }
     }
     function cioeConnectionToast(e) {
@@ -6743,8 +6765,11 @@ function cioeTogglePasswordVisibility(){
         for (const e of events) {
           const id = Number(e.id);
           if (id > cioeLastConnectionId) cioeLastConnectionId = id;
+          // Una sola fila por usuario: reemplazar su estado anterior.
+          const previous = cioeConnectionHistory.find(item => item.username === e.username);
+          cioeConnectionHistory = cioeConnectionHistory.filter(item => item.username !== e.username);
           cioeConnectionHistory.push(e);
-          if (cioeConnectionInitialized && e.username !== currentSystemUser?.username) {
+          if (cioeConnectionInitialized && e.username !== currentSystemUser?.username && previous?.event_type !== e.event_type) {
             cioeUnreadConnections++;
             cioeConnectionToast(e);
           }
