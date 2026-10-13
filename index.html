@@ -7271,15 +7271,56 @@ function cioeTogglePasswordVisibility(){
       // La sincronización entre dispositivos se actualiza manualmente con F5.
     }
 
+    // Actualización automática de sesiones mientras el administrador tiene abierto el panel.
+    // Se refrescan solo los contadores para no cerrar otros ajustes o ventanas.
+    let cioeSessionsRefreshTimer = null;
+    let cioeSessionsRefreshBusy = false;
+
+    async function refreshUserSessionCounters() {
+      const modal = document.getElementById("userManagerModal");
+      if (!isAdminUser() || !modal || modal.classList.contains("hidden") || cioeSessionsRefreshBusy) return;
+      cioeSessionsRefreshBusy = true;
+      try {
+        const result = await apiRequest("/api/users");
+        if (!result?.ok || !Array.isArray(result.users)) return;
+        const counts = new Map(result.users.map(u => [String(u.id), Number(u.active_sessions || 0)]));
+        for (const user of cachedSystemUsers) {
+          const count = counts.get(String(user.id));
+          if (count !== undefined) user.active_sessions = count;
+        }
+        document.querySelectorAll('#usersTableBody [data-cioe-session-user]').forEach(button => {
+          const count = counts.get(button.dataset.cioeSessionUser);
+          if (count === undefined) return;
+          const value = button.querySelector('[data-cioe-session-count]');
+          if (value) value.textContent = `${count} / 2`;
+          button.classList.toggle('text-emerald-300', count > 0);
+          button.classList.toggle('border-emerald-500/40', count > 0);
+          button.classList.toggle('bg-emerald-500/15', count > 0);
+          button.classList.toggle('text-slate-400', count === 0);
+          button.classList.toggle('border-slate-700', count === 0);
+          button.classList.toggle('bg-slate-800', count === 0);
+        });
+      } catch (e) {
+        // Si falla una consulta, conserva el último contador y reintenta.
+        console.warn('No se pudieron actualizar las sesiones:', e);
+      } finally {
+        cioeSessionsRefreshBusy = false;
+      }
+    }
+
     function openUserManager() {
       if (!isAdminUser()) return;
       const modal = document.getElementById("userManagerModal");
       modal.classList.remove("hidden");
       modal.classList.add("flex");
+      if (cioeSessionsRefreshTimer) clearInterval(cioeSessionsRefreshTimer);
       renderSystemUsers();
+      cioeSessionsRefreshTimer = setInterval(refreshUserSessionCounters, 3000);
     }
 
     function closeUserManager() {
+      if (cioeSessionsRefreshTimer) clearInterval(cioeSessionsRefreshTimer);
+      cioeSessionsRefreshTimer = null;
       const modal = document.getElementById("userManagerModal");
       modal.classList.add("hidden");
       modal.classList.remove("flex");
@@ -7297,7 +7338,7 @@ function cioeTogglePasswordVisibility(){
             <td class="p-3 text-center ${u.role === "admin" ? "text-violet-400" : "text-cyan-400"} font-bold">${u.role === "admin" ? "ADMINISTRADOR" : "USUARIO"}</td>
             <td class="p-3 text-center font-bold ${u.active !== false ? "text-emerald-400" : "text-rose-400"}">${u.active !== false ? "ACTIVO" : "INACTIVO"}</td>
             <td class="p-3 text-center">
-              ${u.role === "admin" ? '<span class="text-slate-500 font-bold">SIN LÍMITE</span>' : `<button type="button" onclick="openActiveSessionsModal(${i})" class="${Number(u.active_sessions||0)>0?'bg-emerald-500/15 border-emerald-500/40 text-emerald-300':'bg-slate-800 border-slate-700 text-slate-400'} border px-3 py-1.5 rounded-lg font-black hover:border-cyan-400"><i class="fa-solid fa-desktop mr-1"></i>${Number(u.active_sessions||0)} / 2</button>`}
+              ${u.role === "admin" ? '<span class="text-slate-500 font-bold">SIN LÍMITE</span>' : `<button type="button" data-cioe-session-user="${u.id}" onclick="openActiveSessionsModal(${i})" class="${Number(u.active_sessions||0)>0?'bg-emerald-500/15 border-emerald-500/40 text-emerald-300':'bg-slate-800 border-slate-700 text-slate-400'} border px-3 py-1.5 rounded-lg font-black hover:border-cyan-400"><i class="fa-solid fa-desktop mr-1"></i><span data-cioe-session-count>${Number(u.active_sessions||0)} / 2</span></button>`}
             </td>
             <td class="p-3 text-center">
               ${u.role === "admin" ? '<div class="flex flex-wrap items-center justify-center gap-2"><span class="text-emerald-400 font-bold"><i class="fa-solid fa-shield-halved mr-1"></i>Todos</span><button type="button" onclick="openCioeAdminViewSettings()" class="bg-violet-600/20 border border-violet-500/40 text-violet-300 hover:bg-violet-600 hover:text-white px-3 py-1.5 rounded-lg font-bold"><i class="fa-solid fa-sliders mr-1"></i>Configurar</button></div>' :
