@@ -523,6 +523,17 @@ app.get("/api/admin/connection-events", auth, adminOnly, async (req,res) => {
   }
 });
 
+// Borrar eventos históricos; solo administradores. No modifica sesiones activas.
+app.delete("/api/admin/connection-events", auth, adminOnly, async (req,res) => {
+  try {
+    const result = await pool.query("DELETE FROM connection_events");
+    res.json({ok:true,deleted:result.rowCount});
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ok:false,error:"No se pudo borrar el historial"});
+  }
+});
+
 // ======================================================
 // LOGIN
 // ======================================================
