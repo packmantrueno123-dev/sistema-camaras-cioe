@@ -1796,6 +1796,19 @@ function cioeTogglePasswordVisibility(){
       outline-offset: 1px;
     }
   </style>
+
+<style id="cioeStatsRoundedCornersFix2026">
+/* Solo las seis tarjetas principales: esquinas consistentes con el resto del panel. */
+#cioeMainStatsCards > div {
+  border-radius: 20px !important;
+  overflow: hidden;
+  box-sizing: border-box;
+  background-clip: padding-box;
+}
+#cioeMainStatsCards > div > div:last-child {
+  border-radius: 14px !important;
+}
+</style>
 </head>
 <body class="min-h-screen flex flex-col p-3 md:p-5 space-y-4 w-full">
 
@@ -2075,7 +2088,7 @@ function cioeTogglePasswordVisibility(){
       </div>
     </section>
 
-<section class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 w-full">
+<section id="cioeMainStatsCards" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 w-full">
       <div class="bg-[#0a0f1d] p-3.5 rounded-2xl border border-slate-800 shadow-xl flex justify-between items-center">
         <div>
           <span class="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">TOTAL CÁMARAS</span>
