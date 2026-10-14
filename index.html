@@ -11542,10 +11542,37 @@ window.cioeRefreshUserTransparency=syncTransparencyOwner;
 
 const PRESET='fondo-spiderman-cioe.jpg';
 let customUrl=null;
+let cloudOwner='';let cloudBusy=false;let cloudTimer=null;
+function cloudReady(){return typeof currentSystemUser!=='undefined' && currentSystemUser && typeof getApiToken==='function' && !!getApiToken() && typeof apiRequest==='function';}
+function blobToDataURL(file){return new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(reader.result);reader.onerror=()=>reject(reader.error);reader.readAsDataURL(file);});}
+async function cloudSave(imageData){
+ if(!cloudReady()||cloudBusy)return;
+ try{const data={settings:{...settings}};if(imageData!==undefined)data.imageData=imageData;
+ await apiRequest('/api/my-background',{method:'PUT',body:JSON.stringify(data)});
+ status('Personalización guardada en tu cuenta.');
+ }catch(e){status('No se pudo sincronizar el fondo con el servidor: '+(e.message||e));}
+}
+function scheduleCloudSave(){if(!cloudReady())return;clearTimeout(cloudTimer);cloudTimer=setTimeout(()=>cloudSave(),350);}
+async function cloudLoad(){
+ if(!cloudReady())return;
+ const owner=String(currentSystemUser.id);
+ if(owner===cloudOwner)return;
+ cloudOwner=owner;cloudBusy=true;
+ try{
+  const result=await apiRequest('/api/my-background');
+  if(!cloudReady()||String(currentSystemUser.id)!==owner)return;
+  if(result.settings&&Object.keys(result.settings).length){settings={...settings,...result.settings};}
+  if(customUrl&&customUrl.startsWith('blob:'))URL.revokeObjectURL(customUrl);
+  customUrl=result.imageData||null;
+  if(settings.mode==='custom'&&!customUrl){settings.enabled=false;}
+  apply();
+ }catch(e){status('No se pudo cargar la personalización de la cuenta.');}
+ finally{cloudBusy=false;}
+}
 let settings={enabled:false,mode:'preset',shade:45,transparency:0};
 try{settings={...settings,...JSON.parse(localStorage.getItem(SETTINGS)||'{}')}}catch(e){}
 settings.transparency=0;
-function save(){try{const shared={...settings};delete shared.transparency;localStorage.setItem(SETTINGS,JSON.stringify(shared));const id=activeUserId();if(id)localStorage.setItem(TRANSPARENCY_PREFIX+id,String(settings.transparency||0));}catch(e){}}
+function save(){scheduleCloudSave();try{const shared={...settings};delete shared.transparency;localStorage.setItem(SETTINGS,JSON.stringify(shared));const id=activeUserId();if(id)localStorage.setItem(TRANSPARENCY_PREFIX+id,String(settings.transparency||0));}catch(e){}}
 function status(message){const el=document.getElementById('cioeBgStatus');if(el)el.textContent=message;}
 function dbOpen(){
  return new Promise((resolve,reject)=>{
@@ -11614,11 +11641,12 @@ window.cioeBgUpload=async function(file){if(typeof hasPermission==='function'&&!
  if(!/^image\/(png|jpeg|webp|gif)$/.test(file.type)){status('Solo se admiten imágenes JPG, PNG, WebP o GIF.');return;}
  if(file.size>15*1024*1024){status('La imagen supera 15 MB. Usa una imagen más pequeña.');return;}
  try{
+  if(file.size>5*1024*1024){status('Para sincronizar entre dispositivos, la imagen debe ser menor de 5 MB.');return;}
   await dbPut(file);
   if(customUrl)URL.revokeObjectURL(customUrl);
   customUrl=URL.createObjectURL(file);
   settings.mode='custom';settings.enabled=true;save();apply();
-  status('Fondo personalizado guardado en este navegador.');
+  const imageData=await blobToDataURL(file);await cloudSave(imageData);
  }catch(e){status('No se pudo guardar la imagen. Comprueba el almacenamiento del navegador.');}
 };
 window.cioeBgRemove=function(){if(typeof hasPermission==='function'&&!hasPermission('subir_fondos'))return;settings.enabled=false;settings.mode='preset';save();apply();status('Fondo desactivado.');};
@@ -11628,8 +11656,9 @@ document.addEventListener('DOMContentLoaded',async function(){
  }
  apply();
  syncTransparencyOwner();
+ cloudLoad();
  const userLabel=document.getElementById('currentUserName');
- if(userLabel)new MutationObserver(syncTransparencyOwner).observe(userLabel,{childList:true,characterData:true,subtree:true});
+ if(userLabel)new MutationObserver(()=>{syncTransparencyOwner();cloudLoad();}).observe(userLabel,{childList:true,characterData:true,subtree:true});
 });
 })();
 </script>
