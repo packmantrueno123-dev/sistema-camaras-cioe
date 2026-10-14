@@ -272,6 +272,14 @@ async function initDb() {
     ON user_sessions(last_seen);
   `);
 
+  // Preferencias visuales privadas por cuenta (persistentes entre navegadores).
+  await pool.query(`CREATE TABLE IF NOT EXISTS user_background_preferences (
+    user_id INTEGER PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+    settings JSONB NOT NULL DEFAULT '{}'::jsonb,
+    image_data TEXT,
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+  )`);
+
   // Límite individual de sesiones: NULL significa acceso ilimitado.
   await pool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS session_limit INTEGER DEFAULT 2`);
   await pool.query(`UPDATE users SET session_limit=NULL WHERE role='admin'`);
@@ -869,6 +877,39 @@ app.put("/api/state", auth, async (req, res) => {
       error: "Error interno"
     });
   }
+});
+
+// ======================================================
+// FONDO PERSONAL POR USUARIO (no altera el estado compartido)
+// ======================================================
+app.get('/api/my-background',auth,async(req,res)=>{
+  try{
+    const q=await pool.query('SELECT settings,image_data FROM user_background_preferences WHERE user_id=$1',[req.user.id]);
+    const row=q.rows[0];
+    res.json({ok:true,settings:row?.settings||{},imageData:row?.image_data||null});
+  }catch(e){console.error(e);res.status(500).json({ok:false,error:'No se pudo recuperar el fondo'});}
+});
+app.put('/api/my-background',auth,async(req,res)=>{
+  try{
+    const user=await getCurrentUser(req.user.id);
+    if(!user?.active)return res.status(403).json({ok:false,error:'Usuario inactivo'});
+    const perms=user.role==='admin'?allPermissions():normalizePermissions(user.permissions);
+    if(!perms.subir_fondos)return res.status(403).json({ok:false,error:'Sin permiso para personalizar fondos'});
+    const x=req.body?.settings;
+    if(!x||typeof x!=='object'||Array.isArray(x))return res.status(400).json({ok:false,error:'Configuración inválida'});
+    const settings={enabled:x.enabled===true,mode:x.mode==='custom'?'custom':'preset',shade:Math.min(85,Math.max(0,Number(x.shade)||0)),transparency:Math.min(85,Math.max(0,Number(x.transparency)||0))};
+    let img=req.body?.imageData;
+    if(img!==null&&img!==undefined){
+      if(typeof img!=='string'||(img&&!/^data:image\/(?:png|jpeg|webp|gif);base64,[A-Za-z0-9+/=]+$/.test(img))||img.length>7_000_000)
+        return res.status(400).json({ok:false,error:'Imagen inválida o demasiado grande (máximo 5 MB)'});
+    }
+    await pool.query(`INSERT INTO user_background_preferences(user_id,settings,image_data)
+      VALUES($1,$2::jsonb,$3)
+      ON CONFLICT(user_id) DO UPDATE SET settings=EXCLUDED.settings,
+      image_data=CASE WHEN $4::boolean THEN EXCLUDED.image_data ELSE user_background_preferences.image_data END,
+      updated_at=NOW()`,[req.user.id,JSON.stringify(settings),img||null,img!==undefined]);
+    res.json({ok:true});
+  }catch(e){console.error(e);res.status(500).json({ok:false,error:'No se pudo guardar el fondo'});}
 });
 
 // ======================================================
