@@ -1823,7 +1823,7 @@ function cioeTogglePasswordVisibility(){
 
 <style id="cioeHeaderGlassButtons2026">
 /* Solo los botones del encabezado del Centro de Control: sin alterar eventos ni permisos. */
-.cioe-glass-btn {
+body.cioe-transparency-on .cioe-glass-btn {
   background:rgba(8,20,36,.36)!important;
   backdrop-filter:blur(11px) saturate(125%);
   -webkit-backdrop-filter:blur(11px) saturate(125%);
@@ -1834,14 +1834,14 @@ function cioeTogglePasswordVisibility(){
   border-radius:13px!important;
   transition:background .18s ease,border-color .18s ease,box-shadow .18s ease,transform .18s ease!important;
 }
-.cioe-glass-btn:hover {
+body.cioe-transparency-on .cioe-glass-btn:hover {
   background:var(--glass-hover,rgba(51,65,85,.55))!important;
   border-color:var(--glass-color,#e2e8f0)!important;
   box-shadow:0 0 15px var(--glass-glow,rgba(148,163,184,.15)),inset 0 1px 0 rgba(255,255,255,.12)!important;
   transform:translateY(-1px);
 }
-.cioe-glass-btn:active {transform:translateY(0)}
-.cioe-glass-btn:focus-visible{outline:2px solid var(--glass-color,#e2e8f0)!important;outline-offset:2px}
+body.cioe-transparency-on .cioe-glass-btn:active {transform:translateY(0)}
+body.cioe-transparency-on .cioe-glass-btn:focus-visible{outline:2px solid var(--glass-color,#e2e8f0)!important;outline-offset:2px}
 .cioe-glass-msg {--glass-color:#67e8f9;--glass-border:rgba(34,211,238,.48);--glass-hover:rgba(8,145,178,.24);--glass-glow:rgba(34,211,238,.17)}
 .cioe-glass-spotify {--glass-color:#86efac;--glass-border:rgba(34,197,94,.5);--glass-hover:rgba(22,163,74,.25);--glass-glow:rgba(34,197,94,.16)}
 .cioe-glass-occ {--glass-color:#fcd34d;--glass-border:rgba(245,158,11,.53);--glass-hover:rgba(217,119,6,.24);--glass-glow:rgba(245,158,11,.18)}
@@ -1853,8 +1853,33 @@ function cioeTogglePasswordVisibility(){
 .cioe-glass-users {--glass-color:#d8b4fe;--glass-border:rgba(168,85,247,.56);--glass-hover:rgba(126,34,206,.25)}
 .cioe-glass-logout {--glass-color:#fda4af;--glass-border:rgba(244,63,94,.61);--glass-hover:rgba(225,29,72,.26);--glass-glow:rgba(244,63,94,.18)}
 /* El personalizador usa reglas propias: este botón debe permanecer translúcido. */
-body.cioe-custom-theme #themeCustomizerBtn.cioe-glass-btn {background:rgba(8,20,36,.36)!important}
-body.cioe-custom-theme #themeCustomizerBtn.cioe-glass-btn:hover {background:rgba(8,145,178,.24)!important}
+body.cioe-transparency-on.cioe-custom-theme #themeCustomizerBtn.cioe-glass-btn {background:rgba(8,20,36,.36)!important}
+body.cioe-transparency-on.cioe-custom-theme #themeCustomizerBtn.cioe-glass-btn:hover {background:rgba(8,145,178,.24)!important}
+</style>
+
+<style id="cioeGlassFixSpotifyVecinal2026">
+/* Una sola cápsula para Spotify: se elimina el doble borde solo con transparencia activa. */
+body.cioe-transparency-on #cioeSpotifyPlayer {
+  background:transparent!important;border:0!important;box-shadow:none!important;
+  padding:0!important;gap:0!important;border-radius:13px!important;
+}
+body.cioe-transparency-on #cioeSpotifyPlayer > .cioe-glass-spotify {
+  display:inline-flex!important;align-items:center!important;justify-content:center!important;
+  gap:5px!important;padding:8px 12px!important;min-height:35px;
+  font-size:11px!important;line-height:1.25!important;white-space:nowrap!important;
+}
+/* Encabezado de Barrio Seguro: mismo efecto transparente, sin cambiar los eventos. */
+body.cioe-transparency-on .cioe-vecinal-glass {
+  background:rgba(8,20,36,.38)!important;color:#f8fafc!important;
+  border:1px solid rgba(148,163,184,.55)!important;
+  backdrop-filter:blur(11px) saturate(125%);-webkit-backdrop-filter:blur(11px) saturate(125%);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.09),0 3px 10px rgba(0,0,0,.15)!important;
+}
+body.cioe-transparency-on .cioe-vecinal-glass:hover {
+  background:rgba(51,65,85,.52)!important;border-color:rgba(226,232,240,.8)!important;
+}
+body.cioe-transparency-on .cioe-vecinal-add {border-color:rgba(251,191,36,.7)!important}
+body.cioe-transparency-on .cioe-vecinal-barrio {border-color:rgba(52,211,153,.65)!important}
 </style>
 </head>
 <body class="min-h-screen flex flex-col p-3 md:p-5 space-y-4 w-full">
@@ -2863,12 +2888,12 @@ body.cioe-custom-theme #themeCustomizerBtn.cioe-glass-btn:hover {background:rgba
       </div>
 
       <div class="flex items-center gap-2 relative">
-        <button onclick="openVecinalModal()" class="bg-amber-500 hover:bg-amber-400 text-black px-4 py-2 rounded-xl text-xs font-black transition flex items-center gap-2 shadow-lg shadow-amber-500/10">
+        <button onclick="openVecinalModal()" class="cioe-vecinal-glass cioe-vecinal-add bg-amber-500 hover:bg-amber-400 text-black px-4 py-2 rounded-xl text-xs font-black transition flex items-center gap-2 shadow-lg shadow-amber-500/10">
           <i class="fa-solid fa-plus text-sm"></i> Añadir Cámara Vecinal
         </button>
 
         <div class="relative">
-          <button type="button" onclick="toggleVecinalExcelReportPanel(event)" class="bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2">
+          <button type="button" onclick="toggleVecinalExcelReportPanel(event)" class="cioe-vecinal-glass bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2">
             <i class="fa-solid fa-file-excel text-emerald-400"></i> Reporte Excel
           </button>
 
@@ -2897,11 +2922,11 @@ body.cioe-custom-theme #themeCustomizerBtn.cioe-glass-btn:hover {background:rgba
           </div>
         </div>
 
-        <button onclick="openVecinalAddToBarrio()" class="bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2 rounded-xl text-xs font-black transition flex items-center gap-2 shadow-lg shadow-emerald-500/10">
+        <button onclick="openVecinalAddToBarrio()" class="cioe-vecinal-glass cioe-vecinal-barrio bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2 rounded-xl text-xs font-black transition flex items-center gap-2 shadow-lg shadow-emerald-500/10">
           <i class="fa-solid fa-folder-plus text-sm"></i> Añadir a un Barrio
         </button>
 
-        <button type="button" onclick="cioeToggleNavigation(event)" class="bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2"><i class="fa-solid fa-compass text-amber-400"></i> Ir a otras opciones <i class="fa-solid fa-chevron-down text-[10px]"></i></button>
+        <button type="button" onclick="cioeToggleNavigation(event)" class="cioe-vecinal-glass bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2"><i class="fa-solid fa-compass text-amber-400"></i> Ir a otras opciones <i class="fa-solid fa-chevron-down text-[10px]"></i></button>
       </div>
     </header>
 
@@ -11674,6 +11699,7 @@ function updateUI(){
 function apply(){
  updateUI();
  document.body.style.setProperty('--cioe-panel-alpha',String(1-(Number(settings.transparency)||0)/100));
+ document.body.classList.toggle('cioe-transparency-on',Number(settings.transparency)>0);
  if(!settings.enabled){document.body.classList.remove('cioe-background-active');document.body.style.removeProperty('background-image');return;}
  const url=settings.mode==='custom'?customUrl:PRESET;
  if(!url){document.body.classList.remove('cioe-background-active');document.body.style.removeProperty('background-image');status('No se encontró la imagen personalizada. Sube una nueva.');return;}
