@@ -1,1561 +1,185 @@
-const express = require("express");
-const cors = require("cors");
-const { Pool } = require("pg");
-const bcrypt = require("bcryptjs");
-const jwt = require("jsonwebtoken");
-const { randomUUID, createHash, createCipheriv, createDecipheriv, randomBytes } = require("crypto");
+'use strict';
+// JJAE SECURITY - Supabase Storage + Postgres. Revisar y probar antes de uso real.
+require('dotenv').config();
+const express = require('express');
+const multer = require('multer');
+const session = require('express-session');
+const crypto = require('node:crypto');
+const path = require('node:path');
+const { createClient } = require('@supabase/supabase-js');
 
 const app = express();
-const PORT = process.env.PORT || 3000;
-
-const FRONTEND_ORIGIN =
-  process.env.FRONTEND_ORIGIN ||
-  "https://sistema-camaras-cioe.onrender.com";
-
-const JWT_SECRET = process.env.JWT_SECRET;
-
-// ======================================================
-// PERMISOS DEL SISTEMA
-// ======================================================
-
-const DEFAULT_PERMISSIONS = {
-  configurar_vista_iconos: false,
-  vista_columnas: false,
-  vista_ocultar_camaras: false,
-  vista_ocultar_estaciones: false,
-  vista_indicadores: false,
-
-  ver_centro_control: true,
-  cambiar_estado: true,
-  agregar_camara: true,
-  editar_camara: true,
-  eliminar_camara: true,
-  buscar_filtrar: true,
-  ver_reportes: true,
-  editar_reportes: true,
-  reporte_whatsapp: true,
-  exportar_csv: true,
-  personalizar_colores: true,
-  diseno_colores: true,
-  mascotas_encabezado: true,
-  usar_spotify: true,
-  subir_fondos: true,
-  ajustar_transparencia: true,
-  telefono_perifoneo: true,
-  editar_perifoneo: true,
-  estado_perifoneo: true,
-  barrio_seguro: true,
-  barrio_agregar: true,
-  barrio_editar: true,
-  barrio_eliminar: true,
-  camaras_fijas: true,
-  fijas_agregar: true,
-  fijas_editar: true,
-  fijas_eliminar: true,
-  estaciones_pares: true,
-  ep_crear_grupo: true,
-  ep_agregar_camara: true,
-  ep_editar: true,
-  ep_eliminar: true,
-  gestionar_indicadores: false,
-  turnos: true,
-  turno_manana: true,
-  turno_tarde: true,
-  turno_noche: true,
-  turnos_crear: true,
-  turnos_editar: true,
-  turnos_eliminar: true,
-  totems: true,
-  totems_agregar: true,
-  totems_editar: true,
-  totems_eliminar: true
+const PORT = Number(process.env.PORT || 3000);
+const OWNER_PASSWORD = process.env.OWNER_PASSWORD;
+const SESSION_SECRET = process.env.SESSION_SECRET;
+const SUPABASE_URL = process.env.SUPABASE_URL;
+const SUPABASE_SECRET_KEY = process.env.SUPABASE_SECRET_KEY;
+const BUCKET = 'jjae-security-files';
+if (!OWNER_PASSWORD || !SESSION_SECRET || SESSION_SECRET.length < 32 || !SUPABASE_URL || !SUPABASE_SECRET_KEY) {
+  console.error('Faltan OWNER_PASSWORD, SESSION_SECRET (32+), SUPABASE_URL o SUPABASE_SECRET_KEY');
+  process.exit(1);
+}
+const supabase = createClient(SUPABASE_URL, SUPABASE_SECRET_KEY, {
+  auth: { persistSession: false, autoRefreshToken: false },
+});
+// IMPORTANTE: mantener el mismo OWNER_PASSWORD para descifrar archivos previos.
+const KEY = crypto.scryptSync(OWNER_PASSWORD, crypto.createHash('sha256').update('jjae-vault-key-v1').digest(), 32);
+const safe = s => String(s || '').replace(/[\x00-\x1f]/g, '').trim().slice(0, 180);
+const validName = s => typeof s === 'string' && safe(s).length > 0;
+const asyncRoute = fn => (req, res, next) => Promise.resolve(fn(req, res, next)).catch(next);
+const dbError = ({ error, data }) => { if (error) throw error; return data; };
+const files = () => supabase.from('jjae_files');
+const folders = () => supabase.from('jjae_folders');
+const getAllFiles = async () => dbError(await files().select('*').order('created', { ascending: false }).limit(1000));
+const getAllFolders = async () => dbError(await folders().select('*').limit(1000));
+const folderNames = async () => {
+  const [f, r] = await Promise.all([getAllFolders(), getAllFiles()]);
+  return [...new Set([...f.map(x => x.name), ...r.filter(x => !x.deleted_at).map(x => x.folder || 'Archivos')])].sort((a,b) => a.localeCompare(b,'es'));
+};
+const findFile = async (id, deleted = false) => {
+  const { data, error } = await files().select('*').eq('id', id).limit(1).maybeSingle();
+  if (error) throw error;
+  return data && Boolean(data.deleted_at) === deleted ? data : null;
+};
+const toPublic = r => ({ id:r.id, name:r.name, folder:r.folder, size:r.size, created:r.created, favorite:!!r.favorite, locked:true });
+const filePath = id => `${id}.bin`;
+const decrypt = b => {
+  if (b.length < 29) throw new Error('Archivo cifrado inválido');
+  const decipher = crypto.createDecipheriv('aes-256-gcm', KEY, b.subarray(0,12));
+  decipher.setAuthTag(b.subarray(12,28));
+  return Buffer.concat([decipher.update(b.subarray(28)), decipher.final()]);
 };
 
-function normalizePermissions(value) {
-  const source =
-    value && typeof value === "object" && !Array.isArray(value)
-      ? value
-      : {};
-
-  const result = {};
-
-  for (const key of Object.keys(DEFAULT_PERMISSIONS)) {
-    result[key] =
-      typeof source[key] === "boolean"
-        ? source[key]
-        : DEFAULT_PERMISSIONS[key];
+app.disable('x-powered-by');
+app.set('trust proxy', 1); // Render utiliza un proxy HTTPS.
+app.use(express.json({ limit: '10kb' }));
+app.use(session({
+  name:'jjae.sid', secret:SESSION_SECRET, resave:false, saveUninitialized:false,
+  cookie:{ httpOnly:true, sameSite:'strict', secure:process.env.NODE_ENV==='production', maxAge:2*60*60*1000 },
+}));
+app.get('/', (req,res) => res.sendFile(path.join(__dirname,'index.html')));
+const auth = (req,res,next) => req.session.owner ? next() : res.status(401).json({error:'Inicia sesión primero'});
+// Limitación básica en memoria: para producción con múltiples instancias usar almacén compartido.
+const attempts = new Map();
+app.post('/api/login', (req,res) => {
+  const ip = req.ip;
+  const now = Date.now();
+  const state = attempts.get(ip) || { count:0, until:now+15*60*1000 };
+  if (now > state.until) { state.count=0; state.until=now+15*60*1000; }
+  if (state.count >= 8) return res.status(429).json({error:'Demasiados intentos. Intenta más tarde'});
+  const a=Buffer.from(String(req.body?.password || ''));
+  const b=Buffer.from(OWNER_PASSWORD);
+  if (a.length !== b.length || !crypto.timingSafeEqual(a,b)) {
+    state.count++; attempts.set(ip,state);
+    return res.status(401).json({error:'Contraseña incorrecta'});
   }
-
-  return result;
-}
-
-function allPermissions() {
-  return Object.fromEntries(
-    Object.keys(DEFAULT_PERMISSIONS).map((key) => [key, true])
-  );
-}
-
-// ======================================================
-// COMPROBACIÓN DE VARIABLES
-// ======================================================
-
-if (!process.env.DATABASE_URL) {
-  throw new Error("Falta DATABASE_URL");
-}
-
-if (!JWT_SECRET) {
-  throw new Error("Falta JWT_SECRET");
-}
-
-// ======================================================
-// POSTGRESQL
-// ======================================================
-
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-  ssl: { rejectUnauthorized: false }
-});
-
-// ======================================================
-// EXPRESS / CORS
-// ======================================================
-
-app.use(
-  cors({
-    origin: FRONTEND_ORIGIN,
-    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"]
-  })
-);
-
-app.use(express.json({ limit: "10mb" }));
-
-// ======================================================
-// AUTENTICACIÓN
-// ======================================================
-
-async function auth(req, res, next) {
-  const header = req.headers.authorization || "";
-
-  const token = header.startsWith("Bearer ")
-    ? header.slice(7)
-    : "";
-
-  if (!token) {
-    return res.status(401).json({
-      ok: false,
-      error: "No autorizado"
-    });
-  }
-
-  try {
-    req.user = jwt.verify(token, JWT_SECRET);
-
-    // El administrador no tiene límite de sesiones.
-    if (req.user?.role === "admin") {
-      return next();
-    }
-
-    // Cada usuario normal debe tener una sesión registrada y activa.
-    if (!req.user?.sid) {
-      return res.status(401).json({
-        ok: false,
-        error: "Sesión inválida. Inicia sesión nuevamente."
-      });
-    }
-
-    const session = await pool.query(
-      `UPDATE user_sessions
-       SET last_seen=NOW()
-       WHERE session_id=$1
-         AND user_id=$2
-         AND last_seen > NOW() - INTERVAL '5 minutes'
-       RETURNING session_id`,
-      [req.user.sid, req.user.id]
-    );
-
-    if (!session.rowCount) {
-      return res.status(401).json({
-        ok: false,
-        error: "La sesión venció o fue cerrada. Inicia sesión nuevamente."
-      });
-    }
-
-    next();
-  } catch (err) {
-    if (err?.name === "JsonWebTokenError" || err?.name === "TokenExpiredError") {
-      return res.status(401).json({
-        ok: false,
-        error: "Sesión inválida o vencida"
-      });
-    }
-
-    console.error("Error validando sesión:", err);
-    return res.status(500).json({
-      ok: false,
-      error: "Error validando la sesión"
-    });
-  }
-}
-
-// ======================================================
-// SOLO ADMINISTRADOR
-// ======================================================
-
-function adminOnly(req, res, next) {
-  if (req.user?.role !== "admin") {
-    return res.status(403).json({
-      ok: false,
-      error: "Solo administrador"
-    });
-  }
-
-  next();
-}
-
-// ======================================================
-// OBTENER USUARIO ACTUAL DESDE LA BD
-// ======================================================
-
-async function getCurrentUser(userId) {
-  const q = await pool.query(
-    `SELECT
-      id,
-      username,
-      role,
-      active,
-      permissions
-     FROM users
-     WHERE id=$1`,
-    [userId]
-  );
-
-  return q.rows[0] || null;
-}
-
-// ======================================================
-// INICIALIZAR BASE DE DATOS
-// ======================================================
-
-async function initDb() {
-  await pool.query(`
-    CREATE TABLE IF NOT EXISTS app_state (
-      id INTEGER PRIMARY KEY,
-      data JSONB NOT NULL DEFAULT '{}'::jsonb,
-      updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-    );
-
-    INSERT INTO app_state (id, data)
-    VALUES (1, '{}'::jsonb)
-    ON CONFLICT (id) DO NOTHING;
-
-    CREATE TABLE IF NOT EXISTS users (
-      id SERIAL PRIMARY KEY,
-      username VARCHAR(30) UNIQUE NOT NULL,
-      password_hash TEXT NOT NULL,
-      role VARCHAR(10) NOT NULL DEFAULT 'user',
-      active BOOLEAN NOT NULL DEFAULT TRUE,
-      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-    );
-
-    CREATE TABLE IF NOT EXISTS user_sessions (
-      session_id UUID PRIMARY KEY,
-      user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-      last_seen TIMESTAMPTZ NOT NULL DEFAULT NOW()
-    );
-
-    CREATE INDEX IF NOT EXISTS idx_user_sessions_user_id
-    ON user_sessions(user_id);
-
-    CREATE INDEX IF NOT EXISTS idx_user_sessions_last_seen
-    ON user_sessions(last_seen);
-  `);
-
-  // Preferencias visuales privadas por cuenta (persistentes entre navegadores).
-  await pool.query(`CREATE TABLE IF NOT EXISTS user_background_preferences (
-    user_id INTEGER PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
-    settings JSONB NOT NULL DEFAULT '{}'::jsonb,
-    image_data TEXT,
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-  )`);
-
-  // Límite individual de sesiones: NULL significa acceso ilimitado.
-  await pool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS session_limit INTEGER DEFAULT 2`);
-  await pool.query(`UPDATE users SET session_limit=NULL WHERE role='admin'`);
-
-  // Agrega la columna sin borrar usuarios existentes
-  await pool.query(`
-    ALTER TABLE users
-    ADD COLUMN IF NOT EXISTS permissions JSONB
-    NOT NULL DEFAULT '{}'::jsonb;
-  `);
-
-  // Metadatos de seguridad para sesiones.
-  await pool.query(`
-    ALTER TABLE user_sessions
-      ADD COLUMN IF NOT EXISTS ip_address TEXT,
-      ADD COLUMN IF NOT EXISTS user_agent TEXT;
-  `);
-
-  // Registro persistente de dispositivos.
-  await pool.query(`
-    CREATE TABLE IF NOT EXISTS user_devices (
-      device_id UUID PRIMARY KEY,
-      user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-      device_key TEXT NOT NULL,
-      device_name TEXT NOT NULL DEFAULT 'Dispositivo',
-      user_agent TEXT,
-      first_seen TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-      last_seen TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-      UNIQUE(user_id, device_key)
-    );
-    CREATE INDEX IF NOT EXISTS idx_user_devices_user_id ON user_devices(user_id);
-  `);
-  await pool.query(`
-    ALTER TABLE user_sessions
-      ADD COLUMN IF NOT EXISTS device_id UUID REFERENCES user_devices(device_id) ON DELETE SET NULL;
-  `);
-
-  // Eventos de conexión para la campana exclusiva del administrador.
-  await pool.query(`
-    CREATE TABLE IF NOT EXISTS connection_events (
-      id BIGSERIAL PRIMARY KEY,
-      user_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
-      username VARCHAR(30) NOT NULL,
-      event_type VARCHAR(12) NOT NULL CHECK (event_type IN ('login','logout')),
-      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-    );
-    CREATE INDEX IF NOT EXISTS idx_connection_events_recent ON connection_events(id DESC);
-  `);
-
-  // Mensajería interna: los mensajes se eliminan automáticamente después de 24 horas.
-  await pool.query(`
-    CREATE TABLE IF NOT EXISTS internal_messages (
-      message_id UUID PRIMARY KEY,
-      sender_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-      recipient_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-      body TEXT NOT NULL,
-      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-      read_at TIMESTAMPTZ
-    );
-    CREATE INDEX IF NOT EXISTS idx_internal_messages_recipient ON internal_messages(recipient_id, created_at DESC);
-    CREATE INDEX IF NOT EXISTS idx_internal_messages_created_at ON internal_messages(created_at);
-  `);
-
-  // ====================================================
-  // CREAR ADMIN SI NO EXISTE
-  // ====================================================
-
-  const exists = await pool.query(
-    "SELECT id FROM users WHERE username=$1",
-    ["admin"]
-  );
-
-  if (!exists.rowCount) {
-    const adminPassword = process.env.ADMIN_PASSWORD;
-
-    if (!adminPassword || adminPassword.length < 4) {
-      throw new Error(
-        "Falta ADMIN_PASSWORD o es demasiado corta"
-      );
-    }
-
-    const hash = await bcrypt.hash(adminPassword, 12);
-
-    await pool.query(
-      `INSERT INTO users(
-        username,
-        password_hash,
-        role,
-        active,
-        permissions
-      )
-      VALUES($1,$2,'admin',TRUE,$3::jsonb)`,
-      [
-        "admin",
-        hash,
-        JSON.stringify(allPermissions())
-      ]
-    );
-
-    console.log("Usuario admin creado correctamente.");
-  }
-
-  // Admin siempre tiene todos los permisos
-  await pool.query(
-    `UPDATE users
-     SET permissions=$1::jsonb
-     WHERE username='admin'`,
-    [JSON.stringify(allPermissions())]
-  );
-
-  // ====================================================
-  // RECUPERACIÓN DE CONTRASEÑA ADMIN
-  // ====================================================
-
-  if (process.env.RESET_ADMIN_PASSWORD === "true") {
-    const resetPassword =
-      process.env.ADMIN_RESET_PASSWORD;
-
-    if (!resetPassword || resetPassword.length < 8) {
-      throw new Error(
-        "ADMIN_RESET_PASSWORD debe tener al menos 8 caracteres"
-      );
-    }
-
-    const resetHash = await bcrypt.hash(
-      resetPassword,
-      12
-    );
-
-    const result = await pool.query(
-      `UPDATE users
-       SET password_hash=$1,
-           active=TRUE
-       WHERE username='admin'
-       RETURNING id`,
-      [resetHash]
-    );
-
-    if (!result.rowCount) {
-      throw new Error(
-        "No se encontró el usuario admin"
-      );
-    }
-
-    console.log(
-      "Contraseña del administrador restablecida correctamente."
-    );
-  }
-}
-
-// ======================================================
-// API PRINCIPAL
-// ======================================================
-
-app.get("/", (_req, res) => {
-  res.json({
-    ok: true,
-    service: "CIOE API"
+  attempts.delete(ip);
+  req.session.regenerate(err => {
+    if (err) return res.status(500).json({error:'Error de sesión'});
+    req.session.owner=true;
+    req.session.save(err2 => err2 ? res.status(500).json({error:'Error de sesión'}) : res.json({ok:true}));
   });
 });
-
-function getClientIp(req) {
-  const forwarded=String(req.headers["x-forwarded-for"]||"").split(",")[0].trim();
-  const raw=forwarded||req.socket?.remoteAddress||"";
-  return raw.replace(/^::ffff:/,"")||"No disponible";
-}
-
-const providerCache = new Map();
-
-function isPublicIpForLookup(ip){
-  ip=String(ip||"").trim();
-  if(!ip || ip==="No disponible") return false;
-  if(ip==="::1" || ip==="127.0.0.1") return false;
-  if(/^10\./.test(ip) || /^192\.168\./.test(ip)) return false;
-  const m=ip.match(/^172\.(\d+)\./);
-  if(m && Number(m[1])>=16 && Number(m[1])<=31) return false;
-  return true;
-}
-
-async function getNetworkProvider(ip){
-  ip=String(ip||"").trim();
-  if(!isPublicIpForLookup(ip)) return "No disponible";
-
-  const cached=providerCache.get(ip);
-  if(cached && cached.expires>Date.now()) return cached.value;
-
-  try{
-    const controller=new AbortController();
-    const timer=setTimeout(()=>controller.abort(),2500);
-    const response=await fetch(
-      `https://ipwho.is/${encodeURIComponent(ip)}?fields=success,connection`,
-      {signal:controller.signal}
-    );
-    clearTimeout(timer);
-
-    if(!response.ok) throw new Error(`HTTP ${response.status}`);
-    const data=await response.json();
-
-    const provider=String(
-      data?.connection?.isp ||
-      data?.connection?.org ||
-      "No disponible"
-    ).trim() || "No disponible";
-
-    providerCache.set(ip,{value:provider,expires:Date.now()+6*60*60*1000});
-    return provider;
-  }catch(err){
-    console.warn("No se pudo consultar proveedor para",ip,err?.message||err);
-    providerCache.set(ip,{value:"No disponible",expires:Date.now()+10*60*1000});
-    return "No disponible";
+app.post('/api/logout', auth, (req,res) => req.session.destroy(() => {res.clearCookie('jjae.sid');res.json({ok:true});}));
+app.get('/api/me', (req,res) => res.json({authenticated:!!req.session.owner}));
+app.get('/api/files', auth, asyncRoute(async(req,res) => res.json((await getAllFiles()).filter(r=>!r.deleted_at).map(toPublic))));
+app.get('/api/folders', auth, asyncRoute(async(req,res) => res.json(await folderNames())));
+app.get('/api/folder-favorites', auth, asyncRoute(async(req,res) => {
+  const all = await getAllFolders(); const names = await folderNames();
+  res.json(all.filter(f=>f.favorite && names.includes(f.name)).map(f=>f.name));
+}));
+app.patch('/api/folder-favorites', auth, asyncRoute(async(req,res) => {
+  const name=safe(req.body?.name), favorite=req.body?.favorite;
+  if (typeof favorite !== 'boolean') return res.status(400).json({error:'Estado inválido'});
+  if (!(await folderNames()).includes(name)) return res.status(404).json({error:'Carpeta no encontrada'});
+  dbError(await folders().upsert({name,favorite}, {onConflict:'name'}));
+  res.json({ok:true,favorite});
+}));
+app.post('/api/folders', auth, asyncRoute(async(req,res) => {
+  const name=safe(req.body?.name);
+  if (!validName(req.body?.name)) return res.status(400).json({error:'Nombre inválido'});
+  if ((await folderNames()).includes(name)) return res.status(409).json({error:'Ya existe esa carpeta'});
+  dbError(await folders().insert({name,favorite:false}));res.status(201).json({name});
+}));
+app.patch('/api/folders', auth, asyncRoute(async(req,res) => {
+  const from=safe(req.body?.from), to=safe(req.body?.to);
+  if (!validName(to) || !(await folderNames()).includes(from)) return res.status(400).json({error:'Carpeta inválida'});
+  if (from !== to && (await folderNames()).includes(to)) return res.status(409).json({error:'Ya existe esa carpeta'});
+  if (from !== to) {
+    const f=dbError(await folders().select('*').eq('name',from).maybeSingle());
+    dbError(await folders().upsert({name:to,favorite:!!f?.favorite},{onConflict:'name'}));
+    dbError(await files().update({folder:to}).eq('folder',from));
+    if (f) dbError(await folders().delete().eq('name',from));
   }
-}
-
-function deviceInfoFromUA(ua){
-  ua=String(ua||"");
-  let device="PC";
-  if(/iPhone/i.test(ua)) device="iPhone";
-  else if(/iPad/i.test(ua)) device="iPad";
-  else if(/Android/i.test(ua)&&/Mobile/i.test(ua)) device="Android";
-  else if(/Android/i.test(ua)) device="Tablet Android";
-  else if(/Macintosh|Mac OS X/i.test(ua)) device="Mac";
-  else if(/Windows/i.test(ua)) device="PC Windows";
-  let browser="Navegador web";
-  if(/Edg\//i.test(ua))browser="Microsoft Edge";
-  else if(/OPR\//i.test(ua))browser="Opera";
-  else if(/Firefox\//i.test(ua))browser="Mozilla Firefox";
-  else if(/Chrome\//i.test(ua))browser="Google Chrome";
-  else if(/Safari\//i.test(ua))browser="Safari";
-  return {device,browser,name:`${device} — ${browser}`};
-}
-function makeDeviceKey(ua){
-  return createHash("sha256").update(String(ua||"desconocido")).digest("hex");
-}
-
-// Solo el administrador puede leer el historial.
-app.get("/api/admin/connection-events", auth, adminOnly, async (req,res) => {
-  try {
-    const after = Number(req.query.after || 0);
-    const validAfter = Number.isSafeInteger(after) && after >= 0 ? after : 0;
-    const q = await pool.query(
-      `SELECT id::text,username,event_type,created_at
-       FROM connection_events WHERE id > $1 ORDER BY id DESC LIMIT 100`,
-      [validAfter]
-    );
-    res.json({ok:true,events:q.rows.reverse()});
-  } catch(err) {
-    console.error(err);
-    res.status(500).json({ok:false,error:"No se pudo consultar el historial"});
-  }
-});
-
-// Borrar eventos históricos; solo administradores. No modifica sesiones activas.
-app.delete("/api/admin/connection-events", auth, adminOnly, async (req,res) => {
-  try {
-    const result = await pool.query("DELETE FROM connection_events");
-    res.json({ok:true,deleted:result.rowCount});
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ok:false,error:"No se pudo borrar el historial"});
-  }
-});
-
-// ======================================================
-// LOGIN
-// ======================================================
-
-app.post("/api/login", async (req, res) => {
-  const client = await pool.connect();
-
-  try {
-    const username = String(
-      req.body?.username || ""
-    ).trim();
-
-    const password = String(
-      req.body?.password || ""
-    );
-
-    const q = await client.query(
-      `SELECT
-        id,
-        username,
-        password_hash,
-        role,
-        active,
-        permissions,
-        session_limit
-       FROM users
-       WHERE username=$1`,
-      [username]
-    );
-
-    if (!q.rowCount || !q.rows[0].active) {
-      return res.status(401).json({
-        ok: false,
-        error: "Usuario o contraseña incorrectos"
-      });
-    }
-
-    const u = q.rows[0];
-
-    const valid = await bcrypt.compare(
-      password,
-      u.password_hash
-    );
-
-    if (!valid) {
-      return res.status(401).json({
-        ok: false,
-        error: "Usuario o contraseña incorrectos"
-      });
-    }
-
-    const permissions =
-      u.role === "admin"
-        ? allPermissions()
-        : normalizePermissions(u.permissions);
-
-    let sessionId = null;
-    let firstActiveSession = false;
-
-    // ADMIN: acceso ilimitado.
-    // USUARIOS NORMALES: máximo 2 sesiones/pestañas activas.
-    if (u.role !== "admin") {
-      await client.query("BEGIN");
-
-      // Evita que dos inicios simultáneos superen el límite.
-      await client.query(
-        "SELECT pg_advisory_xact_lock($1)",
-        [u.id]
-      );
-
-      // Libera sesiones de pestañas/equipos que dejaron de enviar actividad.
-      await client.query(
-        `DELETE FROM user_sessions
-         WHERE user_id=$1
-           AND last_seen <= NOW() - INTERVAL '5 minutes'`,
-        [u.id]
-      );
-
-      const activeSessions = await client.query(
-        `SELECT COUNT(*)::int AS total
-         FROM user_sessions
-         WHERE user_id=$1`,
-        [u.id]
-      );
-
-      const total = activeSessions.rows[0]?.total || 0;
-      firstActiveSession = total === 0;
-
-      if (u.session_limit !== null && total >= u.session_limit) {
-        await client.query("ROLLBACK");
-
-        return res.status(409).json({
-          ok: false,
-          code: "SESSION_LIMIT",
-          error: `Este usuario ya tiene ${u.session_limit} sesiones activas. Cierra una sesión para poder ingresar.`
-        });
-      }
-
-      sessionId = randomUUID();
-      const loginUA=String(req.headers["user-agent"]||"").slice(0,500);
-      const deviceKey=makeDeviceKey(loginUA);
-      const deviceMeta=deviceInfoFromUA(loginUA);
-      const deviceRow=await client.query(
-        `INSERT INTO user_devices(device_id,user_id,device_key,device_name,user_agent,first_seen,last_seen)
-         VALUES($1,$2,$3,$4,$5,NOW(),NOW())
-         ON CONFLICT(user_id,device_key)
-         DO UPDATE SET device_name=EXCLUDED.device_name,user_agent=EXCLUDED.user_agent,last_seen=NOW()
-         RETURNING device_id`,
-        [randomUUID(),u.id,deviceKey,deviceMeta.name,loginUA]
-      );
-      const deviceId=deviceRow.rows[0].device_id;
-      await client.query(
-        `INSERT INTO user_sessions(session_id,user_id,created_at,last_seen,ip_address,user_agent,device_id)
-         VALUES($1,$2,NOW(),NOW(),$3,$4,$5)`,
-        [sessionId,u.id,getClientIp(req),loginUA,deviceId]
-      );
-
-      // Solo registrar conexión cuando pasa de 0 a 1 sesiones.
-      // Se guarda en la misma transacción y bajo el bloqueo por usuario.
-      if (firstActiveSession) {
-        await client.query(
-          `INSERT INTO connection_events(user_id,username,event_type) VALUES($1,$2,'login')`,
-          [u.id,u.username]
-        );
-      }
-      await client.query("COMMIT");
-    }
-
-    const token = jwt.sign(
-      {
-        id: u.id,
-        username: u.username,
-        role: u.role,
-        ...(sessionId ? { sid: sessionId } : {})
-      },
-      JWT_SECRET,
-      {
-        expiresIn: "8h"
-      }
-    );
-
-    res.json({
-      ok: true,
-      token,
-      user: {
-        id: u.id,
-        username: u.username,
-        role: u.role,
-        permissions
-      },
-      sessionLimit: u.role === "admin" ? null : u.session_limit
-    });
-  } catch (err) {
-    try { await client.query("ROLLBACK"); } catch (_) {}
-    console.error(err);
-
-    res.status(500).json({
-      ok: false,
-      error: "Error interno"
-    });
-  } finally {
-    client.release();
-  }
-});
-
-// ======================================================
-// SESIONES ACTIVAS
-// ======================================================
-
-// Mantiene viva una pestaña abierta. Los usuarios normales envían
-// este pulso periódicamente; el admin queda exento del límite.
-app.post("/api/session/heartbeat", auth, async (req, res) => {
-  res.json({ ok: true });
-});
-
-// Cierra únicamente la sesión/pestaña actual.
-app.post("/api/logout", auth, async (req, res) => {
-  const client = await pool.connect();
-  try {
-    if (req.user?.role !== "admin" && req.user?.sid) {
-      await client.query("BEGIN");
-      // Serializar con inicios de sesión y cierres simultáneos del mismo usuario.
-      await client.query("SELECT pg_advisory_xact_lock($1)",[req.user.id]);
-      const removed = await client.query(
-        `DELETE FROM user_sessions WHERE session_id=$1 AND user_id=$2 RETURNING session_id`,
-        [req.user.sid, req.user.id]
-      );
-      if (removed.rowCount) {
-        const remaining = await client.query(
-          `SELECT EXISTS(SELECT 1 FROM user_sessions WHERE user_id=$1 AND last_seen > NOW() - INTERVAL '5 minutes') AS connected`,
-          [req.user.id]
-        );
-        // Registrar desconexión solamente al cerrar la última sesión.
-        if (!remaining.rows[0].connected) {
-          await client.query(
-            `INSERT INTO connection_events(user_id,username,event_type) VALUES($1,$2,'logout')`,
-            [req.user.id,req.user.username]
-          );
-        }
-      }
-      await client.query("COMMIT");
-    }
-    res.json({ok:true});
-  } catch (err) {
-    try { await client.query("ROLLBACK"); } catch (_) {}
-    console.error(err);
-    res.status(500).json({ok:false,error:"No se pudo cerrar la sesión"});
-  } finally {
-    client.release();
-  }
-});
-
-// ======================================================
-// DATOS DEL USUARIO ACTUAL
-// ======================================================
-
-app.get("/api/me", auth, async (req, res) => {
-  try {
-    const u = await getCurrentUser(req.user.id);
-
-    if (!u || !u.active) {
-      return res.status(401).json({
-        ok: false,
-        error: "Usuario no disponible"
-      });
-    }
-
-    res.json({
-      ok: true,
-      user: {
-        id: u.id,
-        username: u.username,
-        role: u.role,
-        active: u.active,
-        permissions:
-          u.role === "admin"
-            ? allPermissions()
-            : normalizePermissions(u.permissions)
-      }
-    });
-  } catch (err) {
-    console.error(err);
-
-    res.status(500).json({
-      ok: false,
-      error: "Error interno"
-    });
-  }
-});
-
-// ======================================================
-// OBTENER ESTADO COMPARTIDO
-// ======================================================
-
-app.get("/api/state", auth, async (_req, res) => {
-  try {
-    const q = await pool.query(
-      `SELECT data,updated_at
-       FROM app_state
-       WHERE id=1`
-    );
-
-    res.json({
-      ok: true,
-      data: q.rows[0].data,
-      updatedAt: q.rows[0].updated_at
-    });
-  } catch (err) {
-    console.error(err);
-
-    res.status(500).json({
-      ok: false,
-      error: "Error interno"
-    });
-  }
-});
-
-// ======================================================
-// GUARDAR ESTADO COMPARTIDO
-// ======================================================
-
-app.put("/api/state", auth, async (req, res) => {
-  try {
-    const currentUser =
-      await getCurrentUser(req.user.id);
-
-    if (!currentUser || !currentUser.active) {
-      return res.status(401).json({
-        ok: false,
-        error: "Usuario no disponible"
-      });
-    }
-
-    const data = req.body?.data;
-
-    if (
-      !data ||
-      typeof data !== "object" ||
-      Array.isArray(data)
-    ) {
-      return res.status(400).json({
-        ok: false,
-        error: "data inválida"
-      });
-    }
-
-    /*
-      El frontend será el encargado de impedir
-      las acciones que el usuario no tenga permitidas.
-
-      El backend mantiene la autenticación y guarda
-      el estado compartido.
-    */
-
-    const q = await pool.query(
-      `UPDATE app_state
-       SET data=jsonb_set($1::jsonb,'{adminViewSettings}',COALESCE(data->'adminViewSettings','{}'::jsonb),true),
-           updated_at=NOW()
-       WHERE id=1
-       RETURNING updated_at`,
-      [JSON.stringify(data)]
-    );
-
-    res.json({
-      ok: true,
-      updatedAt: q.rows[0].updated_at
-    });
-  } catch (err) {
-    console.error(err);
-
-    res.status(500).json({
-      ok: false,
-      error: "Error interno"
-    });
-  }
-});
-
-// ======================================================
-// FONDO PERSONAL POR USUARIO (no altera el estado compartido)
-// ======================================================
-app.get('/api/my-background',auth,async(req,res)=>{
-  try{
-    const q=await pool.query('SELECT settings,image_data FROM user_background_preferences WHERE user_id=$1',[req.user.id]);
-    const row=q.rows[0];
-    res.json({ok:true,settings:row?.settings||{},imageData:row?.image_data||null});
-  }catch(e){console.error(e);res.status(500).json({ok:false,error:'No se pudo recuperar el fondo'});}
-});
-app.put('/api/my-background',auth,async(req,res)=>{
-  try{
-    const user=await getCurrentUser(req.user.id);
-    if(!user?.active)return res.status(403).json({ok:false,error:'Usuario inactivo'});
-    const perms=user.role==='admin'?allPermissions():normalizePermissions(user.permissions);
-    if(!perms.subir_fondos)return res.status(403).json({ok:false,error:'Sin permiso para personalizar fondos'});
-    const x=req.body?.settings;
-    if(!x||typeof x!=='object'||Array.isArray(x))return res.status(400).json({ok:false,error:'Configuración inválida'});
-    const settings={enabled:x.enabled===true,mode:x.mode==='custom'?'custom':'preset',shade:Math.min(85,Math.max(0,Number(x.shade)||0)),transparency:Math.min(85,Math.max(0,Number(x.transparency)||0))};
-    let img=req.body?.imageData;
-    if(img!==null&&img!==undefined){
-      if(typeof img!=='string'||(img&&!/^data:image\/(?:png|jpeg|webp|gif);base64,[A-Za-z0-9+/=]+$/.test(img))||img.length>7_000_000)
-        return res.status(400).json({ok:false,error:'Imagen inválida o demasiado grande (máximo 5 MB)'});
-    }
-    await pool.query(`INSERT INTO user_background_preferences(user_id,settings,image_data)
-      VALUES($1,$2::jsonb,$3)
-      ON CONFLICT(user_id) DO UPDATE SET settings=EXCLUDED.settings,
-      image_data=CASE WHEN $4::boolean THEN EXCLUDED.image_data ELSE user_background_preferences.image_data END,
-      updated_at=NOW()`,[req.user.id,JSON.stringify(settings),img||null,img!==undefined]);
-    res.json({ok:true});
-  }catch(e){console.error(e);res.status(500).json({ok:false,error:'No se pudo guardar el fondo'});}
-});
-
-// ======================================================
-// LISTAR USUARIOS
-// SOLO ADMIN
-// ======================================================
-
-app.get(
-  "/api/users",
-  auth,
-  adminOnly,
-  async (_req, res) => {
-    try {
-      await pool.query(`DELETE FROM user_sessions WHERE last_seen <= NOW() - INTERVAL '5 minutes'`);
-      const q=await pool.query(
-        `SELECT u.id,u.username,u.role,u.active,u.permissions,u.created_at,u.session_limit,
-          CASE WHEN u.role='admin' THEN NULL ELSE COUNT(s.session_id)::int END AS active_sessions
-         FROM users u LEFT JOIN user_sessions s
-         ON s.user_id=u.id AND s.last_seen > NOW() - INTERVAL '5 minutes'
-         GROUP BY u.id ORDER BY u.id`
-      );
-
-      const users = q.rows.map((u) => ({
-        ...u,
-        permissions:
-          u.role === "admin"
-            ? allPermissions()
-            : normalizePermissions(u.permissions)
-      }));
-
-      res.json({
-        ok: true,
-        users
-      });
-    } catch (err) {
-      console.error(err);
-
-      res.status(500).json({
-        ok: false,
-        error: "Error interno"
-      });
-    }
-  }
-);
-
-// ======================================================
-// SESIONES ACTIVAS - SOLO ADMIN
-// ======================================================
-app.get("/api/users/:id/sessions",auth,adminOnly,async(req,res)=>{
- try{
-  const userId=Number(req.params.id);
-  if(!Number.isInteger(userId))return res.status(400).json({ok:false,error:"Usuario inválido"});
-  const target=await pool.query(`SELECT id,username,role,session_limit FROM users WHERE id=$1`,[userId]);
-  if(!target.rowCount)return res.status(404).json({ok:false,error:"Usuario no encontrado"});
-  await pool.query(`DELETE FROM user_sessions WHERE user_id=$1 AND last_seen <= NOW() - INTERVAL '5 minutes'`,[userId]);
-  const q=await pool.query(`SELECT session_id,device_id,created_at,last_seen,COALESCE(ip_address,'No disponible') ip_address,COALESCE(user_agent,'') user_agent FROM user_sessions WHERE user_id=$1 AND last_seen > NOW() - INTERVAL '5 minutes' ORDER BY created_at DESC`,[userId]);
-  const sessions=await Promise.all(q.rows.map(async s=>({
-    ...s,
-    provider:await getNetworkProvider(s.ip_address)
-  })));
-  res.json({ok:true,username:target.rows[0].username,limit:target.rows[0].role==="admin"?null:target.rows[0].session_limit,sessions});
- }catch(err){console.error(err);res.status(500).json({ok:false,error:"No se pudieron consultar las sesiones"});}
-});
-app.get("/api/users/:id/devices",auth,adminOnly,async(req,res)=>{
- try{
-  const userId=Number(req.params.id);
-  if(!Number.isInteger(userId))return res.status(400).json({ok:false,error:"Usuario inválido"});
-  const q=await pool.query(`SELECT d.device_id,d.device_name,d.user_agent,d.first_seen,d.last_seen,COUNT(s.session_id)::int active_sessions FROM user_devices d LEFT JOIN user_sessions s ON s.device_id=d.device_id AND s.last_seen>NOW()-INTERVAL '5 minutes' WHERE d.user_id=$1 GROUP BY d.device_id ORDER BY d.last_seen DESC`,[userId]);
-  res.json({ok:true,devices:q.rows});
- }catch(err){console.error(err);res.status(500).json({ok:false,error:"No se pudieron consultar los dispositivos"});}
-});
-app.delete("/api/users/:id/devices/:deviceId",auth,adminOnly,async(req,res)=>{
- const client=await pool.connect();
- try{
-  const userId=Number(req.params.id),deviceId=String(req.params.deviceId||"");
-  await client.query("BEGIN");
-  await client.query(`DELETE FROM user_sessions WHERE user_id=$1 AND device_id=$2`,[userId,deviceId]);
-  const q=await client.query(`DELETE FROM user_devices WHERE user_id=$1 AND device_id=$2 RETURNING device_id`,[userId,deviceId]);
-  if(!q.rowCount){await client.query("ROLLBACK");return res.status(404).json({ok:false,error:"Dispositivo no encontrado"});}
-  await client.query("COMMIT");res.json({ok:true});
- }catch(err){try{await client.query("ROLLBACK")}catch(_){}console.error(err);res.status(500).json({ok:false,error:"No se pudo revocar el dispositivo"});}
- finally{client.release();}
-});
-app.delete("/api/users/:id/sessions/:sessionId",auth,adminOnly,async(req,res)=>{
- try{
-  const q=await pool.query(`DELETE FROM user_sessions WHERE user_id=$1 AND session_id=$2 RETURNING session_id`,[req.params.id,req.params.sessionId]);
-  if(!q.rowCount)return res.status(404).json({ok:false,error:"La sesión ya no está activa"});
   res.json({ok:true});
- }catch(err){console.error(err);res.status(500).json({ok:false,error:"No se pudo cerrar la sesión"});}
+}));
+app.delete('/api/folders', auth, asyncRoute(async(req,res) => {
+  const name=safe(req.body?.name);
+  if (!(await folderNames()).includes(name)) return res.status(404).json({error:'Carpeta no encontrada'});
+  const now=new Date().toISOString();
+  const changed=dbError(await files().update({deleted_at:now}).eq('folder',name).is('deleted_at',null).select('id'));
+  dbError(await folders().delete().eq('name',name));
+  res.json({ok:true,movedToTrash:changed.length});
+}));
+app.get('/api/storage', auth, asyncRoute(async(req,res) => {
+  const all=await getAllFiles();
+  res.json({vaultBytes:all.reduce((s,r)=>s+Number(r.size||0)+28,0),diskTotalBytes:null,diskFreeBytes:null});
+}));
+const upload=multer({storage:multer.memoryStorage(),limits:{fileSize:15*1024*1024,files:1}});
+app.post('/api/files', auth, upload.single('file'), asyncRoute(async(req,res) => {
+  if (!req.file) return res.status(400).json({error:'Selecciona un archivo'});
+  const id=crypto.randomUUID(), iv=crypto.randomBytes(12), cipher=crypto.createCipheriv('aes-256-gcm',KEY,iv);
+  const encrypted=Buffer.concat([cipher.update(req.file.buffer),cipher.final()]);
+  const blob=Buffer.concat([iv,cipher.getAuthTag(),encrypted]);
+  const {error:uploadError}=await supabase.storage.from(BUCKET).upload(filePath(id),blob,{contentType:'application/octet-stream',upsert:false});
+  if (uploadError) throw uploadError;
+  const row={id,name:safe(req.body.name||req.file.originalname)||'Archivo',folder:safe(req.body.folder||'Archivos')||'Archivos',size:req.file.size,created:new Date().toISOString(),favorite:false};
+  try { dbError(await files().insert(row)); }
+  catch(e) { await supabase.storage.from(BUCKET).remove([filePath(id)]); throw e; }
+  res.status(201).json(toPublic(row));
+}));
+app.get('/api/files/:id/download', auth, asyncRoute(async(req,res) => {
+  const r=await findFile(req.params.id);
+  if (!r) return res.status(404).json({error:'No encontrado'});
+  const {data,error}=await supabase.storage.from(BUCKET).download(filePath(r.id));
+  if (error) throw error;
+  const plaintext=decrypt(Buffer.from(await data.arrayBuffer()));
+  res.setHeader('Content-Type','application/octet-stream');
+  res.setHeader('Content-Disposition',`attachment; filename*=UTF-8''${encodeURIComponent(r.name)}`);
+  res.send(plaintext);
+}));
+app.patch('/api/files/:id', auth, asyncRoute(async(req,res) => {
+  const r=await findFile(req.params.id);
+  if (!r) return res.status(404).json({error:'No encontrado'});
+  const changes={};
+  if (req.body?.name !== undefined) {if(!validName(req.body.name))return res.status(400).json({error:'Nombre inválido'});changes.name=safe(req.body.name);}
+  if (req.body?.folder !== undefined) {if(!validName(req.body.folder))return res.status(400).json({error:'Carpeta inválida'});changes.folder=safe(req.body.folder);}
+  if (req.body?.favorite !== undefined) changes.favorite=!!req.body.favorite;
+  if (Object.keys(changes).length) dbError(await files().update(changes).eq('id',r.id));
+  res.json({ok:true});
+}));
+app.get('/api/trash', auth, asyncRoute(async(req,res) => res.json((await getAllFiles()).filter(r=>r.deleted_at).map(r=>({id:r.id,name:r.name,folder:r.folder,size:r.size,created:r.created,deletedAt:r.deleted_at})))));
+app.delete('/api/files/:id', auth, asyncRoute(async(req,res) => {
+  const r=await findFile(req.params.id);
+  if (!r) return res.status(404).json({error:'No encontrado'});
+  dbError(await files().update({deleted_at:new Date().toISOString()}).eq('id',r.id));res.json({ok:true});
+}));
+app.post('/api/trash/:id/restore', auth, asyncRoute(async(req,res) => {
+  const r=await findFile(req.params.id,true);
+  if (!r) return res.status(404).json({error:'No encontrado'});
+  const {data,error}=await supabase.storage.from(BUCKET).info(filePath(r.id));
+  if (error || !data) return res.status(409).json({error:'Falta el archivo cifrado'});
+  dbError(await files().update({deleted_at:null}).eq('id',r.id));res.json({ok:true});
+}));
+app.delete('/api/trash/:id', auth, asyncRoute(async(req,res) => {
+  const r=await findFile(req.params.id,true);
+  if (!r) return res.status(404).json({error:'No encontrado'});
+  const {error}=await supabase.storage.from(BUCKET).remove([filePath(r.id)]);
+  if (error) throw error;
+  dbError(await files().delete().eq('id',r.id));res.json({ok:true});
+}));
+app.use((err,req,res,next) => {
+  console.error('Error:',err.message);
+  res.status(err.code==='LIMIT_FILE_SIZE'?413:500).json({error:err.code==='LIMIT_FILE_SIZE'?'Máximo 15 MB por archivo':'No se pudo completar la operación'});
 });
-app.delete("/api/users/:id/sessions",auth,adminOnly,async(req,res)=>{
- try{
-  const userId=Number(req.params.id);
-  if(!Number.isInteger(userId))return res.status(400).json({ok:false,error:"Usuario inválido"});
-  const target=await pool.query(`SELECT id,username,role FROM users WHERE id=$1`,[userId]);
-  if(!target.rowCount)return res.status(404).json({ok:false,error:"Usuario no encontrado"});
-  if(target.rows[0].role==="admin")return res.status(400).json({ok:false,error:"No se puede cerrar masivamente la sesión del administrador desde aquí"});
-  const q=await pool.query(`DELETE FROM user_sessions WHERE user_id=$1 RETURNING session_id`,[userId]);
-  res.json({ok:true,closed:q.rowCount});
- }catch(err){console.error(err);res.status(500).json({ok:false,error:"No se pudieron cerrar todas las sesiones"});}
-});
-
-// Configurar el límite de sesiones por usuario (NULL = libre).
-app.patch("/api/users/:id/session-limit",auth,adminOnly,async(req,res)=>{
- const userId=Number(req.params.id);
- const limit=req.body?.limit;
- if(!Number.isInteger(userId)||userId<=0)return res.status(400).json({ok:false,error:"Usuario inválido"});
- if(limit!==null && ![1,2,3,5,10].includes(limit))return res.status(400).json({ok:false,error:"Selecciona 1, 2, 3, 5, 10 o libre"});
- const client=await pool.connect();
- try{
-  await client.query("BEGIN");
-  await client.query("SELECT pg_advisory_xact_lock($1)",[userId]);
-  const target=await client.query("SELECT id,role FROM users WHERE id=$1 FOR UPDATE",[userId]);
-  if(!target.rowCount){await client.query("ROLLBACK");return res.status(404).json({ok:false,error:"Usuario no encontrado"});}
-  if(target.rows[0].role==="admin"){await client.query("ROLLBACK");return res.status(403).json({ok:false,error:"El administrador conserva acceso ilimitado"});}
-  await client.query("UPDATE users SET session_limit=$1 WHERE id=$2",[limit,userId]);
-  // Si se reduce el cupo, conservar las sesiones más recientes y cerrar las sobrantes.
-  let closed=0;
-  if(limit!==null){
-   const removed=await client.query(`DELETE FROM user_sessions WHERE session_id IN (
-    SELECT session_id FROM user_sessions WHERE user_id=$1
-    ORDER BY last_seen DESC,created_at DESC OFFSET $2
-   ) RETURNING session_id`,[userId,limit]);
-   closed=removed.rowCount;
-  }
-  await client.query("COMMIT");
-  res.json({ok:true,limit,closed});
- }catch(e){try{await client.query("ROLLBACK")}catch(_){}console.error(e);res.status(500).json({ok:false,error:"No se pudo actualizar el límite"});}
- finally{client.release();}
-});
-
-// ======================================================
-// CREAR USUARIO
-// SOLO ADMIN
-// ======================================================
-
-app.post(
-  "/api/users",
-  auth,
-  adminOnly,
-  async (req, res) => {
-    try {
-      const username = String(
-        req.body?.username || ""
-      ).trim();
-
-      const password = String(
-        req.body?.password || ""
-      );
-
-      const role =
-        req.body?.role === "admin"
-          ? "admin"
-          : "user";
-
-      if (
-        !/^[A-Za-z0-9._-]{3,30}$/.test(username) ||
-        password.length < 4
-      ) {
-        return res.status(400).json({
-          ok: false,
-          error: "Datos inválidos"
-        });
-      }
-
-      const hash = await bcrypt.hash(
-        password,
-        12
-      );
-
-      const permissions =
-        role === "admin"
-          ? allPermissions()
-          : normalizePermissions(
-              req.body?.permissions
-            );
-
-      await pool.query(
-        `INSERT INTO users(
-          username,
-          password_hash,
-          role,
-          active,
-          permissions
-        )
-        VALUES($1,$2,$3,TRUE,$4::jsonb)`,
-        [
-          username,
-          hash,
-          role,
-          JSON.stringify(permissions)
-        ]
-      );
-
-      res.json({
-        ok: true
-      });
-    } catch (err) {
-      if (err.code === "23505") {
-        return res.status(409).json({
-          ok: false,
-          error: "El usuario ya existe"
-        });
-      }
-
-      console.error(err);
-
-      res.status(500).json({
-        ok: false,
-        error: "Error interno"
-      });
-    }
-  }
-);
-
-// ======================================================
-// CAMBIAR PERMISOS
-// SOLO ADMIN
-// ======================================================
-
-app.patch(
-  "/api/users/:id/permissions",
-  auth,
-  adminOnly,
-  async (req, res) => {
-    try {
-      const userId = Number(req.params.id);
-
-      if (!Number.isInteger(userId)) {
-        return res.status(400).json({
-          ok: false,
-          error: "Usuario inválido"
-        });
-      }
-
-      const findUser = await pool.query(
-        `SELECT id,username,role
-         FROM users
-         WHERE id=$1`,
-        [userId]
-      );
-
-      if (!findUser.rowCount) {
-        return res.status(404).json({
-          ok: false,
-          error: "Usuario no encontrado"
-        });
-      }
-
-      const target = findUser.rows[0];
-
-      if (
-        target.username === "admin" ||
-        target.role === "admin"
-      ) {
-        return res.status(400).json({
-          ok: false,
-          error:
-            "Los permisos del administrador no pueden limitarse"
-        });
-      }
-
-      const permissions =
-        normalizePermissions(
-          req.body?.permissions
-        );
-
-      await pool.query(
-        `UPDATE users
-         SET permissions=$1::jsonb
-         WHERE id=$2`,
-        [
-          JSON.stringify(permissions),
-          userId
-        ]
-      );
-
-      res.json({
-        ok: true,
-        permissions
-      });
-    } catch (err) {
-      console.error(err);
-
-      res.status(500).json({
-        ok: false,
-        error: "Error interno"
-      });
-    }
-  }
-);
-
-// ======================================================
-// CAMBIAR CONTRASEÑA
-// SOLO ADMIN
-// ======================================================
-
-app.patch(
-  "/api/users/:id/password",
-  auth,
-  adminOnly,
-  async (req, res) => {
-    try {
-      const password = String(
-        req.body?.password || ""
-      );
-
-      if (password.length < 4) {
-        return res.status(400).json({
-          ok: false,
-          error: "Contraseña muy corta"
-        });
-      }
-
-      const hash = await bcrypt.hash(
-        password,
-        12
-      );
-
-      const q = await pool.query(
-        `UPDATE users
-         SET password_hash=$1
-         WHERE id=$2
-         RETURNING id`,
-        [hash, req.params.id]
-      );
-
-      if (!q.rowCount) {
-        return res.status(404).json({
-          ok: false,
-          error: "Usuario no encontrado"
-        });
-      }
-
-      await pool.query(
-        "DELETE FROM user_sessions WHERE user_id=$1",
-        [req.params.id]
-      );
-
-      res.json({
-        ok: true
-      });
-    } catch (err) {
-      console.error(err);
-
-      res.status(500).json({
-        ok: false,
-        error: "Error interno"
-      });
-    }
-  }
-);
-
-// ======================================================
-// ACTIVAR / DESACTIVAR USUARIO
-// SOLO ADMIN
-// ======================================================
-
-app.patch(
-  "/api/users/:id/active",
-  auth,
-  adminOnly,
-  async (req, res) => {
-    try {
-      const q = await pool.query(
-        `UPDATE users
-         SET active=$1
-         WHERE id=$2
-         AND username<>'admin'
-         RETURNING id`,
-        [
-          !!req.body?.active,
-          req.params.id
-        ]
-      );
-
-      if (!q.rowCount) {
-        return res.status(400).json({
-          ok: false,
-          error:
-            "No se puede modificar ese usuario"
-        });
-      }
-
-      if (!req.body?.active) {
-        await pool.query(
-          "DELETE FROM user_sessions WHERE user_id=$1",
-          [req.params.id]
-        );
-      }
-
-      res.json({
-        ok: true
-      });
-    } catch (err) {
-      console.error(err);
-
-      res.status(500).json({
-        ok: false,
-        error: "Error interno"
-      });
-    }
-  }
-);
-
-// ======================================================
-// ELIMINAR USUARIO
-// SOLO ADMIN
-// ======================================================
-
-app.delete(
-  "/api/users/:id",
-  auth,
-  adminOnly,
-  async (req, res) => {
-    try {
-      const q = await pool.query(
-        `DELETE FROM users
-         WHERE id=$1
-         AND username<>'admin'
-         RETURNING id`,
-        [req.params.id]
-      );
-
-      if (!q.rowCount) {
-        return res.status(400).json({
-          ok: false,
-          error:
-            "No se puede eliminar ese usuario"
-        });
-      }
-
-      res.json({
-        ok: true
-      });
-    } catch (err) {
-      console.error(err);
-
-      res.status(500).json({
-        ok: false,
-        error: "Error interno"
-      });
-    }
-  }
-);
-
-// ======================================================
-// MENSAJERÍA INTERNA - 24 HORAS
-// ======================================================
-async function cleanupExpiredMessages(){
-  await pool.query(`DELETE FROM internal_messages WHERE created_at <= NOW() - INTERVAL '24 hours'`);
-}
-
-// Mensajes visibles para el usuario actual. El admin también ve los enviados por él.
-app.get("/api/messages", auth, async (req,res)=>{
-  try{
-    await cleanupExpiredMessages();
-    const isAdmin=req.user?.role==="admin";
-    const q=await pool.query(
-      isAdmin
-        ? `SELECT m.message_id,m.body,m.created_at,m.read_at,
-                  su.username sender_username,ru.username recipient_username,
-                  (m.sender_id=$1) AS sent_by_me
-           FROM internal_messages m
-           JOIN users su ON su.id=m.sender_id
-           JOIN users ru ON ru.id=m.recipient_id
-           WHERE m.sender_id=$1 OR m.recipient_id=$1
-           ORDER BY m.created_at DESC`
-        : `SELECT m.message_id,m.body,m.created_at,m.read_at,
-                  su.username sender_username,ru.username recipient_username,
-                  (m.sender_id=$1) AS sent_by_me
-           FROM internal_messages m
-           JOIN users su ON su.id=m.sender_id
-           JOIN users ru ON ru.id=m.recipient_id
-           WHERE m.sender_id=$1 OR m.recipient_id=$1
-           ORDER BY m.created_at DESC`,
-      [req.user.id]
-    );
-    res.json({ok:true,messages:q.rows});
-  }catch(err){console.error(err);res.status(500).json({ok:false,error:"No se pudieron cargar los mensajes"});}
-});
-
-// Chat privado: el administrador puede escribir a usuarios; un usuario normal solo puede responder al administrador.
-app.post("/api/messages", auth, async (req,res)=>{
-  try{
-    await cleanupExpiredMessages();
-    const recipient=String(req.body?.recipient||"").trim();
-    const body=String(req.body?.body||"").trim();
-    if(!recipient || !body || body.length>1000) return res.status(400).json({ok:false,error:"Destinatario o mensaje inválido"});
-
-    const u=await pool.query(`SELECT id,username,role,active FROM users WHERE username=$1`,[recipient]);
-    if(!u.rowCount || !u.rows[0].active) return res.status(404).json({ok:false,error:"Usuario no encontrado o inactivo"});
-
-    const target=u.rows[0];
-    if(req.user?.role==="admin"){
-      if(target.role==="admin") return res.status(400).json({ok:false,error:"Selecciona un usuario del sistema"});
-    }else{
-      if(target.role!=="admin") return res.status(403).json({ok:false,error:"Los usuarios solo pueden chatear con el administrador"});
-    }
-
-    const q=await pool.query(
-      `INSERT INTO internal_messages(message_id,sender_id,recipient_id,body,created_at)
-       VALUES($1,$2,$3,$4,NOW()) RETURNING message_id,created_at`,
-      [randomUUID(),req.user.id,target.id,body]
-    );
-    res.json({ok:true,message:q.rows[0]});
-  }catch(err){console.error(err);res.status(500).json({ok:false,error:"No se pudo enviar el mensaje"});}
-});
-
-// Marca como leído únicamente un mensaje recibido por el usuario actual.
-app.patch("/api/messages/:id/read", auth, async (req,res)=>{
-  try{
-    await cleanupExpiredMessages();
-    const q=await pool.query(`UPDATE internal_messages SET read_at=COALESCE(read_at,NOW()) WHERE message_id=$1 AND recipient_id=$2 RETURNING message_id`,[req.params.id,req.user.id]);
-    if(!q.rowCount) return res.status(404).json({ok:false,error:"Mensaje no encontrado"});
-    res.json({ok:true});
-  }catch(err){console.error(err);res.status(500).json({ok:false,error:"No se pudo actualizar el mensaje"});}
-});
-
-// El administrador puede eliminar una conversación completa con un usuario.
-app.delete("/api/messages/conversation/:username", auth, adminOnly, async (req,res)=>{
-  try{
-    await cleanupExpiredMessages();
-    const username=String(req.params.username||"").trim();
-    const u=await pool.query(`SELECT id,role FROM users WHERE username=$1`,[username]);
-    if(!u.rowCount || u.rows[0].role==="admin") return res.status(404).json({ok:false,error:"Usuario no encontrado"});
-    const q=await pool.query(
-      `DELETE FROM internal_messages
-       WHERE (sender_id=$1 AND recipient_id=$2)
-          OR (sender_id=$2 AND recipient_id=$1)
-       RETURNING message_id`,
-      [req.user.id,u.rows[0].id]
-    );
-    res.json({ok:true,deleted:q.rowCount});
-  }catch(err){console.error(err);res.status(500).json({ok:false,error:"No se pudo eliminar la conversación"});}
-});
-
-// El administrador puede eliminar cualquier mensaje visible del sistema.
-app.delete("/api/messages/:id", auth, adminOnly, async (req,res)=>{
-  try{
-    const q=await pool.query(`DELETE FROM internal_messages WHERE message_id=$1 RETURNING message_id`,[req.params.id]);
-    if(!q.rowCount) return res.status(404).json({ok:false,error:"Mensaje no encontrado"});
-    res.json({ok:true});
-  }catch(err){console.error(err);res.status(500).json({ok:false,error:"No se pudo eliminar el mensaje"});}
-});
-
-
-// =============== SPOTIFY (independiente del sistema CIOE) ===============
-const SPOTIFY_REDIRECT_URI=process.env.SPOTIFY_REDIRECT_URI || 'https://sistema-camaras-cioe-api.onrender.com/api/spotify/callback';
-const spotifyKey=createHash('sha256').update(String(JWT_SECRET)+':spotify-tokens').digest();
-function spotifyEncrypt(data){const iv=randomBytes(12),c=createCipheriv('aes-256-gcm',spotifyKey,iv);const v=Buffer.concat([c.update(JSON.stringify(data),'utf8'),c.final()]);return Buffer.concat([iv,c.getAuthTag(),v]).toString('base64')}
-function spotifyDecrypt(data){const b=Buffer.from(data,'base64'),d=createDecipheriv('aes-256-gcm',spotifyKey,b.subarray(0,12));d.setAuthTag(b.subarray(12,28));return JSON.parse(Buffer.concat([d.update(b.subarray(28)),d.final()]).toString('utf8'))}
-async function spotifyTokenRequest(body){
- const clientId=process.env.SPOTIFY_CLIENT_ID,secret=process.env.SPOTIFY_CLIENT_SECRET;
- if(!clientId||!secret)throw Error('Faltan credenciales Spotify en Render');
- const response=await fetch('https://accounts.spotify.com/api/token',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded','Authorization':'Basic '+Buffer.from(clientId+':'+secret).toString('base64')},body:new URLSearchParams(body),signal:AbortSignal.timeout(8000)});
- const data=await response.json();if(!response.ok)throw Error(data.error_description||data.error||'Spotify rechazó la solicitud');return data;
-}
-async function spotifyStore(userId,info){await pool.query('INSERT INTO spotify_connections(user_id,token_data) VALUES($1,$2) ON CONFLICT(user_id) DO UPDATE SET token_data=EXCLUDED.token_data',[userId,spotifyEncrypt(info)])}
-app.get('/api/spotify/connect',auth,(req,res)=>{
- if(!process.env.SPOTIFY_CLIENT_ID||!process.env.SPOTIFY_CLIENT_SECRET)return res.status(503).json({ok:false,error:'Configura SPOTIFY_CLIENT_ID y SPOTIFY_CLIENT_SECRET en Render'});
- const state=jwt.sign({userId:req.user.id,purpose:'spotify',nonce:randomUUID()},JWT_SECRET,{expiresIn:'5m'});
- const url=new URL('https://accounts.spotify.com/authorize');url.search=new URLSearchParams({client_id:process.env.SPOTIFY_CLIENT_ID,response_type:'code',redirect_uri:SPOTIFY_REDIRECT_URI,scope:'user-read-currently-playing user-read-playback-state',state}).toString();res.json({ok:true,url:url.toString()});
-});
-app.get('/api/spotify/callback',async(req,res)=>{
- const back='https://sistema-camaras-cioe.onrender.com/';
- try{
-  if(req.query.error)throw Error('Acceso denegado');
-  const state=jwt.verify(String(req.query.state||''),JWT_SECRET);
-  if(state.purpose!=='spotify'||!Number.isInteger(state.userId)||!req.query.code)throw Error('Autorización inválida');
-  const t=await spotifyTokenRequest({grant_type:'authorization_code',code:String(req.query.code),redirect_uri:SPOTIFY_REDIRECT_URI});
-  await spotifyStore(state.userId,{access_token:t.access_token,refresh_token:t.refresh_token,expires_at:Date.now()+t.expires_in*1000});
-  res.redirect(back+'?spotify=connected');
- }catch(err){console.error('Spotify callback:',err.message);res.redirect(back+'?spotify=error')}
-});
-app.get('/api/spotify/now-playing',auth,async(req,res)=>{
- try{
-  const q=await pool.query('SELECT token_data FROM spotify_connections WHERE user_id=$1',[req.user.id]);
-  if(!q.rowCount)return res.json({ok:true,connected:false,track:null});
-  let t=spotifyDecrypt(q.rows[0].token_data);
-  if(Date.now()>=t.expires_at-60000){const n=await spotifyTokenRequest({grant_type:'refresh_token',refresh_token:t.refresh_token});t={access_token:n.access_token,refresh_token:n.refresh_token||t.refresh_token,expires_at:Date.now()+n.expires_in*1000};await spotifyStore(req.user.id,t)}
-  const r=await fetch('https://api.spotify.com/v1/me/player/currently-playing',{headers:{Authorization:'Bearer '+t.access_token},signal:AbortSignal.timeout(7000)});
-  if(r.status===204)return res.json({ok:true,connected:true,track:null});
-  if(!r.ok)throw Error('Spotify HTTP '+r.status);
-  const d=await r.json();const item=d.item;
-  res.json({ok:true,connected:true,track:item?{name:item.name,artist:(item.artists||[]).map(a=>a.name).join(', '),image:item.album?.images?.[0]?.url||null,isPlaying:!!d.is_playing}:null});
- }catch(e){console.error('Spotify:',e.message);res.status(503).json({ok:false,error:'Spotify temporalmente no disponible'})}
-});
-
-// Preferencias globales de visualización. Solo el administrador puede modificarlas.
-app.get('/api/admin-view',auth,async(req,res)=>{
- try{const q=await pool.query("SELECT data FROM app_state WHERE id=1");res.json({ok:true,settings:q.rows[0]?.data?.adminViewSettings||{}})}
- catch(err){console.error(err);res.status(500).json({ok:false,error:'No se pudo consultar la visualización'})}
-});
-app.put('/api/admin-view',auth,async(req,res,next)=>{
- if(req.user?.role==='admin')return next();
- try{
-  const u=await getCurrentUser(req.user.id);
-  if(!u||!u.active||normalizePermissions(u.permissions).gestionar_indicadores!==true)return res.status(403).json({ok:false,error:'Sin permiso para gestionar indicadores'});
-  const changes=req.body?.indicators;
-  const keys=['blurCameras','cleanCameras','intermittentCameras','rainCameras','powerCameras','fiberCameras'];
-  if(!changes||typeof changes!=='object'||Array.isArray(changes)||Object.keys(changes).some(k=>!keys.includes(k)))return res.status(400).json({ok:false,error:'Indicadores inválidos'});
-  const clean={};
-  for(const key of keys){if(!Array.isArray(changes[key]))return res.status(400).json({ok:false,error:'Falta '+key});clean[key]=[...new Set(changes[key].filter(n=>Number.isInteger(n)&&n>0&&n<=999999))].slice(0,3000);}
-  const q=await pool.query(`UPDATE app_state SET data=jsonb_set(data,'{adminViewSettings}',COALESCE(data->'adminViewSettings','{}'::jsonb)||$1::jsonb,true),updated_at=NOW() WHERE id=1 RETURNING data->'adminViewSettings' AS settings`,[JSON.stringify(clean)]);
-  res.json({ok:true,settings:q.rows[0].settings});
- }catch(err){console.error(err);res.status(500).json({ok:false,error:'No se pudieron guardar los indicadores'});}
-},adminOnly,async(req,res)=>{
- try{
-  const v=req.body?.settings;
-  if(!v||typeof v!=='object'||Array.isArray(v))return res.status(400).json({ok:false,error:'Configuración inválida'});
-  const columns=Array.isArray(v.columns)?[...new Set(v.columns.filter(n=>Number.isInteger(n)&&n>=0&&n<12))]:[];
-  const rows=Array.isArray(v.rows)?[...new Set(v.rows.filter(n=>Number.isInteger(n)&&n>0&&n<=999999))].slice(0,3000):[];
-  const stations=Array.isArray(v.stations)?[...new Set(v.stations.filter(x=>typeof x==='string').map(x=>x.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toUpperCase().trim().replace(/\s+/g,' ').replace(/^(ESTACION)\s*0+(\d+)$/,'$1 $2')).filter(x=>x.length>0&&x.length<=100))].slice(0,100):[];
-  const density=['normal','compact','comfortable'].includes(v.density)?v.density:'normal';
-  const font=['normal','small','large'].includes(v.font)?v.font:'normal';
-  const blurCameras=Array.isArray(v.blurCameras)?[...new Set(v.blurCameras.filter(n=>Number.isInteger(n)&&n>0&&n<=999999))].slice(0,3000):[];
-  const cleanCameras=Array.isArray(v.cleanCameras)?[...new Set(v.cleanCameras.filter(n=>Number.isInteger(n)&&n>0&&n<=999999))].slice(0,3000):[];
-  const intermittentCameras=Array.isArray(v.intermittentCameras)?[...new Set(v.intermittentCameras.filter(n=>Number.isInteger(n)&&n>0&&n<=999999))].slice(0,3000):[];
-  const rainCameras=Array.isArray(v.rainCameras)?[...new Set(v.rainCameras.filter(n=>Number.isInteger(n)&&n>0&&n<=999999))].slice(0,3000):[];
-  const powerCameras=Array.isArray(v.powerCameras)?[...new Set(v.powerCameras.filter(n=>Number.isInteger(n)&&n>0&&n<=999999))].slice(0,3000):[];
-  const fiberCameras=Array.isArray(v.fiberCameras)?[...new Set(v.fiberCameras.filter(n=>Number.isInteger(n)&&n>0&&n<=999999))].slice(0,3000):[];
-  const settings={columns,rows,stations,density,font,blurCameras,cleanCameras,intermittentCameras,rainCameras,powerCameras,fiberCameras};
-  await pool.query("UPDATE app_state SET data=jsonb_set(data,'{adminViewSettings}',$1::jsonb,true),updated_at=NOW() WHERE id=1",[JSON.stringify(settings)]);
-  res.json({ok:true,settings});
- }catch(err){console.error(err);res.status(500).json({ok:false,error:'No se pudo guardar la visualización'})}
-});
-
-// ======================================================
-// INICIAR SERVIDOR
-// ======================================================
-
-initDb()
-  .then(async () => { await pool.query(`CREATE TABLE IF NOT EXISTS spotify_connections (user_id INTEGER PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE, token_data TEXT NOT NULL)`); })
-  .then(() => {
-    app.listen(PORT, () => {
-      console.log(
-        `CIOE API activa en puerto ${PORT}`
-      );
-    });
-  })
-  .catch((err) => {
-    console.error(
-      "Error iniciando BD:",
-      err
-    );
-
-    process.exit(1);
-  });
+app.listen(PORT,'0.0.0.0',()=>console.log(`JJAE SECURITY escuchando en puerto ${PORT}`));
