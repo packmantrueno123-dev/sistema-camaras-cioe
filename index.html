@@ -1820,6 +1820,42 @@ function cioeTogglePasswordVisibility(){
   border-radius: 14px !important;
 }
 </style>
+
+<style id="cioeHeaderGlassButtons2026">
+/* Solo los botones del encabezado del Centro de Control: sin alterar eventos ni permisos. */
+.cioe-glass-btn {
+  background:rgba(8,20,36,.36)!important;
+  backdrop-filter:blur(11px) saturate(125%);
+  -webkit-backdrop-filter:blur(11px) saturate(125%);
+  color:var(--glass-color,#e2e8f0)!important;
+  border:1px solid var(--glass-border,rgba(148,163,184,.55))!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.09),0 3px 10px rgba(0,0,0,.13)!important;
+  text-shadow:0 1px 3px rgba(0,0,0,.6);
+  border-radius:13px!important;
+  transition:background .18s ease,border-color .18s ease,box-shadow .18s ease,transform .18s ease!important;
+}
+.cioe-glass-btn:hover {
+  background:var(--glass-hover,rgba(51,65,85,.55))!important;
+  border-color:var(--glass-color,#e2e8f0)!important;
+  box-shadow:0 0 15px var(--glass-glow,rgba(148,163,184,.15)),inset 0 1px 0 rgba(255,255,255,.12)!important;
+  transform:translateY(-1px);
+}
+.cioe-glass-btn:active {transform:translateY(0)}
+.cioe-glass-btn:focus-visible{outline:2px solid var(--glass-color,#e2e8f0)!important;outline-offset:2px}
+.cioe-glass-msg {--glass-color:#67e8f9;--glass-border:rgba(34,211,238,.48);--glass-hover:rgba(8,145,178,.24);--glass-glow:rgba(34,211,238,.17)}
+.cioe-glass-spotify {--glass-color:#86efac;--glass-border:rgba(34,197,94,.5);--glass-hover:rgba(22,163,74,.25);--glass-glow:rgba(34,197,94,.16)}
+.cioe-glass-occ {--glass-color:#fcd34d;--glass-border:rgba(245,158,11,.53);--glass-hover:rgba(217,119,6,.24);--glass-glow:rgba(245,158,11,.18)}
+.cioe-glass-add {--glass-color:#fde68a;--glass-border:rgba(251,191,36,.63);--glass-hover:rgba(245,158,11,.25);--glass-glow:rgba(251,191,36,.2)}
+.cioe-glass-excel {--glass-color:#a7f3d0;--glass-border:rgba(52,211,153,.43);--glass-hover:rgba(16,185,129,.21)}
+.cioe-glass-csv {--glass-color:#93c5fd;--glass-border:rgba(96,165,250,.49);--glass-hover:rgba(37,99,235,.24)}
+.cioe-glass-theme {--glass-color:#67e8f9;--glass-border:rgba(6,182,212,.58);--glass-hover:rgba(8,145,178,.24)}
+.cioe-glass-bell {--glass-color:#a5f3fc;--glass-border:rgba(34,211,238,.47);--glass-hover:rgba(8,145,178,.24)}
+.cioe-glass-users {--glass-color:#d8b4fe;--glass-border:rgba(168,85,247,.56);--glass-hover:rgba(126,34,206,.25)}
+.cioe-glass-logout {--glass-color:#fda4af;--glass-border:rgba(244,63,94,.61);--glass-hover:rgba(225,29,72,.26);--glass-glow:rgba(244,63,94,.18)}
+/* El personalizador usa reglas propias: este botón debe permanecer translúcido. */
+body.cioe-custom-theme #themeCustomizerBtn.cioe-glass-btn {background:rgba(8,20,36,.36)!important}
+body.cioe-custom-theme #themeCustomizerBtn.cioe-glass-btn:hover {background:rgba(8,145,178,.24)!important}
+</style>
 </head>
 <body class="min-h-screen flex flex-col p-3 md:p-5 space-y-4 w-full">
 
@@ -1915,15 +1951,15 @@ function cioeTogglePasswordVisibility(){
       </div>
 
       <div class="flex flex-wrap items-center gap-2.5 w-full lg:w-auto justify-end">
-        <button type="button" id="cioeMessagesBtn" onclick="openCioeMessages()" class="relative flex items-center gap-2 bg-[#030712] border border-slate-800 px-3.5 py-2 rounded-xl text-xs font-bold text-cyan-300 hover:border-cyan-500/50 hover:bg-slate-900/60 transition select-none" title="Mensajería interna">
+        <button type="button" id="cioeMessagesBtn" onclick="openCioeMessages()" class="cioe-glass-btn cioe-glass-msg relative flex items-center gap-2 bg-[#030712] border border-slate-800 px-3.5 py-2 rounded-xl text-xs font-bold text-cyan-300 hover:border-cyan-500/50 hover:bg-slate-900/60 transition select-none" title="Mensajería interna">
           <i class="fa-solid fa-message text-cyan-400"></i>
           <span class="uppercase tracking-wider">Mensajería</span>
           <span id="cioeMessagesBadge" style="display:none" class="absolute -top-2 -right-2 min-w-[21px] h-[21px] px-1 rounded-full bg-red-600 text-white text-[10px] font-black items-center justify-center border-2 border-[#0a0f1d] shadow-lg shadow-red-600/40 animate-pulse">0</span>
         </button>
 
-        <div id="cioeSpotifyPlayer"><i class="fa-brands fa-spotify"></i><button type="button" onclick="cioeSpotifyFocus()" title="Ir al buscador de Spotify">SPOTIFY <i class="fa-solid fa-magnifying-glass"></i></button></div>
+        <div id="cioeSpotifyPlayer"><i class="fa-brands fa-spotify"></i><button type="button" onclick="cioeSpotifyFocus()" title="Ir al buscador de Spotify" class="cioe-glass-btn cioe-glass-spotify">SPOTIFY <i class="fa-solid fa-magnifying-glass"></i></button></div>
         <div class="relative">
-          <button type="button" id="ocurrenciasBtn" onclick="toggleOcurrenciasMenu(event)" class="flex items-center gap-2 bg-[#030712] border border-slate-800 px-3.5 py-2 rounded-xl text-xs font-bold text-amber-400 hover:border-slate-700 hover:bg-slate-900/60 transition select-none">
+          <button type="button" id="ocurrenciasBtn" onclick="toggleOcurrenciasMenu(event)" class="cioe-glass-btn cioe-glass-occ flex items-center gap-2 bg-[#030712] border border-slate-800 px-3.5 py-2 rounded-xl text-xs font-bold text-amber-400 hover:border-slate-700 hover:bg-slate-900/60 transition select-none">
             <i class="fa-solid fa-clipboard-list text-amber-500 text-sm pointer-events-none"></i>
             <span class="pointer-events-none uppercase tracking-wider">OCURRENCIAS</span>
             <i class="fa-solid fa-chevron-down text-[10px] text-slate-400 ml-1 pointer-events-none"></i>
@@ -1965,12 +2001,12 @@ function cioeTogglePasswordVisibility(){
           </div>
         </div>
 
-        <button onclick="openModal()" class="bg-amber-500 hover:bg-amber-400 text-black px-4 py-2 rounded-xl text-xs font-black transition flex items-center gap-2 shadow-lg shadow-amber-500/10">
+        <button onclick="openModal()" class="cioe-glass-btn cioe-glass-add bg-amber-500 hover:bg-amber-400 text-black px-4 py-2 rounded-xl text-xs font-black transition flex items-center gap-2 shadow-lg shadow-amber-500/10">
           <i class="fa-solid fa-plus text-sm"></i> Añadir Cámara
         </button>
 
         <div class="relative">
-          <button type="button" onclick="toggleExcelReportPanel(event)" class="bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 shadow">
+          <button type="button" onclick="toggleExcelReportPanel(event)" class="cioe-glass-btn cioe-glass-excel bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 shadow">
             <i class="fa-solid fa-file-excel text-emerald-400"></i> Reporte Excel
             <i class="fa-solid fa-chevron-down text-[9px] text-slate-400"></i>
           </button>
@@ -2000,7 +2036,7 @@ function cioeTogglePasswordVisibility(){
           </div>
         </div>
 
-        <button onclick="exportCSV()" class="bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 px-3.5 py-2 rounded-xl text-xs font-medium transition flex items-center gap-1.5">
+        <button onclick="exportCSV()" class="cioe-glass-btn cioe-glass-csv bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 px-3.5 py-2 rounded-xl text-xs font-medium transition flex items-center gap-1.5">
           <i class="fa-solid fa-database text-blue-400"></i> Exportar CSV
         </button>
 
@@ -2008,12 +2044,12 @@ function cioeTogglePasswordVisibility(){
           <i class="fa-solid fa-user-shield mr-1"></i> Usuario: <span id="currentUserName">—</span>
         </span>
 
-        <button id="themeCustomizerBtn" onclick="openThemeCustomizer()" class="hidden bg-cyan-600 hover:bg-cyan-500 text-white px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2">
+        <button id="themeCustomizerBtn" onclick="openThemeCustomizer()" class="cioe-glass-btn cioe-glass-theme hidden bg-cyan-600 hover:bg-cyan-500 text-white px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2">
           <i class="fa-solid fa-palette"></i> Personalizar
         </button>
 
         <div id="cioeAdminBellWrap" class="hidden relative">
-          <button id="cioeAdminBellBtn" type="button" onclick="cioeToggleConnectionPanel()" class="relative bg-slate-800 hover:bg-slate-700 border border-cyan-700 text-cyan-300 px-3.5 py-2 rounded-xl text-xs font-bold" title="Conexiones de usuarios" aria-label="Notificaciones de conexiones">
+          <button id="cioeAdminBellBtn" type="button" onclick="cioeToggleConnectionPanel()" class="cioe-glass-btn cioe-glass-bell relative bg-slate-800 hover:bg-slate-700 border border-cyan-700 text-cyan-300 px-3.5 py-2 rounded-xl text-xs font-bold" title="Conexiones de usuarios" aria-label="Notificaciones de conexiones">
             <i class="fa-solid fa-bell"></i> Conexiones
             <span id="cioeConnectionCount" class="hidden absolute -top-2 -right-2 bg-rose-600 text-white text-[10px] rounded-full min-w-5 px-1 py-0.5">0</span>
           </button>
@@ -2023,13 +2059,13 @@ function cioeTogglePasswordVisibility(){
           </div>
         </div>
 
-        <button id="manageUsersBtn" onclick="openUserManager()" class="hidden bg-violet-600 hover:bg-violet-500 text-white px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2">
+        <button id="manageUsersBtn" onclick="openUserManager()" class="cioe-glass-btn cioe-glass-users hidden bg-violet-600 hover:bg-violet-500 text-white px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2">
           <i class="fa-solid fa-users-gear"></i> Administrar usuarios
         </button>
 
         <button type="button" id="cioeUserQuickConfigBtn" onclick="cioeOpenUserQuickConfig()" class="bg-indigo-700 hover:bg-indigo-600 border border-indigo-500 text-white px-3.5 py-2 rounded-xl text-xs font-bold flex items-center gap-2"><i class="fa-solid fa-sliders"></i> Configurar vista e iconos</button>
 
-        <button onclick="cerrarSesion()" class="bg-rose-600 hover:bg-rose-500 text-white px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2">
+        <button onclick="cerrarSesion()" class="cioe-glass-btn cioe-glass-logout bg-rose-600 hover:bg-rose-500 text-white px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2">
           <i class="fa-solid fa-right-from-bracket"></i> Cerrar sesión
         </button>
       </div>
