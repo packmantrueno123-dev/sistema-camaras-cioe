@@ -4229,6 +4229,8 @@ function cioeTogglePasswordVisibility(){
       258: { estacion: "ESTACIÓN 2", sistema: "DSS", ubicacion: "STA. CRUZ DE PACAHCUTEC CON JR. CARLOS A. SALAVERRY", status: "OPERATIVA", details: "CÁMARA PRINCIPAL FUNCIONA" }
     };
 
+    const CIOE_FIJAS_IDS = new Set([2,9,16,17,21,26,28,29,30,32,36,37,38,41,47,55,65,66,69,70,79,82,85,124,143,145,146,148,151,152,153,157,160,161,166,173,178,188,199,201,205,208,209,247,255,258]);
+
     loadFijasOverrides();
 
     function getLogForCamera(camId) {
@@ -4308,7 +4310,6 @@ function cioeTogglePasswordVisibility(){
     }
 
     // Registro independiente de cámaras fijas originales. No confundir con las 285 del Centro.
-    const CIOE_FIJAS_IDS = new Set([2,9,16,17,21,26,28,29,30,32,36,37,38,41,47,55,65,66,69,70,79,82,85,124,143,145,146,148,151,152,153,157,160,161,166,173,178,188,199,201,205,208,209,247,255,258]);
     function cioeEsFija(id) { return CIOE_FIJAS_IDS.has(Number(id)); }
     function cioeDepurarFijas() {
       // La migración antigua contaminó OVERRIDES. Retirar únicamente claves ajenas
@@ -6584,6 +6585,7 @@ function cioeTogglePasswordVisibility(){
           e.code = "TIMEOUT";
           throw e;
         }
+        console.error("CIOE API: fallo de comunicación en " + path, err);
         throw new Error("No se pudo conectar con el servidor CIOE. Verifica tu conexión e inténtalo de nuevo.");
       } finally {
         clearTimeout(timeoutId);
