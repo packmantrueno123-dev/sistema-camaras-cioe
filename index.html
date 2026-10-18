@@ -1855,6 +1855,18 @@ body.cioe-transparency-on .cioe-glass-btn:focus-visible{outline:2px solid var(--
 /* El personalizador usa reglas propias: este botón debe permanecer translúcido. */
 body.cioe-transparency-on.cioe-custom-theme #themeCustomizerBtn.cioe-glass-btn {background:rgba(8,20,36,.36)!important}
 body.cioe-transparency-on.cioe-custom-theme #themeCustomizerBtn.cioe-glass-btn:hover {background:rgba(8,145,178,.24)!important}
+
+/* Icono de Spotify dentro de la cápsula en ambos modos. */
+#cioeSpotifyPlayer > button.cioe-glass-spotify {
+  display:inline-flex;align-items:center;justify-content:center;gap:6px;
+  white-space:nowrap;vertical-align:middle;
+}
+#cioeSpotifyPlayer > button.cioe-glass-spotify > .fa-spotify {
+  color:#1ed760;font-size:13px;flex-shrink:0;line-height:1;
+}
+#cioeSpotifyPlayer > button.cioe-glass-spotify > .fa-magnifying-glass {
+  flex-shrink:0;line-height:1;
+}
 </style>
 
 <style id="cioeGlassFixSpotifyVecinal2026">
@@ -2043,7 +2055,7 @@ body.cioe-transparency-on :is(.cioe-polish-totem-nav,.cioe-polish-fijas-nav) i.f
           <span id="cioeMessagesBadge" style="display:none" class="absolute -top-2 -right-2 min-w-[21px] h-[21px] px-1 rounded-full bg-red-600 text-white text-[10px] font-black items-center justify-center border-2 border-[#0a0f1d] shadow-lg shadow-red-600/40 animate-pulse">0</span>
         </button>
 
-        <div id="cioeSpotifyPlayer"><i class="fa-brands fa-spotify"></i><button type="button" onclick="cioeSpotifyFocus()" title="Ir al buscador de Spotify" class="cioe-glass-btn cioe-glass-spotify">SPOTIFY <i class="fa-solid fa-magnifying-glass"></i></button></div>
+        <div id="cioeSpotifyPlayer"><button type="button" onclick="cioeSpotifyFocus()" title="Ir al buscador de Spotify" class="cioe-glass-btn cioe-glass-spotify"><i class="fa-brands fa-spotify" aria-hidden="true"></i><span>SPOTIFY</span><i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i></button></div>
         <div class="relative">
           <button type="button" id="ocurrenciasBtn" onclick="toggleOcurrenciasMenu(event)" class="cioe-glass-btn cioe-glass-occ flex items-center gap-2 bg-[#030712] border border-slate-800 px-3.5 py-2 rounded-xl text-xs font-bold text-amber-400 hover:border-slate-700 hover:bg-slate-900/60 transition select-none">
             <i class="fa-solid fa-clipboard-list text-amber-500 text-sm pointer-events-none"></i>
