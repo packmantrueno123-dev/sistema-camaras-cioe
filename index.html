@@ -1906,6 +1906,42 @@ body.cioe-transparency-on #cioeQuickNavigation button:focus-visible {
  background:rgba(100,116,139,.28)!important;outline:1px solid rgba(148,163,184,.3);
 }
 </style>
+
+<style id="cioePolishTransparencyIcons2026">
+/* Ajuste visual de encabezados: solo se aplica cuando el usuario activa transparencia. */
+body.cioe-transparency-on :is(.cioe-stats-glass,.cioe-vecinal-glass,.cioe-polish-totem-add,.cioe-polish-totem-nav,.cioe-polish-fijas-add,.cioe-polish-fijas-nav){
+  background:rgba(7,19,33,.42)!important;
+  backdrop-filter:blur(13px) saturate(145%)!important;
+  -webkit-backdrop-filter:blur(13px) saturate(145%)!important;
+  border:1px solid rgba(148,163,184,.48)!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.13),0 4px 14px rgba(0,0,0,.19)!important;
+  color:#f8fafc!important;
+  text-shadow:0 1px 2px rgba(0,0,0,.5);
+  border-radius:13px!important;
+  transition:background .2s ease,box-shadow .2s ease,border-color .2s ease!important;
+}
+body.cioe-transparency-on :is(.cioe-stats-glass,.cioe-vecinal-glass,.cioe-polish-totem-add,.cioe-polish-totem-nav,.cioe-polish-fijas-add,.cioe-polish-fijas-nav):hover{
+  background:rgba(25,43,60,.62)!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.16),0 0 15px rgba(148,163,184,.13)!important;
+}
+/* Los iconos conservan sus tonos propios, sin fondos blancos ni filtros que los destiñan. */
+body.cioe-transparency-on :is(.cioe-stats-glass,.cioe-vecinal-glass,.cioe-polish-totem-add,.cioe-polish-totem-nav,.cioe-polish-fijas-add,.cioe-polish-fijas-nav) i{
+  opacity:1!important;filter:none!important;text-shadow:none!important;
+  font-size:1.08em;display:inline-block;
+}
+body.cioe-transparency-on button[onclick="downloadCameraStatisticsExcel()"].cioe-stats-glass{border-color:rgba(16,185,129,.7)!important}
+body.cioe-transparency-on button[onclick="downloadCameraStatisticsExcel()"].cioe-stats-glass i{color:#34d399!important}
+body.cioe-transparency-on button[onclick="downloadCameraStatisticsWord()"].cioe-stats-glass{border-color:rgba(59,130,246,.7)!important}
+body.cioe-transparency-on button[onclick="downloadCameraStatisticsWord()"].cioe-stats-glass i{color:#60a5fa!important}
+body.cioe-transparency-on button[onclick="downloadCameraStatisticsPDF()"].cioe-stats-glass{border-color:rgba(239,68,68,.7)!important}
+body.cioe-transparency-on button[onclick="downloadCameraStatisticsPDF()"].cioe-stats-glass i{color:#fb7185!important}
+body.cioe-transparency-on :is(.cioe-vecinal-add,.cioe-polish-totem-add,.cioe-polish-fijas-add){border-color:rgba(251,191,36,.72)!important}
+body.cioe-transparency-on :is(.cioe-vecinal-add,.cioe-polish-totem-add,.cioe-polish-fijas-add) i{color:#fbbf24!important}
+body.cioe-transparency-on .cioe-vecinal-barrio{border-color:rgba(52,211,153,.7)!important}
+body.cioe-transparency-on .cioe-vecinal-barrio i{color:#34d399!important}
+body.cioe-transparency-on :is(.cioe-polish-totem-nav,.cioe-polish-fijas-nav) i.fa-compass{color:#fbbf24!important}
+body.cioe-transparency-on :is(.cioe-polish-totem-nav,.cioe-polish-fijas-nav) i.fa-chevron-down{color:#cbd5e1!important}
+</style>
 </head>
 <body class="min-h-screen flex flex-col p-3 md:p-5 space-y-4 w-full">
 
@@ -2407,10 +2443,10 @@ body.cioe-transparency-on #cioeQuickNavigation button:focus-visible {
       </div>
 
       <div class="flex flex-wrap items-center justify-end gap-2">
-        <button onclick="openModal()" class="bg-amber-500 hover:bg-amber-400 text-black px-4 py-2 rounded-xl text-xs font-black transition flex items-center gap-2 shadow-lg shadow-amber-500/10">
+        <button onclick="openModal()" class="cioe-polish-fijas-add bg-amber-500 hover:bg-amber-400 text-black px-4 py-2 rounded-xl text-xs font-black transition flex items-center gap-2 shadow-lg shadow-amber-500/10">
           <i class="fa-solid fa-plus"></i> Añadir Cámara
         </button>
-        <button type="button" onclick="cioeToggleNavigation(event)" class="bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2"><i class="fa-solid fa-compass text-amber-400"></i> Ir a otras opciones <i class="fa-solid fa-chevron-down text-[10px]"></i></button>
+        <button type="button" onclick="cioeToggleNavigation(event)" class="cioe-polish-fijas-nav bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2"><i class="fa-solid fa-compass text-amber-400"></i> Ir a otras opciones <i class="fa-solid fa-chevron-down text-[10px]"></i></button>
       </div>
     </header>
 
@@ -2571,7 +2607,7 @@ body.cioe-transparency-on #cioeQuickNavigation button:focus-visible {
   <div id="totemsView" class="hidden space-y-4 flex-col flex-1">
     <header class="bg-[#0a0f1d] border border-orange-500/30 rounded-2xl p-4 shadow-xl flex flex-col lg:flex-row justify-between items-center gap-4 w-full">
       <div class="flex items-center gap-3"><div class="p-3 bg-orange-500 rounded-xl text-black"><i class="fa-solid fa-tower-observation text-xl"></i></div><div><h1 class="text-xl font-black text-white uppercase">TÓTEMS DE CÁMARAS DE LA MUNICIPALIDAD DE LOS OLIVOS</h1><p class="text-xs text-slate-400">Registro y control de cámaras instaladas en tótems municipales</p></div></div>
-      <div class="flex gap-2"><button onclick="openTotemModal()" class="bg-amber-500 hover:bg-amber-400 text-black px-4 py-2 rounded-xl text-xs font-black"><i class="fa-solid fa-plus mr-2"></i>Añadir Tótem</button><button type="button" onclick="cioeToggleNavigation(event)" class="bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2"><i class="fa-solid fa-compass text-amber-400"></i> Ir a otras opciones <i class="fa-solid fa-chevron-down text-[10px]"></i></button></div>
+      <div class="flex gap-2"><button onclick="openTotemModal()" class="cioe-polish-totem-add bg-amber-500 hover:bg-amber-400 text-black px-4 py-2 rounded-xl text-xs font-black"><i class="fa-solid fa-plus mr-2"></i>Añadir Tótem</button><button type="button" onclick="cioeToggleNavigation(event)" class="cioe-polish-totem-nav bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2"><i class="fa-solid fa-compass text-amber-400"></i> Ir a otras opciones <i class="fa-solid fa-chevron-down text-[10px]"></i></button></div>
     </header>
     <section class="grid grid-cols-2 lg:grid-cols-4 gap-3"><div class="bg-[#0a0f1d] border border-slate-800 rounded-2xl p-4"><span class="text-[10px] text-slate-400 font-bold">TOTAL TÓTEMS</span><div id="totStatTotal" class="text-2xl font-black">0</div></div><div class="bg-[#0a0f1d] border border-slate-800 rounded-2xl p-4"><span class="text-[10px] text-emerald-400 font-bold">OPERATIVAS</span><div id="totStatOp" class="text-2xl font-black text-emerald-400">0</div></div><div class="bg-[#0a0f1d] border border-slate-800 rounded-2xl p-4"><span class="text-[10px] text-rose-400 font-bold">INOPERATIVAS</span><div id="totStatInop" class="text-2xl font-black text-rose-400">0</div></div><div class="bg-[#0a0f1d] border border-slate-800 rounded-2xl p-4"><span class="text-[10px] text-blue-400 font-bold">MANTENIMIENTO</span><div id="totStatMant" class="text-2xl font-black text-blue-400">0</div></div></section>
     <div class="bg-[#0a0f1d] border border-slate-800 rounded-2xl p-3"><input id="totemSearch" oninput="renderTotems()" placeholder="Buscar tótem, sistema, ubicación, urbanización o zona..." class="w-full bg-[#030712] border border-slate-700 rounded-xl px-4 py-2.5 text-xs text-white outline-none focus:border-orange-500"></div>
