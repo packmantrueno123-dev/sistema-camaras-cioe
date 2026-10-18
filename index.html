@@ -2317,6 +2317,16 @@ body.cioe-transparency-on :is(.cioe-polish-totem-nav,.cioe-polish-fijas-nav) i.f
         </div>
       </div>
 
+      <!-- CIOE: orden visual exclusivo del Centro de Control -->
+      <div class="flex items-center gap-2 w-full md:w-auto" title="Ordenar únicamente las filas del Centro de Control">
+        <label for="cioeMainCameraSort" class="text-xs font-bold text-slate-400 whitespace-nowrap"><i class="fa-solid fa-arrow-down-wide-short text-cyan-400 mr-1"></i>Orden:</label>
+        <select id="cioeMainCameraSort" onchange="cioeCambiarOrdenCamaras(this.value)" aria-label="Ordenar cámaras del Centro de Control" class="bg-[#030712] border border-cyan-900/70 text-cyan-200 font-bold text-xs rounded-xl px-3 py-2.5 focus:outline-none focus:border-cyan-400 w-full md:w-44">
+          <option value="asc">Correlativo (1 → 285)</option>
+          <option value="desc">Mayor a menor (285 → 1)</option>
+          <option value="original">Orden original</option>
+        </select>
+      </div>
+
       <!-- Buscador exacto tipo BUSCARV: adicional, no altera filtros existentes -->
       <div class="flex items-center gap-1.5 w-full md:w-auto" title="Buscar número exacto de cámara">
         <i class="fa-solid fa-magnifying-glass text-cyan-400 text-xs"></i>
@@ -4676,6 +4686,21 @@ body.cioe-transparency-on :is(.cioe-polish-totem-nav,.cioe-polish-fijas-nav) i.f
       select.value = nums.includes(Number(previous)) ? previous : 'ALL';
     }
 
+    // Orden de presentación: no altera el array cameras ni sus identificadores.
+    const CIOE_MAIN_SORT_KEY = 'cioe_centro_control_orden_v1';
+    function cioeLeerOrdenCamaras() {
+      try {
+        const value = localStorage.getItem(CIOE_MAIN_SORT_KEY);
+        return ['asc', 'desc', 'original'].includes(value) ? value : 'asc';
+      } catch (_) { return 'asc'; }
+    }
+    let cioeOrdenCamaras = cioeLeerOrdenCamaras();
+    function cioeCambiarOrdenCamaras(value) {
+      cioeOrdenCamaras = ['asc', 'desc', 'original'].includes(value) ? value : 'asc';
+      try { localStorage.setItem(CIOE_MAIN_SORT_KEY, cioeOrdenCamaras); } catch (_) {}
+      renderTable();
+    }
+
     function renderTable() {
       if (typeof updateTotalGeneral === 'function') updateTotalGeneral();
       const search = document.getElementById('searchInput').value.toLowerCase();
@@ -4702,6 +4727,20 @@ body.cioe-transparency-on :is(.cioe-polish-totem-nav,.cioe-polish-fijas-nav) i.f
         const matchesExacta = !buscaCamExacta || (coincideCamExacta && Number(cam.camara) === Number(numeroCamExacta));
         return matchesFilter && matchesCamera && matchesAnexo && matchesSearch && matchesExacta;
       });
+
+      // Orden numérico, no alfabético (CAMARA-2 antes de CAMARA-10).
+      // sort() se aplica solo a la lista filtrada, nunca al almacenamiento.
+      const ordenSelect = document.getElementById('cioeMainCameraSort');
+      if (ordenSelect && ordenSelect.value !== cioeOrdenCamaras) ordenSelect.value = cioeOrdenCamaras;
+      if (cioeOrdenCamaras !== 'original') {
+        filtered.sort((a, b) => {
+          const na = Number(a.camara);
+          const nb = Number(b.camara);
+          const va = Number.isFinite(na) ? na : Number.MAX_SAFE_INTEGER;
+          const vb = Number.isFinite(nb) ? nb : Number.MAX_SAFE_INTEGER;
+          return cioeOrdenCamaras === 'desc' ? vb - va : va - vb;
+        });
+      }
 
       document.getElementById('recordCount').innerText = `${filtered.length} Registros`;
 
