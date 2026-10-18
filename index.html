@@ -4302,8 +4302,17 @@ function cioeTogglePasswordVisibility(){
       }
     }
 
+    // Registro independiente de cámaras fijas originales. No confundir con las 285 del Centro.
+    const CIOE_FIJAS_IDS = new Set([2,9,16,17,21,26,28,29,30,32,36,37,38,41,47,55,65,66,69,70,79,82,85,124,143,145,146,148,151,152,153,157,160,161,166,173,178,188,199,201,205,208,209,247,255,258]);
+    function cioeEsFija(id) { return CIOE_FIJAS_IDS.has(Number(id)); }
+    function cioeDepurarFijas() {
+      // La migración antigua contaminó OVERRIDES. Retirar únicamente claves ajenas
+      // al registro original; los datos generales permanecen en cameras/dailyLogs.
+      Object.keys(OVERRIDES).forEach(k => { if (!cioeEsFija(k)) delete OVERRIDES[k]; });
+    }
     function persistFijas() {
       // OVERRIDES forma parte de la configuración de cámaras fijas.
+      cioeDepurarFijas();
       localStorage.setItem("cioe_fijas_overrides_v1", JSON.stringify(OVERRIDES));
       saveToStorage();
     }
@@ -4313,12 +4322,13 @@ function cioeTogglePasswordVisibility(){
         const saved = JSON.parse(localStorage.getItem("cioe_fijas_overrides_v1"));
         if (saved && typeof saved === "object") {
           Object.keys(saved).forEach(k => {
-            OVERRIDES[k] = { ...OVERRIDES[k], ...saved[k] };
+            if (cioeEsFija(k)) OVERRIDES[k] = { ...OVERRIDES[k], ...saved[k] };
           });
         }
       } catch (err) {
         console.warn("No se pudieron cargar los cambios de cámaras fijas:", err);
       }
+      cioeDepurarFijas();
     }
 
     function changeCameraStatus(camId, newStatus, subIndex = null) {
@@ -4791,7 +4801,7 @@ function cioeTogglePasswordVisibility(){
       select.innerHTML = '<option value="ALL">TODAS LAS CÁMARAS</option>';
 
       cameras
-        .filter(c => Object.prototype.hasOwnProperty.call(OVERRIDES, c.camara))
+        .filter(c => cioeEsFija(c.camara))
         .sort((a,b) => Number(a.camara) - Number(b.camara))
         .forEach(c => {
           const opt = document.createElement('option');
@@ -4833,7 +4843,7 @@ function cioeTogglePasswordVisibility(){
 
       // Solo se muestran las cámaras registradas como cámaras fijas en OVERRIDES.
       const fixedCameras = cameras
-        .filter(cam => Object.prototype.hasOwnProperty.call(OVERRIDES, cam.camara))
+        .filter(cam => cioeEsFija(cam.camara))
         .map(cam => {
           const ov = OVERRIDES[cam.camara];
           ensureFijaArrays(cam.camara);
@@ -6167,7 +6177,7 @@ function cioeTogglePasswordVisibility(){
       const cam = cameras.find(c => c.id === id);
       const log = getLogForCamera(id);
       if(!cam) return;
-      cameraModalContext = Object.prototype.hasOwnProperty.call(OVERRIDES, cam.camara) ? 'fijas' : 'general';
+      cameraModalContext = cioeEsFija(cam.camara) ? 'fijas' : 'general';
 
       document.getElementById('modalTitle').innerText = "Editar " + formatCamName(cam.camara);
       document.getElementById('camId').value = cam.id;
@@ -6260,7 +6270,7 @@ function cioeTogglePasswordVisibility(){
       if(confirm("¿Seguro que deseas eliminar esta cámara del sistema?")) {
         const deleting = cameras.find(c => c.id === id);
         cameras = cameras.filter(c => c.id !== id);
-        if (deleting && Object.prototype.hasOwnProperty.call(OVERRIDES, deleting.camara)) {
+        if (deleting && cioeEsFija(deleting.camara)) {
           delete OVERRIDES[deleting.camara];
           persistFijas();
           populateCamaraFijasFilter();
@@ -7059,8 +7069,7 @@ function cioeTogglePasswordVisibility(){
         cam.estacion=fix.estacion;cam.sistema=fix.sistema;cam.status=fix.status;
         // El estado real del Centro se obtiene de getLogForCamera(), que
         // prioriza OVERRIDES sobre dailyLogs. Sin esto la tabla sigue antigua.
-        const anterior=OVERRIDES[cam.id] || {};
-        OVERRIDES[cam.id]={...anterior,status:fix.status,estacion:fix.estacion,sistema:fix.sistema};
+        // No insertar cámaras generales en el registro exclusivo de fijas.
         if(!dailyLogs[selectedDateStr]) dailyLogs[selectedDateStr]={timestamp:selectedDateStr,cameras:{}};
         if(!dailyLogs[selectedDateStr].cameras) dailyLogs[selectedDateStr].cameras={};
         const logPrevio=dailyLogs[selectedDateStr].cameras[cam.id] || {};
@@ -7071,7 +7080,7 @@ function cioeTogglePasswordVisibility(){
       // ubicación física, reportes, suministros ni otros campos.
       localStorage.setItem('cioe_cameras_v101',JSON.stringify(cameras));
       localStorage.setItem('cioe_daily_logs_v101',JSON.stringify(dailyLogs));
-      localStorage.setItem('cioe_fijas_overrides_v1',JSON.stringify(OVERRIDES));
+      // No escribir el registro de fijas al actualizar cámaras generales.
       // Primero corregir el Centro; luego recrear las 285 asignaciones de Mañana.
       cioeCorregirEstacionesManana285();
       localStorage.setItem(MARCA,'ok');
@@ -7154,7 +7163,7 @@ function cioeTogglePasswordVisibility(){
         const savedFijas = JSON.parse(localStorage.getItem("cioe_fijas_overrides_v1") || "null");
         if (savedFijas && typeof savedFijas === "object" && !Array.isArray(savedFijas)) {
           Object.keys(savedFijas).forEach(k => {
-            OVERRIDES[k] = { ...(OVERRIDES[k] || {}), ...savedFijas[k] };
+            if (cioeEsFija(k)) OVERRIDES[k] = { ...(OVERRIDES[k] || {}), ...savedFijas[k] };
           });
         }
       } catch (_) {}
@@ -7984,11 +7993,12 @@ function cioeTogglePasswordVisibility(){
       // Inicializa las subcámaras DSS antes de contar.
       // Así el total correcto (184) existe desde que carga el sistema,
       // sin necesidad de abrir primero "Listado de cámaras fijas".
-      Object.keys(OVERRIDES).forEach(camaraNum => {
+      cioeDepurarFijas();
+      Object.keys(OVERRIDES).filter(cioeEsFija).forEach(camaraNum => {
         ensureFijaArrays(Number(camaraNum));
       });
 
-      return Object.values(OVERRIDES).reduce((total, ov) => {
+      return Object.entries(OVERRIDES).filter(([id]) => cioeEsFija(id)).reduce((total, [, ov]) => {
         if (Array.isArray(ov.subStatuses) && ov.subStatuses.length) {
           return total + ov.subStatuses.length;
         }
