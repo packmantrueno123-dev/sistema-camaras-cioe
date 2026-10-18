@@ -3373,6 +3373,9 @@ function cioeTogglePasswordVisibility(){
   </div>
 
 <script>
+    // Claves de autenticación inicializadas antes de cualquier rutina de arranque.
+    const CIOE_TOKEN_KEY = "cioe_api_token";
+    const CIOE_USER_KEY = "cioe_api_user";
     const CURRENT_SYS_VERSION = "cioe_v303_fijas_fila";
     if (localStorage.getItem("sys_ver") !== CURRENT_SYS_VERSION) {
       localStorage.setItem("sys_ver", CURRENT_SYS_VERSION);
@@ -6549,8 +6552,6 @@ function cioeTogglePasswordVisibility(){
 
     // ===== BACKEND CIOE: USUARIOS, ROLES Y SINCRONIZACIÓN =====
     const CIOE_API = "https://sistema-camaras-cioe-api.onrender.com";
-    const CIOE_TOKEN_KEY = "cioe_api_token";
-    const CIOE_USER_KEY = "cioe_api_user";
     const SYSTEM_USERS_KEY = "cioe_system_users_v1"; // solo para limpiar la versión local antigua
     let currentSystemUser = null;
     let cachedSystemUsers = [];
